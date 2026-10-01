@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, spacing, typography } from '@/shared/theme/tokens';
+import type { AppTheme } from '@/shared/theme/useAppTheme';
+import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 interface AuthFormTemplateProps {
   title: string;
@@ -13,6 +14,8 @@ interface AuthFormTemplateProps {
 }
 
 export function AuthFormTemplate({ title, children, footer }: AuthFormTemplateProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -28,23 +31,24 @@ export function AuthFormTemplate({ title, children, footer }: AuthFormTemplatePr
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    gap: spacing.md,
-    padding: spacing.lg,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-});
+const createStyles = ({ colors, spacing, typography }: AppTheme) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    flex: {
+      flex: 1,
+    },
+    content: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      gap: spacing.lg,
+      padding: spacing.xl,
+    },
+    title: {
+      ...typography.h1,
+      color: colors.textPrimary,
+      marginBottom: spacing.sm,
+    },
+  });
