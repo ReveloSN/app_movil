@@ -20,6 +20,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "scheme": "verificadorsalida",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
