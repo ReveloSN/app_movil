@@ -12,6 +12,8 @@ export interface VerificationRecord {
 }
 
 export interface CreateVerificationRecordInput {
+  /** Generado por el cliente para que reintentar el guardado no duplique el registro. */
+  id?: string;
   routineId: string;
   result: string;
   /** Por defecto, el momento de inserción. */
@@ -20,4 +22,4 @@ export interface CreateVerificationRecordInput {
   durationSeconds?: number | null;
 }
 
-export type UpdateVerificationRecordInput = Partial<Omit<CreateVerificationRecordInput, 'routineId'>>;
+export type UpdateVerificationRecordInput = Partial<Omit<CreateVerificationRecordInput, 'id' | 'routineId'>>;

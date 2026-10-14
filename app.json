@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "verificador-salida",
+    "name": "Verificador",
     "slug": "verificador-salida",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,15 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
+      "package": "com.anonymous.verificadorsalida"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -26,7 +34,18 @@
       "expo-router",
       "expo-status-bar",
       "expo-font",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-background-task",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Para detectar tu Wi-Fi, el teléfono pide acceso a la ubicación. No la guardamos.",
+          "locationAlwaysAndWhenInUsePermission": "Para notar que saliste de tu Wi-Fi aunque la app esté cerrada. No guardamos tu ubicación.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "expo-notifications"
     ],
     "scheme": "verificadorsalida",
     "experiments": {

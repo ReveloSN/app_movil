@@ -17,7 +17,11 @@ interface TriggerRow {
   active: boolean;
 }
 
-export type TriggerRepository = Repository<Trigger, CreateTriggerInput, UpdateTriggerInput>;
+export interface TriggerRepository extends Repository<Trigger, CreateTriggerInput, UpdateTriggerInput> {
+  /** Avisos de una rutina (0–3). */
+  getByRoutine(routineId: string): Promise<Trigger[]>;
+  deleteByRoutine(routineId: string): Promise<void>;
+}
 
 const toEntity = (row: TriggerRow): Trigger => ({
   id: row.id,
@@ -44,11 +48,22 @@ const toUpdateRow = (changes: UpdateTriggerInput) => ({
 const toInsertRow = (input: CreateTriggerInput) => ({ routine_id: input.routineId, ...toUpdateRow(input) });
 
 export function createTriggerRepository(client: SupabaseClient): TriggerRepository {
-  return createSupabaseRepository<TriggerRow, Trigger, CreateTriggerInput, UpdateTriggerInput>({
+  const { listWhere, deleteWhere, ...base } = createSupabaseRepository<
+    TriggerRow,
+    Trigger,
+    CreateTriggerInput,
+    UpdateTriggerInput
+  >({
     client,
     table: 'triggers',
     toEntity,
     toInsertRow,
     toUpdateRow,
   });
+
+  return {
+    ...base,
+    getByRoutine: (routineId) => listWhere('routine_id', routineId),
+    deleteByRoutine: (routineId) => deleteWhere('routine_id', routineId),
+  };
 }

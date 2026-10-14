@@ -16,7 +16,11 @@ interface ItemRow {
   sort_order: number;
 }
 
-export type ItemRepository = Repository<Item, CreateItemInput, UpdateItemInput>;
+export interface ItemRepository extends Repository<Item, CreateItemInput, UpdateItemInput> {
+  /** Ítems de una rutina, en su orden (sort_order). */
+  getByRoutine(routineId: string): Promise<Item[]>;
+  deleteByRoutine(routineId: string): Promise<void>;
+}
 
 const toEntity = (row: ItemRow): Item => ({
   id: row.id,
@@ -41,7 +45,7 @@ const toUpdateRow = (changes: UpdateItemInput) => ({
 const toInsertRow = (input: CreateItemInput) => ({ routine_id: input.routineId, ...toUpdateRow(input) });
 
 export function createItemRepository(client: SupabaseClient): ItemRepository {
-  return createSupabaseRepository<ItemRow, Item, CreateItemInput, UpdateItemInput>({
+  const { listWhere, deleteWhere, ...base } = createSupabaseRepository<ItemRow, Item, CreateItemInput, UpdateItemInput>({
     client,
     table: 'items',
     orderBy: { column: 'sort_order', ascending: true },
@@ -49,4 +53,10 @@ export function createItemRepository(client: SupabaseClient): ItemRepository {
     toInsertRow,
     toUpdateRow,
   });
+
+  return {
+    ...base,
+    getByRoutine: (routineId) => listWhere('routine_id', routineId),
+    deleteByRoutine: (routineId) => deleteWhere('routine_id', routineId),
+  };
 }

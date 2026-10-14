@@ -19,11 +19,11 @@ interface RecordRow {
   duration_seconds: number | null;
 }
 
-export type VerificationRecordRepository = Repository<
-  VerificationRecord,
-  CreateVerificationRecordInput,
-  UpdateVerificationRecordInput
->;
+export interface VerificationRecordRepository
+  extends Repository<VerificationRecord, CreateVerificationRecordInput, UpdateVerificationRecordInput> {
+  /** Borra el historial de una rutina (para eliminarla si la base no lo hace en cascada). */
+  deleteByRoutine(routineId: string): Promise<void>;
+}
 
 const toEntity = (row: RecordRow): VerificationRecord => ({
   id: row.id,
@@ -41,10 +41,14 @@ const toUpdateRow = (changes: UpdateVerificationRecordInput) => ({
   duration_seconds: changes.durationSeconds,
 });
 
-const toInsertRow = (input: CreateVerificationRecordInput) => ({ routine_id: input.routineId, ...toUpdateRow(input) });
+const toInsertRow = (input: CreateVerificationRecordInput) => ({
+  id: input.id,
+  routine_id: input.routineId,
+  ...toUpdateRow(input),
+});
 
 export function createVerificationRecordRepository(client: SupabaseClient): VerificationRecordRepository {
-  return createSupabaseRepository<
+  const { listWhere: _listWhere, deleteWhere, ...base } = createSupabaseRepository<
     RecordRow,
     VerificationRecord,
     CreateVerificationRecordInput,
@@ -58,4 +62,9 @@ export function createVerificationRecordRepository(client: SupabaseClient): Veri
     toInsertRow,
     toUpdateRow,
   });
+
+  return {
+    ...base,
+    deleteByRoutine: (routineId) => deleteWhere('routine_id', routineId),
+  };
 }
