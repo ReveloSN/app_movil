@@ -24,6 +24,8 @@ export const sizes = {
   badgeHeight: 28,
   progressBarHeight: 6,
   largeIconCircle: 112,
+  /** Fila de la verificación (P07): área táctil de 56pt. */
+  checklistRowHeight: 56,
 } as const;
 
 // No viene del mockup: escala de íconos para no dejar tamaños sueltos en los componentes.
@@ -50,6 +52,8 @@ const lightColors = {
   categoryAmber: '#A8660B',
   categoryPurple: '#7A4B8F',
   categoryGray: '#4A5850',
+  /** No viene del mockup: fondo oscurecido detrás de los diálogos. */
+  scrim: 'rgba(21,32,27,0.5)',
 } as const;
 
 // Valores marcados "estimado" no estaban visibles en las pantallas extraídas del mockup;
@@ -75,6 +79,7 @@ const darkColors = {
   categoryAmber: '#D99A3A', // estimado
   categoryPurple: '#B089C2', // estimado
   categoryGray: 'rgba(255,255,255,0.6)', // estimado
+  scrim: 'rgba(0,0,0,0.6)', // no viene del mockup
 } as const;
 
 export const palettes = { light: lightColors, dark: darkColors };

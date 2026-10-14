@@ -2,14 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { ThemeModeContext, type ThemeMode, type ThemeModeContextValue } from '@/shared/theme/themeMode.context';
+import type { KeyValueStorage } from '@/shared/types/key-value-storage.types';
 
 const STORAGE_KEY = 'theme-mode';
 const DEFAULT_MODE: ThemeMode = 'light';
-
-interface KeyValueStorage {
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-}
 
 interface ThemeModeProviderProps {
   children: ReactNode;
