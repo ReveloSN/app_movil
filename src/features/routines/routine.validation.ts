@@ -1,3 +1,5 @@
+import { MAX_TRIGGERS } from '@/features/triggers/trigger.validation';
+
 import type { RoutineDraft, RoutineValidationErrors } from './routines.types';
 
 export const ROUTINE_NAME_MAX_LENGTH = 24;
@@ -5,7 +7,7 @@ export const ITEM_LABEL_MAX_LENGTH = 32;
 export const MIN_ITEMS = 1;
 export const MAX_ITEMS = 12;
 
-export function validateRoutineDraft({ name, items }: RoutineDraft): RoutineValidationErrors {
+export function validateRoutineDraft({ name, items, triggers = [] }: RoutineDraft): RoutineValidationErrors {
   const errors: RoutineValidationErrors = {};
   const trimmedName = name.trim();
 
@@ -28,6 +30,8 @@ export function validateRoutineDraft({ name, items }: RoutineDraft): RoutineVali
     else if (trimmed.length > ITEM_LABEL_MAX_LENGTH) itemLabels[index] = `Máximo ${ITEM_LABEL_MAX_LENGTH} caracteres.`;
   });
   if (Object.keys(itemLabels).length > 0) errors.itemLabels = itemLabels;
+
+  if (triggers.length > MAX_TRIGGERS) errors.triggers = `Máximo ${MAX_TRIGGERS} avisos por rutina.`;
 
   return errors;
 }

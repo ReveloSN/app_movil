@@ -4,28 +4,36 @@ import { appRepositories } from '@/db/app.repositories';
 import { useAuth } from '@/features/auth/AuthProvider';
 import type { Routine } from '@/shared/types/routine.types';
 
+import { deleteRoutineCascade, type RoutineDeleteDeps } from './routine-delete.service';
+import { updateRoutineWithItems, type RoutineOriginal } from './routine-edit.service';
 import { createRoutineWithItems, type RoutineServiceDeps } from './routine.service';
 import { hasValidationErrors, validateRoutineDraft } from './routine.validation';
 import { RoutinesContext } from './routines.context';
-import type { CreateRoutineResult, RoutineDraft, RoutinesContextValue } from './routines.types';
+import type { DeleteRoutineResult, RoutineDraft, RoutinesContextValue, SaveRoutineResult } from './routines.types';
 
 const LOAD_ERROR = 'No pudimos cargar tus rutinas. Revisa tu conexión e inténtalo de nuevo.';
 const SAVE_ERROR = 'No se pudo guardar la rutina. Revisa tu conexión e inténtalo de nuevo.';
+const DELETE_ERROR = 'No se pudo eliminar la rutina. Revisa tu conexión e inténtalo de nuevo.';
 
-const defaultRepositories: RoutineServiceDeps = {
+type RoutinesRepositories = RoutineServiceDeps & RoutineDeleteDeps;
+
+const defaultRepositories: RoutinesRepositories = {
   routines: appRepositories.routines,
   items: appRepositories.items,
+  triggers: appRepositories.triggers,
+  homeNetworks: appRepositories.homeNetworks,
+  records: appRepositories.records,
 };
 
 interface RoutinesProviderProps {
   children: ReactNode;
   /** Inyectable para tests; por defecto los repositorios de Supabase. */
-  repositories?: RoutineServiceDeps;
+  repositories?: RoutinesRepositories;
 }
 
 export function RoutinesProvider({ children, repositories = defaultRepositories }: RoutinesProviderProps) {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? null;
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(userId !== null);
@@ -77,14 +85,14 @@ export function RoutinesProvider({ children, repositories = defaultRepositories 
   }, [userId, fetchRoutines]);
 
   const createRoutine = useCallback(
-    async (draft: RoutineDraft): Promise<CreateRoutineResult> => {
+    async (draft: RoutineDraft): Promise<SaveRoutineResult> => {
       const errors = validateRoutineDraft(draft);
       if (hasValidationErrors(errors)) return { status: 'invalid', errors };
 
       try {
         const routine = await createRoutineWithItems(repositories, draft);
         setRoutines((current) => [...current, routine]);
-        return { status: 'created', routine };
+        return { status: 'saved', routine };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.create]', cause);
         return { status: 'failed', error: SAVE_ERROR };
@@ -93,9 +101,42 @@ export function RoutinesProvider({ children, repositories = defaultRepositories 
     [repositories],
   );
 
+  const updateRoutine = useCallback(
+    async (routineId: string, draft: RoutineDraft, original: RoutineOriginal): Promise<SaveRoutineResult> => {
+      const errors = validateRoutineDraft(draft);
+      if (hasValidationErrors(errors)) return { status: 'invalid', errors };
+
+      try {
+        const routine = await updateRoutineWithItems(repositories, routineId, draft, original);
+        setRoutines((current) => current.map((item) => (item.id === routine.id ? routine : item)));
+        return { status: 'saved', routine };
+      } catch (cause) {
+        if (__DEV__) console.warn('[routines.update]', cause);
+        return { status: 'failed', error: SAVE_ERROR };
+      }
+    },
+    [repositories],
+  );
+
+  const deleteRoutine = useCallback(
+    async (routineId: string): Promise<DeleteRoutineResult> => {
+      try {
+        const how = await deleteRoutineCascade(repositories, routineId);
+        // Deja ver en desarrollo si la base borró en cascada o hubo que borrar a mano.
+        if (__DEV__) console.info('[routines.delete] dependencias:', how);
+        setRoutines((current) => current.filter((item) => item.id !== routineId));
+        return { status: 'deleted' };
+      } catch (cause) {
+        if (__DEV__) console.warn('[routines.delete]', cause);
+        return { status: 'failed', error: DELETE_ERROR };
+      }
+    },
+    [repositories],
+  );
+
   const value = useMemo<RoutinesContextValue>(
-    () => ({ routines, loading, error, refresh, createRoutine }),
-    [routines, loading, error, refresh, createRoutine],
+    () => ({ routines, loading, error, refresh, createRoutine, updateRoutine, deleteRoutine }),
+    [routines, loading, error, refresh, createRoutine, updateRoutine, deleteRoutine],
   );
 
   return <RoutinesContext.Provider value={value}>{children}</RoutinesContext.Provider>;

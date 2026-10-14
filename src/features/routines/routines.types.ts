@@ -1,9 +1,14 @@
+import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 import type { Routine } from '@/shared/types/routine.types';
+
+import type { RoutineOriginal } from './routine-edit.service';
 
 /** Valor guardado en items.type. */
 export type ItemKind = 'carry' | 'do' | 'check';
 
 export interface ItemDraft {
+  /** Id del ítem guardado (solo en edición). */
+  id?: string;
   label: string;
   kind: ItemKind;
   critical: boolean;
@@ -11,7 +16,11 @@ export interface ItemDraft {
 
 export interface RoutineDraft {
   name: string;
+  /** Nombre de ícono de Ionicons (ej. el de una plantilla). Sin él, no se envía y la rutina queda como hasta ahora. */
+  icon?: string;
   items: ItemDraft[];
+  /** Avisos configurados en P06 (0–3). En edición, la clave de los ya guardados es su id. */
+  triggers?: TriggerDraftEntry[];
 }
 
 export interface RoutineValidationErrors {
@@ -20,17 +29,24 @@ export interface RoutineValidationErrors {
   items?: string;
   /** Error de etiqueta por posición del ítem. */
   itemLabels?: Record<number, string>;
+  /** Cantidad de avisos. */
+  triggers?: string;
 }
 
-export type CreateRoutineResult =
-  | { status: 'created'; routine: Routine }
+/** Resultado de crear o editar una rutina. */
+export type SaveRoutineResult =
+  | { status: 'saved'; routine: Routine }
   | { status: 'invalid'; errors: RoutineValidationErrors }
   | { status: 'failed'; error: string };
+
+export type DeleteRoutineResult = { status: 'deleted' } | { status: 'failed'; error: string };
 
 export interface RoutinesContextValue {
   routines: Routine[];
   loading: boolean;
   error: string | null;
   refresh(): Promise<void>;
-  createRoutine(draft: RoutineDraft): Promise<CreateRoutineResult>;
+  createRoutine(draft: RoutineDraft): Promise<SaveRoutineResult>;
+  updateRoutine(routineId: string, draft: RoutineDraft, original: RoutineOriginal): Promise<SaveRoutineResult>;
+  deleteRoutine(routineId: string): Promise<DeleteRoutineResult>;
 }

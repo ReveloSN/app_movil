@@ -1,37 +1,58 @@
 import { useMemo, useState } from 'react';
 
+import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
+
 import { DEFAULT_ITEM_KIND } from './item-kinds';
 import { MAX_ITEMS, validateRoutineDraft } from './routine.validation';
-import type { CreateRoutineResult, ItemDraft, RoutineDraft, RoutineValidationErrors } from './routines.types';
+import type { ItemDraft, RoutineDraft, RoutineValidationErrors, SaveRoutineResult } from './routines.types';
 
-/** Ítem del formulario con una clave estable para React (no se guarda). */
+/** Ítem del formulario con una clave estable para React (no se guarda). En edición trae su `id`. */
 export interface ItemFormEntry extends ItemDraft {
   key: string;
 }
 
 interface UseRoutineFormOptions {
-  createRoutine(draft: RoutineDraft): Promise<CreateRoutineResult>;
+  /** Crea o actualiza según el modo de P04. */
+  save(draft: RoutineDraft): Promise<SaveRoutineResult>;
   onSaved(): void;
+  /** Borrador precargado (ej. desde una plantilla). Solo se lee al montar. */
+  initialDraft?: RoutineDraft;
+  /** Avisos configurados en P06 (viven fuera del formulario: los edita otra pantalla). */
+  triggers?: readonly TriggerDraftEntry[];
 }
 
 const NO_ERRORS: RoutineValidationErrors = {};
+const NO_TRIGGERS: readonly TriggerDraftEntry[] = [];
 
 // Contador de módulo: solo genera claves únicas para React, no participa en el render.
 let entrySeed = 0;
-const newEntry = (): ItemFormEntry => ({ key: `item-${entrySeed++}`, label: '', kind: DEFAULT_ITEM_KIND, critical: false });
+const newEntry = (item: ItemDraft = { label: '', kind: DEFAULT_ITEM_KIND, critical: false }): ItemFormEntry => ({
+  key: `item-${entrySeed++}`,
+  ...item,
+});
+
+const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] =>
+  draft && draft.items.length > 0 ? draft.items.map(newEntry) : [newEntry()];
 
 /** Estado local del formulario de rutina. Lo escrito se conserva si el guardado falla. */
-export function useRoutineForm({ createRoutine, onSaved }: UseRoutineFormOptions) {
-  const [name, setName] = useState('');
-  const [items, setItems] = useState<ItemFormEntry[]>(() => [newEntry()]);
+export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS }: UseRoutineFormOptions) {
+  const [name, setName] = useState(initialDraft?.name ?? '');
+  // Sin selector de ícono todavía (04-2): solo se conserva el que venga precargado.
+  const [icon] = useState(initialDraft?.icon);
+  const [items, setItems] = useState<ItemFormEntry[]>(() => initialEntries(initialDraft));
   // Los errores se muestran tras el primer intento de guardar y luego se actualizan en vivo.
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const draft = useMemo<RoutineDraft>(
-    () => ({ name, items: items.map(({ label, kind, critical }) => ({ label, kind, critical })) }),
-    [name, items],
+    () => ({
+      name,
+      icon,
+      items: items.map(({ id, label, kind, critical }) => ({ id, label, kind, critical })),
+      triggers: [...triggers],
+    }),
+    [name, icon, items, triggers],
   );
   const errors = useMemo(() => (attempted ? validateRoutineDraft(draft) : NO_ERRORS), [attempted, draft]);
 
@@ -55,10 +76,10 @@ export function useRoutineForm({ createRoutine, onSaved }: UseRoutineFormOptions
     setSubmitError(null);
 
     setSubmitting(true);
-    const result = await createRoutine(draft);
+    const result = await save(draft);
     setSubmitting(false);
 
-    if (result.status === 'created') onSaved();
+    if (result.status === 'saved') onSaved();
     else if (result.status === 'failed') setSubmitError(result.error);
     // 'invalid': los errores ya se ven porque attempted = true.
   }

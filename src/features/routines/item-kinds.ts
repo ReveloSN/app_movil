@@ -9,3 +9,6 @@ export const ITEM_KIND_OPTIONS: readonly SegmentOption<ItemKind>[] = [
   { value: 'do', label: 'Hacer' },
   { value: 'check', label: 'Comprobar' },
 ];
+
+export const isItemKind = (value: string | null): value is ItemKind =>
+  ITEM_KIND_OPTIONS.some((option) => option.value === value);

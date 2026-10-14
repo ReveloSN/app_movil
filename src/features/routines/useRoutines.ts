@@ -4,7 +4,7 @@ import { RoutinesContext } from './routines.context';
 import type { RoutinesContextValue } from './routines.types';
 
 /**
- * Rutinas del usuario: { routines, loading, error, refresh, createRoutine }.
+ * Rutinas del usuario: { routines, loading, error, refresh, createRoutine, updateRoutine, deleteRoutine }.
  * El estado es compartido (RoutinesProvider), así una rutina creada en /routine/new
  * aparece en la lista sin recargar.
  */
