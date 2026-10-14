@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
 import { RequireSession } from '@/features/auth/RequireSession';
+import { OnboardingGate } from '@/features/onboarding/OnboardingGate';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
 
 export default function TabsLayout() {
@@ -9,6 +10,8 @@ export default function TabsLayout() {
 
   return (
     <RequireSession>
+      {/* Primer uso (sin rutinas y sin haber pasado por P01): lleva al onboarding. */}
+      <OnboardingGate>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
@@ -43,6 +46,7 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
+      </OnboardingGate>
     </RequireSession>
   );
 }
