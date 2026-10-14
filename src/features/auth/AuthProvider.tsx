@@ -1,11 +1,13 @@
-import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
 import { supabase as defaultClient } from '@/shared/lib/supabase';
 
-import { toAuthErrorMessage } from './auth.errors';
-import type { AuthContextValue, Credentials } from './auth.types';
+import { toAuthErrorMessage, toGuestErrorMessage } from './auth.errors';
+import { nextUserForEvent, resolveStartupUser, toAuthUser } from './auth.session';
+import type { AuthContextValue, AuthUser, Credentials } from './auth.types';
+import { clearLastUser, loadLastUser, saveLastUser } from './lastUser.store';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -15,24 +17,30 @@ interface AuthProviderProps {
   client?: SupabaseClient;
 }
 
+const warn = (scope: string) => (cause: unknown) => {
+  if (__DEV__) console.warn(`[auth.${scope}]`, cause);
+};
+
 export function AuthProvider({ children, client = defaultClient }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    client.auth
-      .getSession()
-      .then(({ data }) => {
-        if (mounted) setSession(data.session);
+    Promise.all([client.auth.getSession(), loadLastUser().catch(() => null)])
+      .then(([{ data, error }, lastKnown]) => {
+        if (mounted) setUser(resolveStartupUser({ session: data.session, error }, lastKnown));
       })
       .finally(() => {
         if (mounted) setLoading(false);
       });
 
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
+    const { data: listener } = client.auth.onAuthStateChange((event, nextSession) => {
+      setUser((current) => nextUserForEvent(event, nextSession, current));
+      // Se recuerda quién tenía sesión para poder seguir sin conexión la próxima vez.
+      if (event === 'SIGNED_OUT') clearLastUser().catch(warn('clearLastUser'));
+      else if (nextSession) saveLastUser(toAuthUser(nextSession)).catch(warn('saveLastUser'));
     });
 
     return () => {
@@ -41,8 +49,10 @@ export function AuthProvider({ children, client = defaultClient }: AuthProviderP
     };
   }, [client]);
 
-  // El refresco automático del token solo debe correr con la app en primer plano.
+  // El refresco automático del token solo debe correr con la app en primer plano. Al volver la
+  // conexión, renueva la sesión que no se pudo renovar sin red.
   useEffect(() => {
+    if (AppState.currentState === 'active') client.auth.startAutoRefresh();
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') client.auth.startAutoRefresh();
       else client.auth.stopAutoRefresh();
@@ -67,14 +77,19 @@ export function AuthProvider({ children, client = defaultClient }: AuthProviderP
     [client],
   );
 
+  const signInAsGuest = useCallback(async () => {
+    const { error } = await client.auth.signInAnonymously();
+    return { error: error ? toGuestErrorMessage(error) : null };
+  }, [client]);
+
   const signOut = useCallback(async () => {
     const { error } = await client.auth.signOut();
     return { error: error ? toAuthErrorMessage(error) : null };
   }, [client]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, loading, signIn, signUp, signOut }),
-    [session, loading, signIn, signUp, signOut],
+    () => ({ user, loading, signIn, signUp, signInAsGuest, signOut }),
+    [user, loading, signIn, signUp, signInAsGuest, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

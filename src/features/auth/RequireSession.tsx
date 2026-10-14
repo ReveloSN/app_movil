@@ -5,12 +5,12 @@ import { LoadingState } from '@/components/molecules/LoadingState';
 
 import { useAuth } from './AuthProvider';
 
-/** Guarda de rutas privadas: sin sesión redirige a login. */
+/** Guarda de rutas privadas: sin usuario redirige a login (sin red se sigue con el último usuario conocido). */
 export function RequireSession({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) return <LoadingState />;
-  if (!session) return <Redirect href="/(auth)/login" />;
+  if (!user) return <Redirect href="/(auth)/login" />;
 
   return children;
 }

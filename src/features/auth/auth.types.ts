@@ -1,8 +1,14 @@
-import type { Session } from '@supabase/supabase-js';
-
 export interface Credentials {
   email: string;
   password: string;
+}
+
+/** Quién usa la app. Existe también sin conexión, aunque la sesión de Supabase no se haya podido renovar. */
+export interface AuthUser {
+  id: string;
+  /** null para un invitado (cuenta anónima). */
+  email: string | null;
+  isAnonymous: boolean;
 }
 
 /** Resultado de una operación de autenticación: `error` es un mensaje listo para mostrar. */
@@ -16,9 +22,11 @@ export interface SignUpResult extends AuthResult {
 }
 
 export interface AuthContextValue {
-  session: Session | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn(credentials: Credentials): Promise<AuthResult>;
   signUp(credentials: Credentials): Promise<SignUpResult>;
+  /** Entra sin cuenta (usuario anónimo de Supabase). Necesita internet solo la primera vez. */
+  signInAsGuest(): Promise<AuthResult>;
   signOut(): Promise<AuthResult>;
 }
