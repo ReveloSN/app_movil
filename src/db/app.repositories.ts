@@ -9,10 +9,11 @@ import { createTriggerRepository } from './repositories/trigger.repository';
 import { createVerificationRecordRepository } from './repositories/verification-record.repository';
 
 /**
- * Raíz de composición: único lugar que conecta los repositorios con el cliente real.
- * Hooks y servicios deben recibir el repositorio que necesitan (inyección), no importarlo de aquí.
+ * Raíz de composición de lo remoto: único lugar que conecta los repositorios con Supabase.
+ * La app lee y escribe en la copia local (features/local-data); esto lo usan el historial (que sigue
+ * siendo remoto) y, en la Fase 4, la sincronización.
  */
-export const appRepositories = {
+export const remoteRepositories = {
   routines: createRoutineRepository(supabase),
   items: createItemRepository(supabase),
   triggers: createTriggerRepository(supabase),
@@ -22,4 +23,4 @@ export const appRepositories = {
   homeNetworks: createHomeNetworkRepository(supabase),
 };
 
-export type AppRepositories = typeof appRepositories;
+export type RemoteRepositories = typeof remoteRepositories;
