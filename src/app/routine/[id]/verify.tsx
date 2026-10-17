@@ -9,6 +9,7 @@ import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { ProgressBar } from '@/components/atoms/ProgressBar';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
+import { TextButton } from '@/components/atoms/TextButton';
 import { ChecklistItemRow } from '@/components/molecules/ChecklistItemRow';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
@@ -21,6 +22,7 @@ import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
 import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
+import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
 import { useRoutines } from '@/features/routines/useRoutines';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -34,6 +36,8 @@ export default function VerifyScreen() {
   const routineName = useRoutines().routines.find((routine) => routine.id === id)?.name ?? '';
   const { items, loading, error, retry, toggleItem, progress, startedAt } = useChecklist(id);
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
+  const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
+  const busy = finishing || postponement.postponing;
   const [dialog, setDialog] = useState<Dialog>(null);
   // true cuando la salida ya está decidida (terminó o confirmó "Salir"): no se vuelve a preguntar.
   const leaving = useRef(false);
@@ -53,6 +57,14 @@ export default function VerifyScreen() {
     });
     leaving.current = true;
     router.replace({ pathname: '/routine/[id]/summary', params: toSummaryParams(id, summary) });
+  }
+
+  /** Posponer: cierra el modal y vuelve al origen; los recordatorios avisan en N minutos. */
+  async function postpone() {
+    if (!(await postponement.postpone())) return; // El error se muestra sobre los botones.
+    leaving.current = true;
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   }
 
   function handleDone() {
@@ -95,8 +107,16 @@ export default function VerifyScreen() {
       />
       <View style={styles.footer}>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
-        <PrimaryButton label={copy.DONE_LABEL} onPress={handleDone} loading={finishing} />
-        <SecondaryButton label={copy.SKIP_TODAY_LABEL} onPress={() => void complete('skip')} disabled={finishing} />
+        {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
+        {/* 07-6: primaria · secundaria · terciaria (Documento de Jerarquía). */}
+        <PrimaryButton label={copy.DONE_LABEL} onPress={handleDone} loading={finishing} disabled={postponement.postponing} />
+        <SecondaryButton
+          icon="time-outline"
+          label={copy.postponeLabel(postponement.snoozeMinutes)}
+          onPress={() => void postpone()}
+          disabled={busy}
+        />
+        <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => void complete('skip')} disabled={busy} />
       </View>
     </>
   );
