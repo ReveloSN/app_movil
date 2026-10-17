@@ -12,6 +12,7 @@ import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
 import { useRoutines } from '@/features/routines/useRoutines';
+import { PendingSyncIndicator } from '@/features/sync/PendingSyncIndicator';
 import { clearFlashMessage, useFlashMessage } from '@/shared/events/flashMessage';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -32,6 +33,8 @@ export default function RoutinesScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Cambios sin subir o con error: ícono + texto. */}
+      <PendingSyncIndicator style={styles.syncStatus} />
       {routines.length === 0 ? (
         <EmptyState icon="checkbox-outline" message={EMPTY_MESSAGE} />
       ) : (
@@ -81,6 +84,10 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
     },
     messages: {
       gap: spacing.md,
+    },
+    syncStatus: {
+      marginHorizontal: spacing.xl,
+      marginTop: spacing.lg,
     },
     list: {
       gap: spacing.md,
