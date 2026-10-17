@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { usePreventRemove, type NavigationAction } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
@@ -24,8 +25,9 @@ import { useChecklist } from '@/features/checklist/useChecklist';
 import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
+import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
-import type { AppTheme } from '@/shared/theme/useAppTheme';
+import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 type Dialog = { kind: 'critical'; label: string; intent: FinishIntent } | { kind: 'exit'; action: NavigationAction } | null;
@@ -34,7 +36,10 @@ export default function VerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const styles = useThemedStyles(createStyles);
-  const routineName = useRoutines().routines.find((routine) => routine.id === id)?.name ?? '';
+  const { colors, iconSizes } = useAppTheme();
+  const routine = useRoutines().routines.find((candidate) => candidate.id === id);
+  const routineName = routine?.name ?? '';
+  const accent = routineAccent(colors, routine?.color);
   const { items, loading, error, retry, toggleItem, progress, startedAt } = useChecklist(id);
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
@@ -139,6 +144,10 @@ export default function VerifyScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
+          {/* Ícono con el color de la rutina: la identifica de un vistazo (el nombre va al lado). */}
+          <View style={[styles.badge, { backgroundColor: accent.tint }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <Ionicons name={resolveRoutineIcon(routine?.icon)} size={iconSizes.lg} color={accent.color} />
+          </View>
           <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
             {routineName}
           </Text>
@@ -163,7 +172,7 @@ export default function VerifyScreen() {
   );
 }
 
-const createStyles = ({ colors, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
     screen: {
       flex: 1,
@@ -179,6 +188,13 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: spacing.sm,
+    },
+    badge: {
+      width: sizes.secondaryRowHeight,
+      height: sizes.secondaryRowHeight,
+      borderRadius: radii.full,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     title: {
       ...typography.h1,

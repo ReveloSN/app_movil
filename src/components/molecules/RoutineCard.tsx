@@ -12,8 +12,10 @@ interface RoutineCardProps {
   name: string;
   /** Nombre de ícono de Ionicons; si no es válido se usa uno genérico. */
   icon: string | null;
-  /** Color de la rutina (ya resuelto al tema). Sin él, el principal. */
+  /** Color de la rutina (ya resuelto al tema): franja e ícono. Sin él, el principal. */
   accentColor?: string;
+  /** Tinte del mismo color para el fondo del ícono. */
+  accentTint?: string;
   active: boolean;
   /** ISO 8601. */
   lastCompletedAt: string | null;
@@ -30,6 +32,7 @@ export function RoutineCard({
   name,
   icon,
   accentColor,
+  accentTint,
   active,
   lastCompletedAt,
   actionLabel,
@@ -44,7 +47,8 @@ export function RoutineCard({
   const lastCompletedText = lastCompleted ? `Última vez: ${lastCompleted}` : 'Aún no la has completado';
 
   return (
-    <View style={styles.card}>
+    // La franja y el ícono llevan el color de la rutina; el nombre y el ícono la identifican sin él.
+    <View style={[styles.card, { borderLeftColor: accentColor ?? colors.primary }]}>
       <Pressable
         style={({ pressed }) => [styles.summary, pressed && styles.pressed]}
         onPress={onPress}
@@ -54,7 +58,7 @@ export function RoutineCard({
         accessibilityHint={onPress ? pressHint : undefined}
         accessibilityLabel={`${name}. ${statusLabel}. ${lastCompletedText}.`}
       >
-        <View style={styles.iconCircle}>
+        <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
           <Ionicons name={toIoniconName(icon, 'checkbox-outline')} size={iconSizes.lg} color={accentColor ?? colors.primary} />
         </View>
         <View style={styles.body}>
@@ -77,6 +81,7 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       gap: spacing.lg,
       padding: spacing.lg,
       borderRadius: radii.xxl,
+      borderLeftWidth: spacing.xs,
       backgroundColor: colors.card,
     },
     summary: {
