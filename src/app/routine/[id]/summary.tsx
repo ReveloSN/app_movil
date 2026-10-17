@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
-import { COMPLETE_MESSAGE, partialMessage } from '@/features/checklist/checklist.copy';
+import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage } from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -40,12 +40,26 @@ export default function SummaryScreen() {
         {summary.omittedLabels.length > 0 ? (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Omitidos</Text>
-            {summary.omittedLabels.map((label, index) => (
-              <View key={`${label}-${index}`} style={styles.omittedRow}>
-                <Ionicons name="close-circle-outline" size={iconSizes.md} color={colors.textMuted} />
-                <Text style={styles.omittedLabel}>{label}</Text>
-              </View>
-            ))}
+            {summary.omittedLabels.map((label, index) => {
+              const critical = summary.omittedCriticalLabels.includes(label);
+              return (
+                <View
+                  key={`${label}-${index}`}
+                  style={styles.omittedRow}
+                  accessible
+                  accessibilityLabel={critical ? `${label}, ${CRITICAL_LABEL}` : label}
+                >
+                  <Ionicons name="close-circle-outline" size={iconSizes.md} color={colors.textMuted} />
+                  <Text style={styles.omittedLabel}>{label}</Text>
+                  {critical ? (
+                    <View style={styles.critical}>
+                      <Ionicons name="flag" size={iconSizes.sm} color={colors.criticalText} />
+                      <Text style={styles.criticalText}>{CRITICAL_LABEL}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
         ) : null}
 
@@ -115,6 +129,19 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       ...typography.body,
       color: colors.textPrimary,
       flex: 1,
+    },
+    critical: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radii.sm,
+      backgroundColor: colors.criticalBg,
+    },
+    criticalText: {
+      ...typography.caption,
+      color: colors.criticalText,
     },
     duration: {
       ...typography.bodyStrong,

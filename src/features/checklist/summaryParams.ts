@@ -9,6 +9,8 @@ export type SummaryParams = {
   duration: string;
   /** JSON con las etiquetas no marcadas. */
   omitted: string;
+  /** JSON con las etiquetas no marcadas que eran críticas. */
+  omittedCritical: string;
 };
 
 export const toSummaryParams = (routineId: string, summary: VerificationSummary): SummaryParams => ({
@@ -18,6 +20,7 @@ export const toSummaryParams = (routineId: string, summary: VerificationSummary)
   total: String(summary.total),
   duration: String(summary.durationSeconds),
   omitted: JSON.stringify(summary.omittedLabels),
+  omittedCritical: JSON.stringify(summary.omittedCriticalLabels),
 });
 
 const OUTCOMES: readonly VerificationOutcome[] = ['completed', 'partial', 'skipped'];
@@ -45,5 +48,6 @@ export function fromSummaryParams(params: Partial<Record<keyof SummaryParams, st
     total: toCount(params.total),
     durationSeconds: toCount(params.duration),
     omittedLabels: toLabels(params.omitted),
+    omittedCriticalLabels: toLabels(params.omittedCritical),
   };
 }

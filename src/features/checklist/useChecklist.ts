@@ -2,19 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ItemRepository } from '@/db/repositories/item.repository';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
-import type { Item } from '@/shared/types/item.types';
-
+import { toChecklistItems } from './checklist.items';
 import type { ChecklistItemState, ChecklistProgress } from './checklist.types';
 
 const LOAD_ERROR = 'No pudimos cargar los ítems de esta rutina.';
-
-const toState = (item: Item): ChecklistItemState => ({
-  id: item.id,
-  label: item.label,
-  icon: item.icon,
-  critical: item.critical,
-  checked: false,
-});
 
 /**
  * Ítems de una rutina para verificar, desde la copia local: abre igual sin conexión. Marcar/desmarcar es
@@ -42,7 +33,7 @@ export function useChecklist(
       (rows) => {
         if (!isLatest()) return;
         const now = Date.now();
-        setItems(rows.map(toState));
+        setItems(toChecklistItems(rows));
         setError(null);
         setLoading(false);
         setStartedAt((current) => current ?? now);

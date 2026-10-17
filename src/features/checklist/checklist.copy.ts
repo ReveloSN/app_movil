@@ -26,6 +26,8 @@ export const partialMessage = (checked: number, total: number, omitted: readonly
 export const criticalSkipMessage = (label: string) => `«${label}» es un ítem crítico. ¿Omitirlo de todas formas?`;
 export const CRITICAL_SKIP_CONFIRM = 'Omitir';
 export const CRITICAL_SKIP_CANCEL = 'Revisar';
+/** Marca de ítem crítico (07-4) para lector de pantalla y en el resumen. */
+export const CRITICAL_LABEL = 'crítico';
 
 // Salir de P07 con ítems marcados. Botones del brief; el mensaje NO viene del Documento de Contenido.
 export const EXIT_MESSAGE = 'Ya marcaste algunos ítems. ¿Salir sin terminar la verificación?';
