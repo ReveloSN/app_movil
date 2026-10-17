@@ -3,14 +3,9 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
-import { SecondaryButton } from '@/components/atoms/SecondaryButton';
-import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
-import { ColorPicker } from '@/components/molecules/ColorPicker';
-import { IconPicker } from '@/components/molecules/IconPicker';
-import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
@@ -25,14 +20,15 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
 
-import { resolveItemIcon } from './item-icons';
 import { ItemSuggestions } from './ItemSuggestions';
-import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS, routineAccent } from './routine-appearance';
+import { RoutineAppearanceFields } from './RoutineAppearanceFields';
+import { RoutineItemsSection } from './RoutineItemsSection';
+import { routineAccent } from './routine-appearance';
 import { savedRoutineMessage } from './routine-feedback';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
 import { ItemEditSheet } from './ItemEditSheet';
-import { MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
+import { ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
 import type { RoutineDraft } from './routines.types';
 import { useFirstErrorFocus } from './useFirstErrorFocus';
 import { useRoutineDeletion } from './useRoutineDeletion';
@@ -135,55 +131,16 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         />
 
         {/* 04-2 */}
-        <SectionLabel label={copy.ICON_LABEL} />
-        <IconPicker
-          accessibilityLabel={copy.ICON_LABEL}
-          options={ROUTINE_ICONS}
-          value={resolveRoutineIcon(form.icon)}
-          onChange={form.setIcon}
-          accentColor={colors[resolveRoutineColor(form.color).token]}
-        />
-        <SectionLabel label={copy.COLOR_LABEL} />
-        <ColorPicker
-          accessibilityLabel={copy.COLOR_LABEL}
-          options={ROUTINE_COLORS.map((option) => ({ key: option.key, label: option.label, color: colors[option.token] }))}
-          value={resolveRoutineColor(form.color).key}
-          onChange={form.setColor}
-        />
+        <RoutineAppearanceFields icon={form.icon} color={form.color} onIconChange={form.setIcon} onColorChange={form.setColor} />
 
-        <View onLayout={onItemsLayout}>
-          <SectionLabel
-            label={copy.ITEMS_SECTION_TITLE}
-            trailing={`${form.items.length}/${MAX_ITEMS}`}
-            accessibilityLabel={`${copy.ITEMS_SECTION_TITLE}, ${form.items.length} de ${MAX_ITEMS}`}
-          />
-        </View>
-        {form.errors.items ? <StatusMessage tone="error" message={form.errors.items} /> : null}
-
-        {form.items.length === 0 ? <StatusMessage tone="info" message={copy.EMPTY_ITEMS_MESSAGE} /> : null}
-        {form.items.map((item, index) => (
-          <ItemSummaryRow
-            key={item.key}
-            label={item.label}
-            icon={resolveItemIcon(item.icon).icon}
-            critical={item.critical}
-            criticalLabel={copy.CRITICAL_LABEL}
-            note={item.note}
-            error={form.errors.itemLabels?.[index]}
-            onPress={() => setEditingItem({ entry: item, isNew: false })}
-            editHint={copy.editItemHint(item.label)}
-            onRemove={() => form.removeItem(item.key)}
-            removeLabel={copy.removeItemLabel(item.label)}
-          />
-        ))}
-
-        {/* ER-05: al llegar al máximo, se explica por qué ya no se puede añadir. */}
-        {form.canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}
-        <SecondaryButton
-          icon="add"
-          label={copy.ADD_ITEM_LABEL}
-          onPress={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
-          disabled={!form.canAddItem}
+        <RoutineItemsSection
+          items={form.items}
+          errors={form.errors}
+          canAddItem={form.canAddItem}
+          onLayout={onItemsLayout}
+          onEdit={(entry) => setEditingItem({ entry, isNew: false })}
+          onAdd={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
+          onRemove={form.removeItem}
         />
 
         {/* 04-4 */}
