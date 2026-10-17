@@ -1,21 +1,26 @@
 import type { ItemDraft } from './routines.types';
 
-const suggestion = (label: string, kind: ItemDraft['kind'], critical = false): ItemDraft => ({ label, kind, critical });
+const suggestion = (label: string, kind: ItemDraft['kind'], icon: string, critical = false): ItemDraft => ({
+  label,
+  kind,
+  critical,
+  icon,
+});
 
 /** 04-4: lo que más se olvida al salir (mismo vocabulario que las plantillas). Etiquetas ≤ 32. */
 export const ITEM_SUGGESTIONS: readonly ItemDraft[] = [
-  suggestion('Llaves', 'carry', true),
-  suggestion('Billetera', 'carry'),
-  suggestion('Celular cargado', 'carry'),
-  suggestion('Cargador', 'carry'),
-  suggestion('Estufa apagada', 'check', true),
-  suggestion('Puerta con seguro', 'check', true),
-  suggestion('Luces apagadas', 'check'),
-  suggestion('Ventanas cerradas', 'check'),
-  suggestion('Audífonos', 'carry'),
-  suggestion('Gafas', 'carry'),
-  suggestion('Paraguas', 'carry'),
-  suggestion('Botella de agua', 'carry'),
+  suggestion('Llaves', 'carry', 'key-outline', true),
+  suggestion('Billetera', 'carry', 'wallet-outline'),
+  suggestion('Celular cargado', 'carry', 'phone-portrait-outline'),
+  suggestion('Cargador', 'carry', 'battery-charging-outline'),
+  suggestion('Estufa apagada', 'check', 'flame-outline', true),
+  suggestion('Puerta con seguro', 'check', 'lock-closed-outline', true),
+  suggestion('Luces apagadas', 'check', 'bulb-outline'),
+  suggestion('Ventanas cerradas', 'check', 'lock-closed-outline'),
+  suggestion('Audífonos', 'carry', 'headset-outline'),
+  suggestion('Gafas', 'carry', 'glasses-outline'),
+  suggestion('Paraguas', 'carry', 'umbrella-outline'),
+  suggestion('Botella de agua', 'carry', 'water-outline'),
 ];
 
 const MAX_SHOWN = 4;

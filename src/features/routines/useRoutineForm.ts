@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 
 import { DEFAULT_ITEM_KIND } from './item-kinds';
+import { sortCriticalFirst } from './item-order';
 import { resolveRoutineColor, resolveRoutineIcon } from './routine-appearance';
 import { draftFingerprint, toRoutineDraft } from './routine.draft';
 import { MAX_ITEMS, validateRoutineDraft } from './routine.validation';
@@ -33,8 +34,8 @@ const newEntry = (item: ItemDraft = { label: '', kind: DEFAULT_ITEM_KIND, critic
   ...item,
 });
 
-const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] =>
-  draft && draft.items.length > 0 ? draft.items.map(newEntry) : [newEntry()];
+// Una rutina nueva empieza sin ítems (EV-03); cada ítem se crea desde la hoja P05.
+const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] => (draft ? draft.items.map(newEntry) : []);
 
 /** Estado local del formulario de rutina. Lo escrito se conserva si el guardado falla. */
 export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS }: UseRoutineFormOptions) {
@@ -65,26 +66,29 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
   const errors = useMemo(() => (attempted ? validateRoutineDraft(draft) : NO_ERRORS), [attempted, draft]);
 
   const canAddItem = items.length < MAX_ITEMS;
+  // En pantalla, los críticos arriba: el mismo orden con el que se guardan.
+  const sortedItems = useMemo(() => sortCriticalFirst(items), [items]);
 
-  function addItem() {
-    if (canAddItem) setItems((current) => [...current, newEntry()]);
+  /** Ítem en blanco para abrir P05 en modo "nuevo" (aún no está en la lista). */
+  const blankItem = () => newEntry();
+
+  /** Guarda lo editado en P05: reemplaza el ítem con esa clave o, si es nuevo y hay espacio, lo añade. */
+  function saveItem(entry: ItemFormEntry) {
+    setItems((current) => {
+      if (current.some((item) => item.key === entry.key)) {
+        return current.map((item) => (item.key === entry.key ? entry : item));
+      }
+      return current.length < MAX_ITEMS ? [...current, entry] : current;
+    });
   }
 
-  /** Sugerencia (04-4): ocupa el primer ítem vacío o se añade al final si hay espacio. */
+  /** Sugerencia (04-4): se añade al final si hay espacio. */
   function addSuggested(item: ItemDraft) {
-    setItems((current) => {
-      const empty = current.findIndex((entry) => !entry.label.trim());
-      if (empty >= 0) return current.map((entry, index) => (index === empty ? { ...entry, ...item, id: entry.id } : entry));
-      return current.length < MAX_ITEMS ? [...current, newEntry(item)] : current;
-    });
+    setItems((current) => (current.length < MAX_ITEMS ? [...current, newEntry(item)] : current));
   }
 
   function removeItem(key: string) {
     setItems((current) => current.filter((item) => item.key !== key));
-  }
-
-  function updateItem(key: string, changes: Partial<ItemDraft>) {
-    setItems((current) => current.map((item) => (item.key === key ? { ...item, ...changes } : item)));
   }
 
   /** Devuelve true si se guardó. */
@@ -103,7 +107,23 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     return result.status === 'saved';
   }
 
-  const hasRoom = canAddItem || items.some((entry) => !entry.label.trim());
-
-  return { name, setName, icon, setIcon, color, setColor, items, addItem, addSuggested, hasRoom, removeItem, updateItem, canAddItem, errors, submitting, submitError, submit, dirty };
+  return {
+    name,
+    setName,
+    icon,
+    setIcon,
+    color,
+    setColor,
+    items: sortedItems,
+    blankItem,
+    saveItem,
+    addSuggested,
+    removeItem,
+    canAddItem,
+    errors,
+    submitting,
+    submitError,
+    submit,
+    dirty,
+  };
 }

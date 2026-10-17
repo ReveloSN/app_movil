@@ -30,6 +30,8 @@ export async function createRoutineWithItems(deps: RoutineServiceDeps, draft: Ro
         label: item.label.trim(),
         type: item.kind,
         critical: item.critical,
+        icon: item.icon ?? null,
+        note: item.note?.trim() || null,
         sortOrder: index,
       }),
     ),

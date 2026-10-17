@@ -10,6 +10,23 @@ export const SAVE_CHANGES_LABEL = 'Guardar cambios';
 export const ADD_ITEM_LABEL = 'Añadir ítem';
 export const ITEMS_SECTION_TITLE = 'Ítems';
 
+/** EV-03 */
+export const EMPTY_ITEMS_MESSAGE = 'Añade lo que no puede faltar. Con 3 o 4 cosas basta.';
+
+// P05 (hoja "Editar ítem"). Sin código en el Documento de Contenido: propuestos, pendientes de validar.
+export const NEW_ITEM_TITLE = 'Nuevo ítem';
+export const EDIT_ITEM_TITLE = 'Editar ítem';
+export const CLOSE_ITEM_LABEL = 'Cerrar';
+export const ITEM_LABEL_FIELD = '¿Qué es?';
+export const ITEM_ICON_GROUP_LABEL = 'Ícono del ítem';
+export const ITEM_KIND_LABEL = 'Tipo';
+export const CRITICAL_SWITCH_LABEL = 'Marcar como crítico';
+export const CRITICAL_LABEL = 'Crítico';
+export const ITEM_NOTE_FIELD = 'Nota';
+export const ITEM_NOTE_PLACEHOLDER = 'Opcional. Ej. En el cajón de la entrada';
+export const editItemHint = (label: string) => `Edita «${label}»`;
+export const removeItemLabel = (label: string) => `Quitar «${label}»`;
+
 // 04-2. Sin código en el Documento de Contenido: propuestos, pendientes de validar.
 export const ICON_LABEL = 'Ícono';
 export const COLOR_LABEL = 'Color';

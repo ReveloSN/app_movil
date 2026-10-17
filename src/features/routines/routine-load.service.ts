@@ -36,6 +36,8 @@ export async function loadRoutineForEdit(deps: RoutineLoadDeps, routine: Routine
     label: item.label,
     kind: isItemKind(item.type) ? item.type : DEFAULT_ITEM_KIND,
     critical: item.critical,
+    icon: item.icon ?? undefined,
+    note: item.note ?? undefined,
   }));
 
   const networksById = new Map(networks.map((network) => [network.id, network]));

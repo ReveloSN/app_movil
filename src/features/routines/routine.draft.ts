@@ -1,6 +1,8 @@
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 import { stableStringify } from '@/shared/utils/stableStringify';
 
+import { sortCriticalFirst } from './item-order';
+
 import type { ItemDraft, RoutineDraft } from './routines.types';
 
 /** Lo que el formulario de P04 tiene en pantalla. Los ítems traen su clave de React, que no se guarda. */
@@ -12,12 +14,12 @@ export interface RoutineFormState {
   triggers: readonly TriggerDraftEntry[];
 }
 
-/** Borrador para guardar: los ítems sin su clave de React. */
+/** Borrador para guardar: los ítems sin su clave de React y con los críticos arriba (así se guarda el orden). */
 export const toRoutineDraft = ({ name, icon, color, items, triggers }: RoutineFormState): RoutineDraft => ({
   name,
   icon,
   color,
-  items: items.map(({ key: _key, ...item }) => item),
+  items: sortCriticalFirst(items).map(({ key: _key, ...item }) => item),
   triggers: [...triggers],
 });
 
