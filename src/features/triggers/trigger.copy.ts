@@ -57,6 +57,6 @@ export const CONFIGURE_TRIGGER_TITLE = 'Configurar aviso';
 export const DETECT_NETWORK_LABEL = 'Detectar red actual';
 export const detectedNetworkMessage = (ssid: string) => `Estás conectado a «${ssid}».`;
 export const applyNetworkLabel = (ssid: string) => `Usar «${ssid}»`;
-export const NOT_ON_WIFI_MESSAGE = 'No estás conectado a un Wi-Fi. Conéctate a la red y vuelve a detectar, o escribe su nombre.';
-export const HIDDEN_SSID_MESSAGE = 'El teléfono no deja ver el nombre de esta red. Escríbelo a mano.';
+/** ER-03: no hay Wi-Fi, o el teléfono no deja leer su nombre (con permiso y ubicación ya activos). */
+export const NETWORK_NOT_FOUND_MESSAGE = 'No encontramos tu red. Conéctate a ella y vuelve a intentar.';
 export const WINDOW_SWITCH_LABEL = 'Solo en una franja horaria';
