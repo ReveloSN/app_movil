@@ -19,9 +19,8 @@ import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard'
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
-import { routineSavedMessage } from '@/features/triggers/trigger.copy';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
-import { showFlashMessage } from '@/shared/events/flashMessage';
+import { useToast } from '@/features/feedback/toast.context';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
@@ -29,6 +28,7 @@ import type { Routine } from '@/shared/types/routine.types';
 import { resolveItemIcon } from './item-icons';
 import { ItemSuggestions } from './ItemSuggestions';
 import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
+import { savedRoutineMessage } from './routine-feedback';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
 import { ItemEditSheet } from './ItemEditSheet';
@@ -66,15 +66,14 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   const { createRoutine, updateRoutine } = useRoutines();
   const { drafts: triggers, clear: clearTriggers } = useTriggerDrafts(formId);
   const { rearm } = useTriggerRuntime();
+  const toast = useToast();
   const { scrollRef, nameRef, onItemsLayout, onTriggersLayout, focusFirstError } = useFirstErrorFocus();
   useEffect(() => clearTriggers, [clearTriggers]);
 
   function handleSaved() {
     guard.allowExit();
-    // CF-03 adaptado a los avisos.
-    if (triggers.length > 0) {
-      showFlashMessage(routineSavedMessage(triggers.map((trigger) => strategyFor(trigger).describe(trigger))));
-    }
+    // CF-03 adaptado a los avisos; el aviso sobrevive a la vuelta a Inicio.
+    toast.show(savedRoutineMessage(Boolean(editing), triggers.map((trigger) => strategyFor(trigger).describe(trigger))));
     // Reprograma en el teléfono: avisos nuevos, cambiados o quitados, y el nombre en las notificaciones.
     if (triggers.length > 0 || editing) {
       rearm().catch((cause: unknown) => {
@@ -98,6 +97,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   const guard = useUnsavedChangesGuard(form.dirty);
   const removal = useRoutineDeletion(editing?.routine.id, () => {
     guard.allowExit();
+    toast.show(copy.ROUTINE_DELETED);
     backToRoutines();
   });
 

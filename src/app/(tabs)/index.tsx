@@ -33,7 +33,7 @@ export default function RoutinesScreen() {
   const displayName = useDisplayName();
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  // CF-03 al volver de guardar una rutina con avisos; se descarta al salir de Inicio.
+  // Avisos de la sincronización (conflicto, error); se descartan al salir de Inicio.
   const flash = useFlashMessage();
   useFocusEffect(useCallback(() => clearFlashMessage, []));
 
