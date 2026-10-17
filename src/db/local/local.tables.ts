@@ -93,6 +93,7 @@ export const settingsTable: LocalTableConfig<Settings, CreateSettingsInput> = {
     doNotDisturb: input.doNotDisturb ?? false,
     snoozeMinutes: input.snoozeMinutes ?? 5,
     sound: input.sound ?? true,
+    displayName: input.displayName ?? null,
     updatedAt: now,
   }),
 };

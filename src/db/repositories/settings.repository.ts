@@ -10,6 +10,8 @@ interface SettingsRow {
   do_not_disturb: boolean;
   snooze_minutes: number;
   sound: boolean;
+  /** Migración 20261017000000; falta en una base sin aplicarla. */
+  display_name?: string | null;
   updated_at: string;
 }
 
@@ -23,6 +25,7 @@ const toEntity = (row: SettingsRow): Settings => ({
   doNotDisturb: row.do_not_disturb,
   snoozeMinutes: row.snooze_minutes,
   sound: row.sound,
+  displayName: row.display_name ?? null,
   updatedAt: row.updated_at,
 });
 
@@ -30,6 +33,7 @@ const toUpdateRow = (input: UpdateSettingsInput) => ({
   do_not_disturb: input.doNotDisturb,
   snooze_minutes: input.snoozeMinutes,
   sound: input.sound,
+  display_name: input.displayName,
 });
 
 const toInsertRow = (input: CreateSettingsInput) => ({ ...toUpdateRow(input), updated_at: input.updatedAt });
