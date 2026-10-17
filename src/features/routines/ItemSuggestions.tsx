@@ -5,6 +5,7 @@ import { Chip } from '@/components/atoms/Chip';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
+import { Skeleton } from '@/components/atoms/Skeleton';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { AiConsentSheet } from '@/features/ai/AiConsentSheet';
 import * as aiCopy from '@/features/ai/ai.copy';
@@ -52,6 +53,7 @@ export function ItemSuggestions({ name, labels, canAdd, onPick }: ItemSuggestion
           labels={shown.map((item) => item.label)}
           onPick={(index) => onPick(shown[index])}
           accessibilityLabelFor={copy.addSuggestionLabel}
+          staggerIn={Boolean(fromAi)}
         />
       ) : fromAi ? (
         <Text style={styles.hint}>{aiCopy.NO_AI_SUGGESTIONS}</Text>
@@ -61,9 +63,17 @@ export function ItemSuggestions({ name, labels, canAdd, onPick }: ItemSuggestion
         <>
           {aiSuggestions.error ? <StatusMessage tone="error" message={aiSuggestions.error} /> : null}
           {aiSuggestions.loading ? (
-            <Text style={styles.hint} accessibilityLiveRegion="polite">
-              {aiCopy.SUGGESTING_LABEL}
-            </Text>
+            // Esqueleto de chips mientras la IA piensa; el texto lo anuncia al lector de pantalla.
+            <View style={styles.loading}>
+              <View style={styles.chipsSkeleton}>
+                <Skeleton height={36} width={96} round />
+                <Skeleton height={36} width={120} round />
+                <Skeleton height={36} width={80} round />
+              </View>
+              <Text style={styles.hint} accessibilityLiveRegion="polite">
+                {aiCopy.SUGGESTING_LABEL}
+              </Text>
+            </View>
           ) : null}
           <TextButton
             label={aiCopy.SUGGEST_WITH_AI_LABEL}
@@ -87,6 +97,14 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    loading: {
+      gap: spacing.sm,
+    },
+    chipsSkeleton: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     hint: {

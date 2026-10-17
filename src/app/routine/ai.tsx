@@ -6,10 +6,13 @@ import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
+import { SecondaryButton } from '@/components/atoms/SecondaryButton';
+import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/ai/ai.copy';
 import { putAiDraft } from '@/features/ai/aiDraft.store';
+import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
 import { useAiDraft } from '@/features/ai/useAiDraft';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
@@ -56,16 +59,29 @@ export default function CreateWithAiScreen() {
         />
         <Text style={styles.hint}>{copy.PROMPT_HINT}</Text>
 
-        <SectionLabel label={copy.EXAMPLES_TITLE} />
-        <SuggestionChips
-          labels={copy.PROMPT_EXAMPLES}
-          onPick={(index) => change(copy.PROMPT_EXAMPLES[index])}
-          accessibilityLabelFor={copy.exampleLabel}
-        />
+        {loading ? (
+          // Mientras se genera, la forma del borrador que viene (ítems) en lugar de los ejemplos.
+          <SkeletonList variant="row" rows={4} padded={false} accessibilityLabel={copy.CREATING_LABEL} />
+        ) : (
+          <>
+            <SectionLabel label={copy.EXAMPLES_TITLE} />
+            <SuggestionChips
+              labels={copy.PROMPT_EXAMPLES}
+              onPick={(index) => change(copy.PROMPT_EXAMPLES[index])}
+              accessibilityLabelFor={copy.exampleLabel}
+            />
+          </>
+        )}
       </ScrollView>
 
       <ScreenFooter bordered>
-        {error ? <StatusMessage tone="error" message={error} /> : null}
+        {error ? (
+          <>
+            <StatusMessage tone="error" message={error} />
+            {/* Siguiente paso claro si la IA no puede (sin cuota, sin servicio): una plantilla. */}
+            <SecondaryButton icon="albums-outline" label={BROWSE_TEMPLATES_LABEL} onPress={() => router.replace('/routine/templates')} />
+          </>
+        ) : null}
         {isConnected ? null : <StatusMessage tone="info" message={copy.OFFLINE_HINT} />}
         {loading ? (
           <Text style={styles.hint} accessibilityLiveRegion="polite">
