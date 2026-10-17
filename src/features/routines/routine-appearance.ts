@@ -28,15 +28,17 @@ export interface ColorOption {
   label: string;
   /** Token del tema: el mismo color se adapta al modo oscuro. */
   token: keyof ThemeColors;
+  /** Tinte suave del mismo color (fondo del ícono, franjas). */
+  tintToken: keyof ThemeColors;
 }
 
 /** 04-2: colores de categoría del mockup (tokens category*), con su versión para modo oscuro. */
 export const ROUTINE_COLORS: readonly ColorOption[] = [
-  { key: 'green', label: 'Verde', token: 'categoryGreen' },
-  { key: 'blue', label: 'Azul', token: 'categoryBlue' },
-  { key: 'amber', label: 'Ámbar', token: 'categoryAmber' },
-  { key: 'purple', label: 'Morado', token: 'categoryPurple' },
-  { key: 'gray', label: 'Gris', token: 'categoryGray' },
+  { key: 'green', label: 'Verde', token: 'categoryGreen', tintToken: 'categoryGreenTint' },
+  { key: 'blue', label: 'Azul', token: 'categoryBlue', tintToken: 'categoryBlueTint' },
+  { key: 'amber', label: 'Ámbar', token: 'categoryAmber', tintToken: 'categoryAmberTint' },
+  { key: 'purple', label: 'Morado', token: 'categoryPurple', tintToken: 'categoryPurpleTint' },
+  { key: 'gray', label: 'Gris', token: 'categoryGray', tintToken: 'categoryGrayTint' },
 ];
 
 /** El ícono es obligatorio (modelo de contenido): si no se elige, este. */
@@ -50,3 +52,15 @@ export const resolveRoutineIcon = (icon: string | null | undefined): IoniconName
 /** Color guardado si es del conjunto; si no (o nulo), el de por defecto. */
 export const resolveRoutineColor = (color: string | null | undefined): ColorOption =>
   ROUTINE_COLORS.find((option) => option.key === color) ?? ROUTINE_COLORS[0];
+
+export interface RoutineAccent {
+  /** Color de la rutina (ícono, franja). Nunca la única señal: siempre va con ícono y nombre. */
+  color: string;
+  tint: string;
+}
+
+/** Color de la rutina y su tinte, ya resueltos al tema (claro u oscuro). */
+export const routineAccent = (colors: ThemeColors, color: string | null | undefined): RoutineAccent => {
+  const option = resolveRoutineColor(color);
+  return { color: colors[option.token], tint: colors[option.tintToken] };
+};

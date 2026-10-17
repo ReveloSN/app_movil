@@ -33,27 +33,42 @@ export const sizes = {
 // No viene del mockup: escala de íconos para no dejar tamaños sueltos en los componentes.
 export const iconSizes = { sm: 16, md: 20, lg: 24, xl: 48 } as const;
 
+// Paleta provisional (2026-10-17): parte del mockup con una pasada de color ligera y contrastes
+// corregidos (texto ≥ 4,5:1 sobre fondo, superficie, tarjeta y tintes). Una paleta completa la
+// reemplazará: las pantallas solo usan estos nombres, nunca valores sueltos.
 const lightColors = {
-  background: '#E7EAE5',
-  surface: '#F3F5F1',
+  /** Verde grisáceo muy suave (antes #E7EAE5). */
+  background: '#E5EBE5',
+  surface: '#F2F6F1',
   card: '#FFFFFF',
-  primary: '#0B7A57',
-  primaryPressed: '#096546',
-  primaryTint: '#DCEFE5',
+  /** Algo más oscuro que el #0B7A57 del mockup: como texto no llegaba a 4,5:1 sobre el fondo. */
+  primary: '#096B4C',
+  primaryPressed: '#075A40',
+  primaryTint: '#DDF0E6',
   onPrimary: '#FFFFFF',
+  /** Tarjetas destacadas (ej. "Próxima rutina"). */
+  accentSurface: '#EEF7F1',
   textPrimary: '#15201B',
-  textSecondary: '#6E7B73',
+  /** Antes #6E7B73 (3,65:1 sobre el fondo). */
+  textSecondary: '#58665E',
   textMuted: '#4A5850',
   border: '#D5DCD3',
-  neutralSurface: '#EDF0EC',
+  neutralSurface: '#EBEFEA',
   criticalBg: '#F7E8CF',
-  criticalText: '#A8660B',
+  /** Antes #A8660B (3,8:1 sobre criticalBg). */
+  criticalText: '#8A5409',
   danger: '#B3372E',
-  categoryGreen: '#0B7A57',
-  categoryBlue: '#2F6DA8',
+  // Color de cada rutina (04-2) y su tinte para fondos de ícono y franjas.
+  categoryGreen: '#096B4C',
+  categoryGreenTint: '#DDF0E6',
+  categoryBlue: '#2B629A',
+  categoryBlueTint: '#DFE9F4',
   categoryAmber: '#A8660B',
+  categoryAmberTint: '#F7E8CF',
   categoryPurple: '#7A4B8F',
+  categoryPurpleTint: '#EEE4F3',
   categoryGray: '#4A5850',
+  categoryGrayTint: '#E6EAE5',
   /** No viene del mockup: fondo oscurecido detrás de los diálogos. */
   scrim: 'rgba(21,32,27,0.5)',
   // No vienen del mockup: aviso breve (snackbar) en contraste con la pantalla.
@@ -72,19 +87,27 @@ const darkColors = {
   primaryPressed: '#6BC7A2', // estimado
   primaryTint: 'rgba(127,217,180,0.16)', // estimado
   onPrimary: '#0E1512',
+  accentSurface: '#16261F', // no viene del mockup
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255,255,255,0.7)',
   textMuted: 'rgba(255,255,255,0.55)',
   border: 'rgba(255,255,255,0.18)',
   neutralSurface: 'rgba(255,255,255,0.08)',
-  criticalBg: 'rgba(247,232,207,0.92)',
+  /** Opaco (antes al 92 %): con transparencia, criticalText quedaba en 4,4:1. */
+  criticalBg: '#F7E8CF',
   criticalText: '#8A5409',
-  danger: '#E5534B', // estimado
+  /** Antes #E5534B (4,0:1 sobre la tarjeta). */
+  danger: '#F07A72',
   categoryGreen: '#7FD9B4',
+  categoryGreenTint: 'rgba(127,217,180,0.18)',
   categoryBlue: '#6FA8D8', // estimado
+  categoryBlueTint: 'rgba(111,168,216,0.18)',
   categoryAmber: '#D99A3A', // estimado
+  categoryAmberTint: 'rgba(217,154,58,0.18)',
   categoryPurple: '#B089C2', // estimado
+  categoryPurpleTint: 'rgba(176,137,194,0.18)',
   categoryGray: 'rgba(255,255,255,0.6)', // estimado
+  categoryGrayTint: 'rgba(255,255,255,0.1)',
   scrim: 'rgba(0,0,0,0.6)', // no viene del mockup
   inverseSurface: '#E7EAE5', // no viene del mockup
   onInverseSurface: '#15201B',
