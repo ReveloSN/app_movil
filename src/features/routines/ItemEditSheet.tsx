@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '@/components/atoms/IconButton';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { TextField } from '@/components/atoms/TextField';
+import { BottomSheet } from '@/components/organisms/BottomSheet';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { IconPicker } from '@/components/molecules/IconPicker';
 import { SegmentedControl } from '@/components/molecules/SegmentedControl';
@@ -48,64 +49,66 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
   }
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={requestClose} statusBarTranslucent navigationBarTranslucent>
-      <View style={styles.scrim}>
-        <Pressable style={styles.backdrop} onPress={requestClose} accessibilityLabel={copy.CLOSE_ITEM_LABEL} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[styles.sheet, accentColor ? { borderTopColor: accentColor } : null]} accessibilityViewIsModal>
-            <View style={styles.header}>
-              <Text style={styles.title} accessibilityRole="header">
-                {isNew ? copy.NEW_ITEM_TITLE : copy.EDIT_ITEM_TITLE}
-              </Text>
-              <IconButton icon="close" accessibilityLabel={copy.CLOSE_ITEM_LABEL} onPress={requestClose} />
-            </View>
-            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-              {/* 05-1 */}
-              <TextField
-                label={copy.ITEM_LABEL_FIELD}
-                placeholder="Ej. Llaves"
-                value={editor.label}
-                onChangeText={editor.setLabel}
-                maxLength={ITEM_LABEL_MAX_LENGTH}
-                showCounter
-                error={editor.errors.label}
-                autoFocus={isNew}
-              />
-              {/* 05-2 */}
-              <SectionLabel label={copy.ICON_LABEL} />
-              <IconPicker
-                accessibilityLabel={copy.ITEM_ICON_GROUP_LABEL}
-                options={ITEM_ICONS}
-                value={resolveItemIcon(editor.icon).icon}
-                onChange={editor.setIcon}
-              />
-              {/* 05-3 */}
-              <SectionLabel label={copy.ITEM_KIND_LABEL} />
-              <SegmentedControl<ItemKind>
-                accessibilityLabel={copy.ITEM_KIND_LABEL}
-                options={ITEM_KIND_OPTIONS}
-                value={editor.kind}
-                onChange={editor.setKind}
-              />
-              {/* 05-4 */}
-              <SwitchRow icon="flag-outline" label={copy.CRITICAL_SWITCH_LABEL} value={editor.critical} onValueChange={editor.setCritical} />
-              {/* 05-5 */}
-              <TextField
-                label={copy.ITEM_NOTE_FIELD}
-                placeholder={copy.ITEM_NOTE_PLACEHOLDER}
-                value={editor.note}
-                onChangeText={editor.setNote}
-                maxLength={ITEM_NOTE_MAX_LENGTH}
-                showCounter
-                error={editor.errors.note}
-              />
-            </ScrollView>
-            <ScreenFooter bordered>
-              <PrimaryButton label={copy.SAVE_CHANGES_LABEL} onPress={save} />
-            </ScreenFooter>
+    <>
+      <BottomSheet
+        onRequestClose={requestClose}
+        dismissible={!editor.dirty}
+        closeLabel={copy.CLOSE_ITEM_LABEL}
+        style={[styles.sheet, accentColor ? { borderTopColor: accentColor } : null]}
+        header={
+          <View style={styles.header}>
+            <Text style={styles.title} accessibilityRole="header">
+              {isNew ? copy.NEW_ITEM_TITLE : copy.EDIT_ITEM_TITLE}
+            </Text>
+            <IconButton icon="close" accessibilityLabel={copy.CLOSE_ITEM_LABEL} onPress={requestClose} />
           </View>
-        </KeyboardAvoidingView>
-      </View>
+        }
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {/* 05-1 */}
+          <TextField
+            label={copy.ITEM_LABEL_FIELD}
+            placeholder="Ej. Llaves"
+            value={editor.label}
+            onChangeText={editor.setLabel}
+            maxLength={ITEM_LABEL_MAX_LENGTH}
+            showCounter
+            error={editor.errors.label}
+            autoFocus={isNew}
+          />
+          {/* 05-2 */}
+          <SectionLabel label={copy.ICON_LABEL} />
+          <IconPicker
+            accessibilityLabel={copy.ITEM_ICON_GROUP_LABEL}
+            options={ITEM_ICONS}
+            value={resolveItemIcon(editor.icon).icon}
+            onChange={editor.setIcon}
+          />
+          {/* 05-3 */}
+          <SectionLabel label={copy.ITEM_KIND_LABEL} />
+          <SegmentedControl<ItemKind>
+            accessibilityLabel={copy.ITEM_KIND_LABEL}
+            options={ITEM_KIND_OPTIONS}
+            value={editor.kind}
+            onChange={editor.setKind}
+          />
+          {/* 05-4 */}
+          <SwitchRow icon="flag-outline" label={copy.CRITICAL_SWITCH_LABEL} value={editor.critical} onValueChange={editor.setCritical} />
+          {/* 05-5 */}
+          <TextField
+            label={copy.ITEM_NOTE_FIELD}
+            placeholder={copy.ITEM_NOTE_PLACEHOLDER}
+            value={editor.note}
+            onChangeText={editor.setNote}
+            maxLength={ITEM_NOTE_MAX_LENGTH}
+            showCounter
+            error={editor.errors.note}
+          />
+        </ScrollView>
+        <ScreenFooter bordered>
+          <PrimaryButton label={copy.SAVE_CHANGES_LABEL} onPress={save} />
+        </ScreenFooter>
+      </BottomSheet>
       <UnsavedChangesDialog
         visible={confirmingClose}
         onSave={() => {
@@ -118,27 +121,16 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
         }}
         onDismiss={() => setConfirmingClose(false)}
       />
-    </Modal>
+    </>
   );
 }
 
-const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, spacing, typography }: AppTheme) =>
   StyleSheet.create({
-    scrim: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: colors.scrim,
-    },
-    backdrop: {
-      flex: 1,
-    },
+    // Franja superior con el color de la rutina.
     sheet: {
-      maxHeight: '90%',
       borderTopWidth: spacing.xs,
       borderTopColor: colors.primary,
-      borderTopLeftRadius: radii.xxl,
-      borderTopRightRadius: radii.xxl,
-      backgroundColor: colors.surface,
     },
     header: {
       flexDirection: 'row',
