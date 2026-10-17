@@ -26,6 +26,8 @@ export const sizes = {
   largeIconCircle: 112,
   /** Fila de la verificación (P07): área táctil de 56pt. */
   checklistRowHeight: 56,
+  /** Alto de la barra de pestañas de React Navigation (sin el inset inferior). */
+  tabBarHeight: 49,
 } as const;
 
 // No viene del mockup: escala de íconos para no dejar tamaños sueltos en los componentes.
@@ -54,6 +56,10 @@ const lightColors = {
   categoryGray: '#4A5850',
   /** No viene del mockup: fondo oscurecido detrás de los diálogos. */
   scrim: 'rgba(21,32,27,0.5)',
+  // No vienen del mockup: aviso breve (snackbar) en contraste con la pantalla.
+  inverseSurface: '#15201B',
+  onInverseSurface: '#FFFFFF',
+  inversePrimary: '#7FD9B4',
 } as const;
 
 // Valores marcados "estimado" no estaban visibles en las pantallas extraídas del mockup;
@@ -80,6 +86,9 @@ const darkColors = {
   categoryPurple: '#B089C2', // estimado
   categoryGray: 'rgba(255,255,255,0.6)', // estimado
   scrim: 'rgba(0,0,0,0.6)', // no viene del mockup
+  inverseSurface: '#E7EAE5', // no viene del mockup
+  onInverseSurface: '#15201B',
+  inversePrimary: '#096546',
 } as const;
 
 export const palettes = { light: lightColors, dark: darkColors };

@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { RootStack } from '@/components/organisms/RootStack';
 import { AuthProvider } from '@/features/auth/AuthProvider';
+import { ToastProvider } from '@/features/feedback/ToastProvider';
 import { LocalRepositoriesProvider } from '@/features/local-data/LocalRepositoriesProvider';
 import { NotificationResponseHandler } from '@/features/notifications/NotificationResponseHandler';
 import { TriggerRuntimeProvider } from '@/features/notifications/TriggerRuntimeProvider';
@@ -27,6 +28,8 @@ export default function RootLayout() {
 
   return (
     <ThemeModeProvider>
+      {/* Avisos breves globales: sobreviven a la navegación (ej. "Rutina guardada." al volver a Inicio). */}
+      <ToastProvider>
       <AuthProvider>
         {/* Datos del usuario en el teléfono (local-first): todo lo de abajo lee y escribe ahí. */}
         <LocalRepositoriesProvider>
@@ -44,6 +47,7 @@ export default function RootLayout() {
           </RoutinesProvider>
         </LocalRepositoriesProvider>
       </AuthProvider>
+      </ToastProvider>
     </ThemeModeProvider>
   );
 }
