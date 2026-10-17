@@ -41,7 +41,7 @@ export const stagger = { step: 40, maxItems: 8 } as const;
 /** Desplazamiento de las entradas (en dp): lo justo para notar de dónde viene. */
 export const offsets = { enter: 12, toast: 24 } as const;
 
-export const timing = (duration: number, easing = easings.standard): WithTimingConfig => ({
+export const timing = (duration: number, easing: WithTimingConfig['easing'] = easings.standard): WithTimingConfig => ({
   duration,
   easing,
   reduceMotion: ReduceMotion.System,
