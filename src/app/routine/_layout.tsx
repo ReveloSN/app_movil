@@ -29,9 +29,13 @@ export default function RoutineLayout() {
         <Stack.Screen name="ai" options={{ title: CREATE_WITH_AI_TITLE }} />
         <Stack.Screen name="trigger" options={{ title: CONFIGURE_TRIGGER_TITLE }} />
         <Stack.Screen name="permissions" options={{ title: PERMISSIONS_TITLE }} />
-        {/* P07 y P08 dibujan su propio encabezado (nombre en h1 + cerrar) para dejarle más alto a la lista. */}
-        <Stack.Screen name="[id]/verify" options={{ headerShown: false }} />
-        <Stack.Screen name="[id]/summary" options={{ headerShown: false }} />
+        {/* P07 y P08 dibujan su propio encabezado (nombre en h1 + cerrar) para dejarle más alto a la lista.
+            P07 es un modal que sube desde abajo; P08 aparece dentro de él con un fundido. */}
+        <Stack.Screen
+          name="[id]/verify"
+          options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="[id]/summary" options={{ headerShown: false, animation: 'fade' }} />
       </Stack>
     </RequireSession>
   );
