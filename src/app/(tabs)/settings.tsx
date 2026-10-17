@@ -7,6 +7,7 @@ import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { PermissionsSection } from '@/features/settings/PermissionsSection';
 import { HELP_LABEL } from '@/features/settings/settings.copy';
+import { SyncStatusSection } from '@/features/sync/SyncStatusSection';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -22,6 +23,8 @@ export default function SettingsScreen() {
 
       {/* 11-6 */}
       <SecondaryButton icon="help-circle-outline" label={HELP_LABEL} onPress={() => router.push('/help')} />
+
+      <SyncStatusSection />
 
       <AccountSection />
     </ScrollView>
