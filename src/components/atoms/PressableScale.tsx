@@ -19,16 +19,16 @@ export function PressableScale({ containerStyle, onPressIn, onPressOut, disabled
   const reducedMotion = useReducedMotion();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 1 - (1 - pressFeedback.opacity) * pressed.value,
-    transform: [{ scale: reducedMotion ? 1 : 1 - (1 - pressFeedback.scale) * pressed.value }],
+    opacity: 1 - (1 - pressFeedback.opacity) * pressed.get(),
+    transform: [{ scale: reducedMotion ? 1 : 1 - (1 - pressFeedback.scale) * pressed.get() }],
   }));
 
   const handlePressIn = (event: GestureResponderEvent) => {
-    pressed.value = withTiming(1, timing(durations.press));
+    pressed.set(withTiming(1, timing(durations.press)));
     onPressIn?.(event);
   };
   const handlePressOut = (event: GestureResponderEvent) => {
-    pressed.value = withSpring(0, springs.press);
+    pressed.set(withSpring(0, springs.press));
     onPressOut?.(event);
   };
 
