@@ -14,7 +14,7 @@ export function PendingSyncIndicator({ style }: { style?: StyleProp<ViewStyle> }
   }
   if (pendingCount === 0) return null;
   return syncing ? (
-    <SyncStatusRow icon="sync-outline" label={SYNCING_LABEL} style={style} />
+    <SyncStatusRow icon="sync-outline" label={SYNCING_LABEL} style={style} busy />
   ) : (
     <SyncStatusRow icon="cloud-upload-outline" label={pendingLabel(pendingCount)} style={style} />
   );
