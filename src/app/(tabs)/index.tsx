@@ -8,9 +8,12 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { LoadingState } from '@/components/molecules/LoadingState';
+import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
+import { NEXT_ROUTINE_LABEL, nextRoutineWhen } from '@/features/home/home.copy';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
+import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { PendingSyncIndicator } from '@/features/sync/PendingSyncIndicator';
 import { clearFlashMessage, useFlashMessage } from '@/shared/events/flashMessage';
@@ -19,8 +22,11 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 const EMPTY_MESSAGE = 'Aún no tienes rutinas. Empieza con una plantilla o crea la tuya.'; // EV-01
 
+const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
+
 export default function RoutinesScreen() {
   const { routines, loading, error, refresh } = useRoutines();
+  const { next, now } = useNextRoutine();
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   // CF-03 al volver de guardar una rutina con avisos; se descarta al salir de Inicio.
@@ -43,10 +49,20 @@ export default function RoutinesScreen() {
           keyExtractor={(routine) => routine.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={
-            flash || error ? (
+            flash || error || next ? (
               <View style={styles.messages}>
                 {flash ? <StatusMessage tone="info" message={flash} /> : null}
                 {error ? <StatusMessage tone="error" message={error} /> : null}
+                {/* 03-2: solo si hay alguna rutina programada por horario. */}
+                {next ? (
+                  <NextRoutineCard
+                    label={NEXT_ROUTINE_LABEL}
+                    name={next.routineName}
+                    when={nextRoutineWhen(next.at, now)}
+                    actionLabel={VERIFY_NOW_LABEL}
+                    onAction={() => openVerification(next.routineId)}
+                  />
+                ) : null}
               </View>
             ) : null
           }
@@ -57,7 +73,7 @@ export default function RoutinesScreen() {
               active={item.active}
               lastCompletedAt={item.lastCompletedAt}
               actionLabel={VERIFY_NOW_LABEL}
-              onAction={() => router.push({ pathname: '/routine/[id]/verify', params: { id: item.id } })}
+              onAction={() => openVerification(item.id)}
               onPress={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
               pressHint="Edita la rutina"
             />
