@@ -13,6 +13,7 @@ import { IconPicker } from '@/components/molecules/IconPicker';
 import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
@@ -43,6 +44,11 @@ interface RoutineFormProps {
   initialDraft?: RoutineDraft;
   /** Modo edición: rutina guardada y lo que tenía al abrir. Sin esto, se crea una nueva. */
   editing?: { routine: Routine; original: RoutineOriginal };
+  /**
+   * Borrador hecho con IA: se marca "Sugerido con IA" y cuenta como cambio sin guardar desde el inicio
+   * (salir pregunta DC-03). Aparte se dice si sugirió un aviso por Wi-Fi (la red la elige la persona).
+   */
+  aiAssisted?: { suggestsWifiExit: boolean };
 }
 
 const backToRoutines = () => router.dismissTo('/(tabs)');
@@ -53,7 +59,7 @@ function cancel() {
 }
 
 /** P04: el mismo formulario crea o edita según reciba `editing`. */
-export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps) {
+export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: RoutineFormProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useAppTheme();
   const { createRoutine, updateRoutine } = useRoutines();
@@ -82,6 +88,7 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
     onSaved: handleSaved,
     initialDraft,
     triggers,
+    startDirty: Boolean(aiAssisted),
   });
   // P05: ítem abierto en la hoja inferior (nuevo o existente).
   const [editingItem, setEditingItem] = useState<{ entry: ItemFormEntry; isNew: boolean } | null>(null);
@@ -108,6 +115,7 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
         }}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {aiAssisted ? <AiDraftNotice suggestsWifiExit={aiAssisted.suggestsWifiExit} /> : null}
         <TextField
           label="Nombre de la rutina"
           placeholder="Ej. Salir al trabajo"
