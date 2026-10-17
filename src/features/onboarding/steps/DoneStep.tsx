@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { routineSavedMessage } from '@/features/triggers/trigger.copy';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -34,9 +35,9 @@ export function DoneStep({ phrases, onContinue, continuing }: DoneStepProps) {
         </Text>
         <Text style={styles.body}>{phrases.length > 0 ? copy.DONE_WITH_TRIGGER : copy.DONE_WITHOUT_TRIGGER}</Text>
       </ScrollView>
-      <View style={styles.footer}>
+      <ScreenFooter>
         <PrimaryButton label={copy.GO_TO_ROUTINES_LABEL} onPress={onContinue} loading={continuing} />
-      </View>
+      </ScreenFooter>
     </View>
   );
 }
@@ -75,9 +76,5 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       ...typography.body,
       color: colors.textSecondary,
       textAlign: 'center',
-    },
-    footer: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
     },
   });

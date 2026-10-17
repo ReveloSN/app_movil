@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { LoadingState } from '@/components/molecules/LoadingState';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
 import { firstUncheckedCritical } from '@/features/checklist/checklist.outcome';
 import type { FinishIntent } from '@/features/checklist/checklist.types';
@@ -108,7 +109,7 @@ export default function VerifyScreen() {
           />
         )}
       />
-      <View style={styles.footer}>
+      <ScreenFooter>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
         {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
         {/* 07-6: fila 1 la primaria a todo el ancho; fila 2 secundaria y terciaria lado a lado. */}
@@ -130,12 +131,12 @@ export default function VerifyScreen() {
             <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => finishAsking('skip')} disabled={busy} />
           </View>
         </View>
-      </View>
+      </ScreenFooter>
     </>
   );
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
@@ -195,11 +196,6 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
       gap: spacing.sm,
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.lg,
-    },
-    footer: {
-      gap: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
     },
     secondaryActions: {
       flexDirection: 'row',

@@ -34,7 +34,7 @@ function OnboardingFlow() {
   }, [canGoBack, back]);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       {/* 01-5 progreso y 01-6 saltar */}
       <View style={styles.topBar}>
         <View style={styles.side}>{canGoBack ? <TextButton label={BACK_LABEL} onPress={back} /> : null}</View>

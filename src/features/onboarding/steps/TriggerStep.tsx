@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
 import { summarySentence } from '@/features/triggers/trigger.copy';
@@ -53,7 +54,7 @@ export function TriggerStep({ routineName, formId, drafts, suggestion, onConfigu
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <ScreenFooter>
         {error ? <StatusMessage tone="error" message={error} /> : null}
         {configured ? (
           <PrimaryButton label={copy.CREATE_ROUTINE_LABEL} onPress={onCreate} loading={creating} />
@@ -63,7 +64,7 @@ export function TriggerStep({ routineName, formId, drafts, suggestion, onConfigu
             <SecondaryButton label={copy.CONTINUE_WITHOUT_TRIGGER_LABEL} onPress={onCreate} disabled={creating} />
           </>
         )}
-      </View>
+      </ScreenFooter>
     </View>
   );
 }
@@ -93,10 +94,5 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     suggestionText: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-    },
-    footer: {
-      gap: spacing.md,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
     },
   });

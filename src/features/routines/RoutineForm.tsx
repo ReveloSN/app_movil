@@ -12,6 +12,7 @@ import { ColorPicker } from '@/components/molecules/ColorPicker';
 import { IconPicker } from '@/components/molecules/IconPicker';
 import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
@@ -199,7 +200,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <ScreenFooter bordered>
         {form.submitError ? <StatusMessage tone="error" message={form.submitError} /> : null}
         <PrimaryButton
           label={copy.SAVE_CHANGES_LABEL}
@@ -207,7 +208,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           loading={form.submitting}
           disabled={removal.deleting}
         />
-      </View>
+      </ScreenFooter>
 
       {editing ? (
         <ConfirmDialog
@@ -242,7 +243,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   );
 }
 
-const createStyles = ({ colors, spacing }: AppTheme) =>
+const createStyles = ({ spacing }: AppTheme) =>
   StyleSheet.create({
     flex: {
       flex: 1,
@@ -255,14 +256,5 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
       gap: spacing.sm,
       alignItems: 'center',
       paddingVertical: spacing.lg,
-    },
-    // Pie fijo con el botón principal, como en el mockup.
-    footer: {
-      gap: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.surface,
     },
   });

@@ -5,6 +5,7 @@ import { IconButton } from '@/components/atoms/IconButton';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { TextField } from '@/components/atoms/TextField';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { IconPicker } from '@/components/molecules/IconPicker';
 import { SegmentedControl } from '@/components/molecules/SegmentedControl';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
@@ -45,7 +46,7 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
   }
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={requestClose} statusBarTranslucent>
+    <Modal visible transparent animationType="slide" onRequestClose={requestClose} statusBarTranslucent navigationBarTranslucent>
       <View style={styles.scrim}>
         <Pressable style={styles.backdrop} onPress={requestClose} accessibilityLabel={copy.CLOSE_ITEM_LABEL} />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -97,9 +98,9 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
                 error={editor.errors.note}
               />
             </ScrollView>
-            <View style={styles.footer}>
+            <ScreenFooter bordered>
               <PrimaryButton label={copy.SAVE_CHANGES_LABEL} onPress={save} />
-            </View>
+            </ScreenFooter>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -149,11 +150,5 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     content: {
       gap: spacing.lg,
       padding: spacing.xl,
-    },
-    footer: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
     },
   });

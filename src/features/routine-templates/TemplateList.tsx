@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
 import { TemplateCard } from '@/components/molecules/TemplateCard';
+import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -19,12 +20,13 @@ interface TemplateListProps {
 /** Plantillas precargadas (P10), cada una con "Usar plantilla". */
 export function TemplateList({ onUse, header }: TemplateListProps) {
   const styles = useThemedStyles(createStyles);
+  const endPadding = useScrollEndPadding();
 
   return (
     <FlatList
       data={PRESET_TEMPLATES}
       keyExtractor={(template) => template.id}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, endPadding]}
       ListHeaderComponent={header}
       renderItem={({ item }) => (
         <TemplateCard

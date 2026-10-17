@@ -10,6 +10,7 @@ import { DayPicker, type DayOption } from '@/components/molecules/DayPicker';
 import { SegmentedControl } from '@/components/molecules/SegmentedControl';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { TimeField } from '@/components/molecules/TimeField';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
@@ -159,9 +160,12 @@ export default function TriggerScreen() {
           <Text style={styles.summaryText}>{form.summary}</Text>
         </View>
 
+      </ScrollView>
+      {/* Primaria en la zona del pulgar, fija como en P04. */}
+      <ScreenFooter bordered>
         {form.permissionError ? <StatusMessage tone="error" message={form.permissionError} /> : null}
         <PrimaryButton label={copy.SAVE_TRIGGER_LABEL} onPress={form.save} loading={form.saving} />
-      </ScrollView>
+      </ScreenFooter>
       <UnsavedChangesDialog
         visible={guard.confirming}
         onSave={() => {
