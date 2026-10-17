@@ -8,6 +8,8 @@ import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
+import { ColorPicker } from '@/components/molecules/ColorPicker';
+import { IconPicker } from '@/components/molecules/IconPicker';
 import { ItemFormRow } from '@/components/molecules/ItemFormRow';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
@@ -19,12 +21,13 @@ import { strategyFor } from '@/features/triggers/strategies';
 import { routineSavedMessage } from '@/features/triggers/trigger.copy';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
 import { showFlashMessage } from '@/shared/events/flashMessage';
-import type { AppTheme } from '@/shared/theme/useAppTheme';
+import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { ITEM_KIND_OPTIONS } from './item-kinds';
 import { pickSuggestions } from './item-suggestions';
+import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
 import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
@@ -51,6 +54,7 @@ function cancel() {
 /** P04: el mismo formulario crea o edita según reciba `editing`. */
 export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps) {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useAppTheme();
   const { createRoutine, updateRoutine } = useRoutines();
   const { drafts: triggers, clear: clearTriggers } = useTriggerDrafts(formId);
   const { rearm } = useTriggerRuntime();
@@ -109,6 +113,23 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
           maxLength={ROUTINE_NAME_MAX_LENGTH}
           showCounter
           error={form.errors.name}
+        />
+
+        {/* 04-2 */}
+        <SectionLabel label={copy.ICON_LABEL} />
+        <IconPicker
+          accessibilityLabel={copy.ICON_LABEL}
+          options={ROUTINE_ICONS}
+          value={resolveRoutineIcon(form.icon)}
+          onChange={form.setIcon}
+          accentColor={colors[resolveRoutineColor(form.color).token]}
+        />
+        <SectionLabel label={copy.COLOR_LABEL} />
+        <ColorPicker
+          accessibilityLabel={copy.COLOR_LABEL}
+          options={ROUTINE_COLORS.map((option) => ({ key: option.key, label: option.label, color: colors[option.token] }))}
+          value={resolveRoutineColor(form.color).key}
+          onChange={form.setColor}
         />
 
         <SectionLabel

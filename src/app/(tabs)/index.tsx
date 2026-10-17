@@ -13,6 +13,7 @@ import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { greeting, NEXT_ROUTINE_LABEL, nextRoutineWhen } from '@/features/home/home.copy';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
+import { resolveRoutineColor } from '@/features/routines/routine-appearance';
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
@@ -74,6 +75,7 @@ export default function RoutinesScreen() {
             <RoutineCard
               name={item.name}
               icon={item.icon}
+              accentColor={colors[resolveRoutineColor(item.color).token]}
               active={item.active}
               lastCompletedAt={item.lastCompletedAt}
               actionLabel={VERIFY_NOW_LABEL}
