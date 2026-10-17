@@ -18,6 +18,9 @@ async function renderFooter(bottom: number) {
   );
 }
 
+// El primer render de un componente compila mucho en frío: con toda la suite en paralelo supera los 5 s.
+jest.setTimeout(20000);
+
 describe('ScreenFooter', () => {
   afterEach(() => jest.restoreAllMocks());
 
