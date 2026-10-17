@@ -30,6 +30,7 @@ export function summarize(
     checked: countChecked(items),
     total: items.length,
     omittedLabels: items.filter((item) => !item.checked).map((item) => item.label),
+    omittedCriticalLabels: items.filter((item) => !item.checked && item.critical).map((item) => item.label),
     durationSeconds,
   };
 }

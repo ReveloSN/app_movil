@@ -27,7 +27,7 @@ import { useRoutines } from '@/features/routines/useRoutines';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-type Dialog = { kind: 'critical'; label: string } | { kind: 'exit'; action: NavigationAction } | null;
+type Dialog = { kind: 'critical'; label: string; intent: FinishIntent } | { kind: 'exit'; action: NavigationAction } | null;
 
 export default function VerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -67,14 +67,15 @@ export default function VerifyScreen() {
     else router.replace('/(tabs)');
   }
 
-  function handleDone() {
+  // DC-02 antes de dejar sin marcar un crítico, con "Listo" o con "Omitir por hoy".
+  function finishAsking(intent: FinishIntent) {
     const critical = firstUncheckedCritical(items);
-    if (critical) setDialog({ kind: 'critical', label: critical.label });
-    else void complete('done');
+    if (critical) setDialog({ kind: 'critical', label: critical.label, intent });
+    else void complete(intent);
   }
 
   function confirmDialog() {
-    if (dialog?.kind === 'critical') void complete('done');
+    if (dialog?.kind === 'critical') void complete(dialog.intent);
     if (dialog?.kind === 'exit') {
       leaving.current = true;
       navigation.dispatch(dialog.action);
@@ -100,6 +101,8 @@ export default function VerifyScreen() {
             label={item.label}
             icon={item.icon}
             critical={item.critical}
+            criticalLabel={copy.CRITICAL_LABEL}
+            note={item.note}
             checked={item.checked}
             onToggle={() => toggleItem(item.id)}
           />
@@ -109,14 +112,19 @@ export default function VerifyScreen() {
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
         {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
         {/* 07-6: primaria · secundaria · terciaria (Documento de Jerarquía). */}
-        <PrimaryButton label={copy.DONE_LABEL} onPress={handleDone} loading={finishing} disabled={postponement.postponing} />
+        <PrimaryButton
+          label={copy.DONE_LABEL}
+          onPress={() => finishAsking('done')}
+          loading={finishing}
+          disabled={postponement.postponing}
+        />
         <SecondaryButton
           icon="time-outline"
           label={copy.postponeLabel(postponement.snoozeMinutes)}
           onPress={() => void postpone()}
           disabled={busy}
         />
-        <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => void complete('skip')} disabled={busy} />
+        <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => finishAsking('skip')} disabled={busy} />
       </View>
     </>
   );

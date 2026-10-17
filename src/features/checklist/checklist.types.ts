@@ -3,6 +3,8 @@ export interface ChecklistItemState {
   label: string;
   icon: string | null;
   critical: boolean;
+  /** 07-5: se muestra bajo la etiqueta. */
+  note: string | null;
   checked: boolean;
 }
 
@@ -31,5 +33,7 @@ export interface VerificationSummary {
   checked: number;
   total: number;
   omittedLabels: string[];
+  /** Los omitidos que eran críticos (P08 los marca con bandera). */
+  omittedCriticalLabels: string[];
   durationSeconds: number;
 }
