@@ -1,20 +1,22 @@
-const formatter = new Intl.DateTimeFormat('es', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+import { formatClock } from './formatClock';
 
-/** "30 sept, 08:15". Devuelve null si la fecha no es válida. */
-export function formatDateTime(iso: string): string | null {
+const dateFormatter = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+
+const parse = (iso: string) => {
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? null : formatter.format(date);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const clockOf = (date: Date) => formatClock({ hour: date.getHours(), minute: date.getMinutes() });
+
+/** "30 sept, 6:00 p. m." (hora local). Devuelve null si la fecha no es válida. */
+export function formatDateTime(iso: string): string | null {
+  const date = parse(iso);
+  return date ? `${dateFormatter.format(date)}, ${clockOf(date)}` : null;
 }
 
-const timeFormatter = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' });
-
-/** "08:15" (hora local). Devuelve null si la fecha no es válida. */
+/** "6:00 p. m." (hora local). Devuelve null si la fecha no es válida. */
 export function formatTime(iso: string): string | null {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? null : timeFormatter.format(date);
+  const date = parse(iso);
+  return date ? clockOf(date) : null;
 }
