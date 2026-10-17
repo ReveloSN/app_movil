@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Chip } from '@/components/atoms/Chip';
 import { IconButton } from '@/components/atoms/IconButton';
+import { BottomSheet } from '@/components/organisms/BottomSheet';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -54,53 +55,43 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
     ) : null;
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
-      <View style={styles.scrim}>
-        <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={copy.DETAIL_CLOSE_LABEL} />
-        <View style={styles.sheet} accessibilityViewIsModal>
-          <View style={styles.header}>
-            <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
-              {entry.routineName}
-            </Text>
-            <IconButton icon="close" accessibilityLabel={copy.DETAIL_CLOSE_LABEL} onPress={onClose} />
-          </View>
-          <ScrollView contentContainerStyle={[styles.content, endPadding]}>
-            <Chip tone={result.tone} icon={result.icon} label={result.label} />
-            {itemList(copy.DETAIL_CHECKED_TITLE, checked, 'checkmark-circle')}
-            {itemList(copy.DETAIL_SKIPPED_TITLE, skipped, 'close-circle-outline')}
-            {items.length > 0 && checked.length === 0 ? <Text style={styles.secondary}>{copy.DETAIL_NO_ITEMS}</Text> : null}
-            {/* Datos del sistema, debajo del contenido de la persona (Documento de Jerarquía). */}
-            <View style={styles.block}>
-              <Text style={styles.secondary}>{copy.recordDateTime(entry.date)}</Text>
-              {entry.durationSeconds !== null ? (
-                <Text style={styles.secondary}>
-                  {copy.DETAIL_DURATION_TITLE}: {formatDuration(entry.durationSeconds)}
-                </Text>
-              ) : null}
-              {entry.pending ? <Text style={styles.secondary}>{PENDING_SYNC_LABEL}</Text> : null}
-            </View>
-          </ScrollView>
+    <BottomSheet
+      onRequestClose={onClose}
+      closeLabel={copy.DETAIL_CLOSE_LABEL}
+      style={styles.sheet}
+      header={
+        <View style={styles.header}>
+          <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
+            {entry.routineName}
+          </Text>
+          <IconButton icon="close" accessibilityLabel={copy.DETAIL_CLOSE_LABEL} onPress={onClose} />
         </View>
-      </View>
-    </Modal>
+      }
+    >
+      <ScrollView contentContainerStyle={[styles.content, endPadding]}>
+        <Chip tone={result.tone} icon={result.icon} label={result.label} />
+        {itemList(copy.DETAIL_CHECKED_TITLE, checked, 'checkmark-circle')}
+        {itemList(copy.DETAIL_SKIPPED_TITLE, skipped, 'close-circle-outline')}
+        {items.length > 0 && checked.length === 0 ? <Text style={styles.secondary}>{copy.DETAIL_NO_ITEMS}</Text> : null}
+        {/* Datos del sistema, debajo del contenido de la persona (Documento de Jerarquía). */}
+        <View style={styles.block}>
+          <Text style={styles.secondary}>{copy.recordDateTime(entry.date)}</Text>
+          {entry.durationSeconds !== null ? (
+            <Text style={styles.secondary}>
+              {copy.DETAIL_DURATION_TITLE}: {formatDuration(entry.durationSeconds)}
+            </Text>
+          ) : null}
+          {entry.pending ? <Text style={styles.secondary}>{PENDING_SYNC_LABEL}</Text> : null}
+        </View>
+      </ScrollView>
+    </BottomSheet>
   );
 }
 
 const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
   StyleSheet.create({
-    scrim: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: colors.scrim,
-    },
-    backdrop: {
-      flex: 1,
-    },
     sheet: {
       maxHeight: '85%',
-      borderTopLeftRadius: radii.xxl,
-      borderTopRightRadius: radii.xxl,
-      backgroundColor: colors.surface,
     },
     header: {
       flexDirection: 'row',

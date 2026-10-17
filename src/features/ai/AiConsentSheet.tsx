@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { TextButton } from '@/components/atoms/TextButton';
+import { BottomSheet } from '@/components/organisms/BottomSheet';
 import { useBottomInset } from '@/shared/hooks/useBottomInset';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -30,38 +31,28 @@ export function AiConsentSheet({ visible, onAccept, onDecline }: AiConsentSheetP
   );
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDecline} statusBarTranslucent navigationBarTranslucent>
-      <View style={styles.scrim}>
-        <View style={[styles.sheet, { paddingBottom: styles.sheet.padding + bottomInset }]} accessibilityViewIsModal>
-          <Text style={styles.title} accessibilityRole="header">
-            {copy.CONSENT_TITLE}
-          </Text>
-          {point('text-outline', copy.CONSENT_SENT)}
-          {point('location-outline', copy.CONSENT_NOT_SENT)}
-          {point('information-circle-outline', copy.CONSENT_PROVIDER)}
-          <View style={styles.actions}>
-            <PrimaryButton label={copy.CONSENT_ACCEPT} onPress={onAccept} />
-            <TextButton label={copy.CONSENT_DECLINE} onPress={onDecline} />
-          </View>
+    <BottomSheet visible={visible} onRequestClose={onDecline}>
+      <View style={[styles.content, { paddingBottom: styles.content.padding + bottomInset }]}>
+        <Text style={styles.title} accessibilityRole="header">
+          {copy.CONSENT_TITLE}
+        </Text>
+        {point('text-outline', copy.CONSENT_SENT)}
+        {point('location-outline', copy.CONSENT_NOT_SENT)}
+        {point('information-circle-outline', copy.CONSENT_PROVIDER)}
+        <View style={styles.actions}>
+          <PrimaryButton label={copy.CONSENT_ACCEPT} onPress={onAccept} />
+          <TextButton label={copy.CONSENT_DECLINE} onPress={onDecline} />
         </View>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
-const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, spacing, typography }: AppTheme) =>
   StyleSheet.create({
-    scrim: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: colors.scrim,
-    },
-    sheet: {
+    content: {
       gap: spacing.lg,
       padding: spacing.xl,
-      borderTopLeftRadius: radii.xxl,
-      borderTopRightRadius: radii.xxl,
-      backgroundColor: colors.surface,
     },
     title: {
       ...typography.h2,
