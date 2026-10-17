@@ -14,14 +14,14 @@ import type { LocalStore } from './local.store';
 import { homeNetworksTable, itemsTable, routinesTable, settingsTable, triggersTable } from './local.tables';
 import { enqueue, enqueueRoutineDeletion } from './outbox.compaction';
 
-/** Lo que usa la app de cada tabla. Las verificaciones solo se crean (el historial sigue siendo remoto). */
+/** Lo que usa la app de cada tabla. Las verificaciones se crean y se leen del historial local. */
 export interface LocalRepositories {
   routines: RoutineRepository;
   items: ItemRepository;
   triggers: TriggerRepository;
   homeNetworks: HomeNetworkRepository;
   settings: SettingsRepository;
-  records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine'>;
+  records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine' | 'getAll'>;
 }
 
 /** Borra la rutina con sus ítems y avisos en el teléfono; en el servidor lo hará deleteRoutineCascade. */
@@ -41,10 +41,20 @@ function deleteRoutineLocally(store: LocalStore, routineId: string, deps: LocalD
       items: items.filter((item) => !ofRoutine(item)),
       triggers: triggers.filter((trigger) => !ofRoutine(trigger)),
     };
+    const records = doc.records?.filter((record) => record.routineId !== routineId);
     const outbox = enqueueRoutineDeletion(doc.outbox, newOp({ kind: 'deleteRoutine', id: routineId }, now, deps), children);
-    return { doc: { ...doc, tables, outbox }, result: undefined };
+    return { doc: { ...doc, tables, outbox, records }, result: undefined };
   });
 }
+
+const toVerificationRecord = (record: PendingRecord, now: string): VerificationRecord => ({
+  id: record.id,
+  routineId: record.routineId,
+  date: record.date ?? now,
+  result: record.result,
+  itemsChecked: record.itemsChecked ?? null,
+  durationSeconds: record.durationSeconds ?? null,
+});
 
 /** Las verificaciones no se guardan como tabla local: van directo a la outbox (antes, pendingSync). */
 function createRecordsOutbox(store: LocalStore, deps: LocalDeps): LocalRepositories['records'] {
@@ -55,9 +65,12 @@ function createRecordsOutbox(store: LocalStore, deps: LocalDeps): LocalRepositor
       const record: PendingRecord = { ...input, id: input.id ?? deps.newId(), date: input.date ?? now };
       const op = newOp({ kind: 'insertRecord', record }, record.date ?? now, deps);
       const completedAt = record.result === 'completed' ? (record.date ?? now) : null;
+      const created = toVerificationRecord(record, now);
       await store.update((doc) => {
         const outbox = enqueue(doc.outbox, op);
-        if (!completedAt) return { doc: { ...doc, outbox }, result: undefined };
+        // También al historial local: se ve sin red y sigue ahí aunque la tarea en segundo plano la suba.
+        const records = [...(doc.records ?? []).filter((existing) => existing.id !== created.id), created];
+        if (!completedAt) return { doc: { ...doc, outbox, records }, result: undefined };
         // "Última vez" se ve al instante, como lo hará el trigger del servidor (solo completas). No se encola:
         // last_completed_at lo pone el servidor y la próxima bajada lo confirma.
         const routines = doc.tables.routines.map((routine) =>
@@ -66,17 +79,14 @@ function createRecordsOutbox(store: LocalStore, deps: LocalDeps): LocalRepositor
             ? { ...routine, lastCompletedAt: completedAt }
             : routine,
         );
-        return { doc: { ...doc, tables: { ...doc.tables, routines }, outbox }, result: undefined };
+        return { doc: { ...doc, tables: { ...doc.tables, routines }, outbox, records }, result: undefined };
       });
-      return {
-        id: record.id,
-        routineId: record.routineId,
-        date: record.date ?? now,
-        result: record.result,
-        itemsChecked: record.itemsChecked ?? null,
-        durationSeconds: record.durationSeconds ?? null,
-      };
+      return created;
     },
+
+    // Historial local, del más reciente al más antiguo (como el repositorio de Supabase).
+    getAll: async () =>
+      [...((await store.read()).records ?? [])].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)),
 
     // Solo quedan por quitar las verificaciones aún sin subir: las del servidor las borra la cascada.
     deleteByRoutine: (routineId) =>
@@ -84,6 +94,7 @@ function createRecordsOutbox(store: LocalStore, deps: LocalDeps): LocalRepositor
         doc: {
           ...doc,
           outbox: doc.outbox.filter((op) => !(op.kind === 'insertRecord' && op.record.routineId === routineId)),
+          records: doc.records?.filter((record) => record.routineId !== routineId),
         },
         result: undefined,
       })),

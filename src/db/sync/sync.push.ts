@@ -19,7 +19,7 @@ export interface RemoteDeps {
   triggers: RemoteTriggerRepository;
   homeNetworks: RemoteHomeNetworkRepository;
   settings: RemoteSettingsRepository;
-  records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine'>;
+  records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine' | 'getAll'>;
 }
 
 export interface PushReport {

@@ -3,7 +3,7 @@ import type { Item } from '@/shared/types/item.types';
 import type { Routine } from '@/shared/types/routine.types';
 import type { Settings } from '@/shared/types/settings.types';
 import type { Trigger } from '@/shared/types/trigger.types';
-import type { CreateVerificationRecordInput } from '@/shared/types/verification-record.types';
+import type { CreateVerificationRecordInput, VerificationRecord } from '@/shared/types/verification-record.types';
 
 /** Copia local de los datos del usuario (entidades del dominio, no filas de la base). */
 export interface LocalTables {
@@ -68,4 +68,9 @@ export interface LocalDocument {
   outbox: OutboxOp[];
   /** ISO 8601 de la última descarga completa del servidor (Fase 4). */
   lastPulledAt: string | null;
+  /**
+   * Historial (P09) sin red: lo bajado del servidor más lo verificado aquí. Lo pendiente de subir se sabe
+   * por la cola. Los documentos anteriores no lo tienen (se llena en la siguiente bajada).
+   */
+  records?: VerificationRecord[];
 }

@@ -71,6 +71,16 @@ describe('repositorios local-first', () => {
     expect(doc.outbox).toEqual([expect.objectContaining({ kind: 'deleteRoutine', id: routine.id })]);
   });
 
+  it('una verificación queda en el historial local (sin red) y se quita al borrar su rutina', async () => {
+    const { repos } = setup();
+    await repos.records.create({ id: 'rec-1', routineId: 'r1', result: 'completed', date: '2026-10-14T08:00:00.000Z' });
+    await repos.records.create({ id: 'rec-2', routineId: 'r2', result: 'partial', date: '2026-10-15T08:00:00.000Z' });
+
+    expect((await repos.records.getAll()).map((record) => record.id)).toEqual(['rec-2', 'rec-1']);
+    await repos.records.deleteByRoutine('r1');
+    expect((await repos.records.getAll()).map((record) => record.id)).toEqual(['rec-2']);
+  });
+
   it('una verificación va directo a la cola (no se guarda como tabla local)', async () => {
     const { store, repos } = setup();
 
