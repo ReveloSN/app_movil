@@ -2,6 +2,7 @@ import type { LocalTables } from '../local/local-document.types';
 import type { LocalStore } from '../local/local.store';
 import { isNetworkError } from '../repositories/repository.types';
 import { mergePulled } from './sync.merge';
+import { mergeRecords, sameRecords } from './sync.records';
 import { pushOutbox, type PushReport, type RemoteDeps } from './sync.push';
 
 export interface SyncReport {
@@ -42,8 +43,9 @@ export function createSyncEngine(
     if (push.offline) return { push, pulled: false, changed: false };
 
     let snapshot: LocalTables;
+    let remoteRecords: Awaited<ReturnType<RemoteDeps['records']['getAll']>>;
     try {
-      snapshot = await fetchRemoteTables(remote);
+      [snapshot, remoteRecords] = await Promise.all([fetchRemoteTables(remote), remote.records.getAll()]);
     } catch (cause) {
       if (isNetworkError(cause)) return { push, pulled: false, changed: false };
       throw cause;
@@ -51,7 +53,11 @@ export function createSyncEngine(
 
     const changed = await store.update((doc) => {
       const tables = mergePulled(doc, snapshot);
-      return { doc: { ...doc, tables, lastPulledAt: now().toISOString() }, result: tables !== doc.tables };
+      const local = doc.records ?? [];
+      const merged = mergeRecords(local, remoteRecords, doc.outbox);
+      // Mismo historial: se conserva el mismo arreglo para no avisar a nadie.
+      const records = doc.records && sameRecords(local, merged) ? doc.records : merged;
+      return { doc: { ...doc, tables, records, lastPulledAt: now().toISOString() }, result: tables !== doc.tables };
     }, 'sync');
     return { push, pulled: true, changed };
   }
