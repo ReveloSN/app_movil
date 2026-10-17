@@ -168,7 +168,7 @@ export default function VerifyScreen() {
         <View style={styles.titleRow}>
           {/* Ícono con el color de la rutina: la identifica de un vistazo (el nombre va al lado). */}
           <View style={[styles.badge, { backgroundColor: accent.tint }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Ionicons name={resolveRoutineIcon(routine?.icon)} size={iconSizes.lg} color={accent.color} />
+            <Ionicons name={resolveRoutineIcon(routine?.icon)} size={iconSizes.md} color={accent.color} />
           </View>
           <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
             {routineName}
@@ -211,9 +211,10 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       alignItems: 'flex-start',
       gap: spacing.sm,
     },
+    // Del alto de la línea del título: decorativa, no quita sitio a la lista.
     badge: {
-      width: sizes.secondaryRowHeight,
-      height: sizes.secondaryRowHeight,
+      width: typography.h1.lineHeight,
+      height: typography.h1.lineHeight,
       borderRadius: radii.full,
       alignItems: 'center',
       justifyContent: 'center',
@@ -224,9 +225,9 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       flex: 1,
     },
     // La lista se lleva todo el alto libre y hace scroll; el pie queda fijo. En 360×640 dp (barra de
-    // estado 24, navegación por gestos 24): encabezado 8+34+12+6+12 = 72, pie 12+52+8+44+12 = 128,
-    // lista 640−48−72−128 = 392 dp (61 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
-    // 368 dp (57,5 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
+    // estado 24, navegación por gestos 24): encabezado 8+34+12+6+12 = 72, pie 12+52+8+48+12 = 132,
+    // lista 640−48−72−132 = 388 dp (60,6 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
+    // 364 dp (57 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
     list: {
       flex: 1,
     },
