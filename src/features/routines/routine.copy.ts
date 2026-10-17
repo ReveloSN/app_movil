@@ -35,6 +35,8 @@ export const ITEM_NOTE_FIELD = 'Nota';
 export const ITEM_NOTE_PLACEHOLDER = 'Opcional. Ej. En el cajón de la entrada';
 export const editItemHint = (label: string) => `Edita «${label}»`;
 export const removeItemLabel = (label: string) => `Quitar «${label}»`;
+/** Aviso breve al quitar un ítem (con "Deshacer"). */
+export const itemRemovedMessage = (label: string) => `Quitaste «${label}».`;
 
 // 04-2. Sin código en el Documento de Contenido: propuestos, pendientes de validar.
 export const ICON_LABEL = 'Ícono';

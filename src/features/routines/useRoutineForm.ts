@@ -94,8 +94,21 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     setItems((current) => (current.length < MAX_ITEMS ? [...current, newEntry(item)] : current));
   }
 
-  function removeItem(key: string) {
+  /** Quita el ítem y devuelve lo necesario para deshacerlo (o null si ya no estaba). */
+  function removeItem(key: string): { entry: ItemFormEntry; index: number } | null {
+    const index = items.findIndex((item) => item.key === key);
+    if (index === -1) return null;
+    const entry = items[index];
     setItems((current) => current.filter((item) => item.key !== key));
+    return { entry, index };
+  }
+
+  /** "Deshacer": vuelve a poner el ítem donde estaba (si sigue habiendo espacio y no está ya). */
+  function restoreItem({ entry, index }: { entry: ItemFormEntry; index: number }) {
+    setItems((current) => {
+      if (current.length >= MAX_ITEMS || current.some((item) => item.key === entry.key)) return current;
+      return [...current.slice(0, index), entry, ...current.slice(index)];
+    });
   }
 
   /** Devuelve el resultado (null si ya había un guardado en curso). */
@@ -128,6 +141,7 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     saveItem,
     addSuggested,
     removeItem,
+    restoreItem,
     canAddItem,
     errors,
     submitting,
