@@ -1,6 +1,6 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
+import { TabBarIcon } from '@/components/atoms/TabBarIcon';
 import { RequireSession } from '@/features/auth/RequireSession';
 import { saveLastTab } from '@/features/navigation/lastTab.store';
 import { useRestoreLastTab } from '@/features/navigation/useRestoreLastTab';
@@ -23,6 +23,7 @@ export default function TabsLayout() {
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
           tabBarLabelStyle: typography.caption,
+          // La pestaña activa: píldora teñida, ícono lleno y verde (no solo color).
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.textPrimary,
           headerTitleStyle: typography.h2,
@@ -33,21 +34,21 @@ export default function TabsLayout() {
           name="index"
           options={{
             title: 'Rutinas',
-            tabBarIcon: ({ color, size }) => <Ionicons name="list" size={size} color={color} />,
+            tabBarIcon: (props) => <TabBarIcon icon="list-outline" activeIcon="list" {...props} />,
           }}
         />
         <Tabs.Screen
           name="history"
           options={{
             title: 'Historial',
-            tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} />,
+            tabBarIcon: (props) => <TabBarIcon icon="time-outline" activeIcon="time" {...props} />,
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             title: 'Ajustes',
-            tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} />,
+            tabBarIcon: (props) => <TabBarIcon icon="settings-outline" activeIcon="settings" {...props} />,
           }}
         />
       </Tabs>
