@@ -25,7 +25,7 @@ import type { Routine } from '@/shared/types/routine.types';
 import { ITEM_KIND_OPTIONS } from './item-kinds';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
-import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
+import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
 import type { RoutineDraft } from './routines.types';
 import { useRoutineDeletion } from './useRoutineDeletion';
 import { useRoutineForm } from './useRoutineForm';
@@ -133,6 +133,8 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
           />
         ))}
 
+        {/* ER-05: al llegar al máximo, se explica por qué ya no se puede añadir. */}
+        {form.canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}
         <SecondaryButton icon="add" label={copy.ADD_ITEM_LABEL} onPress={form.addItem} disabled={!form.canAddItem} />
 
         {/* 04-5 */}

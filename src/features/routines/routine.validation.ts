@@ -7,6 +7,9 @@ export const ITEM_LABEL_MAX_LENGTH = 32;
 export const MIN_ITEMS = 1;
 export const MAX_ITEMS = 12;
 
+/** ER-05 */
+export const MAX_ITEMS_MESSAGE = 'Máximo 12 ítems. Las listas cortas se revisan más rápido.';
+
 export function validateRoutineDraft({ name, items, triggers = [] }: RoutineDraft): RoutineValidationErrors {
   const errors: RoutineValidationErrors = {};
   const trimmedName = name.trim();
@@ -20,7 +23,7 @@ export function validateRoutineDraft({ name, items, triggers = [] }: RoutineDraf
   if (items.length < MIN_ITEMS) {
     errors.items = 'Añade al menos un ítem.';
   } else if (items.length > MAX_ITEMS) {
-    errors.items = `Máximo ${MAX_ITEMS} ítems por rutina.`;
+    errors.items = MAX_ITEMS_MESSAGE;
   }
 
   const itemLabels: Record<number, string> = {};
