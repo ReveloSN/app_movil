@@ -11,7 +11,6 @@ import { TextField } from '@/components/atoms/TextField';
 import { ColorPicker } from '@/components/molecules/ColorPicker';
 import { IconPicker } from '@/components/molecules/IconPicker';
 import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
-import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
@@ -27,7 +26,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { resolveItemIcon } from './item-icons';
-import { pickSuggestions } from './item-suggestions';
+import { ItemSuggestions } from './ItemSuggestions';
 import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
@@ -92,7 +91,6 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   });
   // P05: ítem abierto en la hoja inferior (nuevo o existente).
   const [editingItem, setEditingItem] = useState<{ entry: ItemFormEntry; isNew: boolean } | null>(null);
-  const suggestions = form.canAddItem ? pickSuggestions(form.items.map((item) => item.label)) : [];
   // DC-03: cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04.
   const guard = useUnsavedChangesGuard(form.dirty);
   const removal = useRoutineDeletion(editing?.routine.id, () => {
@@ -177,16 +175,12 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         />
 
         {/* 04-4 */}
-        {suggestions.length > 0 ? (
-          <View style={styles.suggestions}>
-            <SectionLabel label={copy.SUGGESTIONS_TITLE} />
-            <SuggestionChips
-              labels={suggestions.map((item) => item.label)}
-              onPick={(index) => form.addSuggested(suggestions[index])}
-              accessibilityLabelFor={copy.addSuggestionLabel}
-            />
-          </View>
-        ) : null}
+        <ItemSuggestions
+          name={form.name}
+          labels={form.items.map((item) => item.label)}
+          canAdd={form.canAddItem}
+          onPick={form.addSuggested}
+        />
 
         {/* 04-5 */}
         <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
@@ -256,9 +250,6 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
     content: {
       gap: spacing.lg,
       padding: spacing.xl,
-    },
-    suggestions: {
-      gap: spacing.sm,
     },
     deleteZone: {
       gap: spacing.sm,
