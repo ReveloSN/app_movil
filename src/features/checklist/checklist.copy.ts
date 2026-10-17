@@ -5,6 +5,10 @@ import { formatList } from '@/shared/utils/formatList';
 export const VERIFY_NOW_LABEL = 'Verificar ahora';
 export const DONE_LABEL = 'Listo';
 export const SKIP_TODAY_LABEL = 'Omitir por hoy';
+/** "Posponer 5 min": los minutos salen de Ajustes (11-4), igual que en la notificación. */
+export { snoozeActionLabel as postponeLabel } from '@/features/notifications/notification.copy';
+// Sin código en el Documento de Contenido: propuesto, pendiente de validar.
+export const POSTPONE_ERROR = 'No se pudo posponer. Inténtalo de nuevo o márcalo ahora.';
 
 /** CF-01 */
 export const COMPLETE_MESSAGE = 'Todo listo. Buen camino.';

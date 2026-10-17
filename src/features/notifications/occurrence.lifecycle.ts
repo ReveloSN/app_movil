@@ -5,6 +5,7 @@ import type { ArmedTrigger } from '@/features/triggers/trigger.types';
 import { triggerBody } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import { cancelOccurrenceNotifications, scheduleOccurrence, snoozeOccurrence } from './notification.scheduler';
+import { planPostpone, type PostponeTarget } from './occurrence.postpone';
 import { updateOccurrences } from './occurrence.store';
 import type { Occurrence } from './occurrence.types';
 
@@ -113,6 +114,26 @@ export function postponeOccurrence(key: string, now: number, prefs: Notification
     }
     const snoozed = await snoozeOccurrence(target, now, prefs);
     return { entries: entries.map((entry) => (entry === target ? snoozed : entry)), result: snoozed };
+  });
+}
+
+/**
+ * "Posponer N min" en P07: lo mismo que la acción de la notificación (recordatorios ×1 y ×2 y, sin
+ * respuesta, "no_response"), sobre la última vez que sonó esa rutina o una nueva si no sonó ninguna.
+ * Con "No molestar" las veces ya sonadas quedan cerradas sin más avisos. Devuelve la vez pospuesta.
+ */
+export function postponeRoutine(routine: PostponeTarget, now: number, prefs: NotificationPrefs): Promise<Occurrence | null> {
+  return updateOccurrences(async (entries) => {
+    const { target, superseded } = planPostpone(entries, routine, now);
+    const answered = [target, ...superseded];
+    const rest = entries.filter((entry) => !answered.includes(entry));
+    if (prefs.doNotDisturb) {
+      await Promise.allSettled(answered.map(cancelOccurrenceNotifications));
+      return { entries: rest, result: null };
+    }
+    await Promise.allSettled(superseded.map(cancelOccurrenceNotifications));
+    const snoozed = await snoozeOccurrence(target, now, prefs);
+    return { entries: [...rest, snoozed], result: snoozed };
   });
 }
 
