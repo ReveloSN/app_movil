@@ -14,7 +14,7 @@ export interface TriggerSyncDeps {
 }
 
 /**
- * Avisos activos del usuario (RLS) con lo necesario para notificar sin red: nombre de la rutina
+ * Avisos activos del usuario (copia local) con lo necesario para notificar sin red: nombre de la rutina
  * e ítems en orden. Se ignoran los de rutinas pausadas y las filas incompletas.
  */
 export async function fetchArmedTriggers(deps: TriggerSyncDeps): Promise<ArmedTrigger[]> {

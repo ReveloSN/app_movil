@@ -4,9 +4,9 @@ import NetInfo from '@react-native-community/netinfo';
 import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
-import { appRepositories } from '@/db/app.repositories';
 import type { SettingsRepository } from '@/db/repositories/settings.repository';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
 import { clearArmedTriggers, loadArmedTriggers, saveArmedTriggers } from '@/features/triggers/armedTriggers.store';
 import { fetchArmedTriggers, type TriggerSyncDeps } from '@/features/triggers/trigger.sync';
 import { clearLastSsid } from '@/features/triggers/wifi/wifiSnapshot.store';
@@ -24,16 +24,13 @@ import { runTriggerMaintenance } from './trigger.maintenance';
 import { checkWifiTriggers } from './wifi.monitor';
 
 interface TriggerRuntimeValue {
-  /** Vuelve a leer los avisos de Supabase y reprograma (llamar tras guardar una rutina con avisos). */
+  /** Vuelve a leer los avisos de la copia local y reprograma (llamar tras guardar una rutina con avisos). */
   rearm(): Promise<void>;
   /** Aplica ya un cambio de Ajustes (P11): botón "Posponer N min", sonido y "No molestar". */
   applyPrefs(prefs: NotificationPrefs): Promise<void>;
 }
 
 const TriggerRuntimeContext = createContext<TriggerRuntimeValue | null>(null);
-
-const defaultDeps: TriggerSyncDeps = appRepositories;
-const defaultSettings: Pick<SettingsRepository, 'getAll'> = appRepositories.settings;
 
 const warn = (scope: string) => (cause: unknown) => {
   if (__DEV__) console.warn(`[triggers.${scope}]`, cause);
@@ -60,13 +57,17 @@ async function applyPrefs(prefs: NotificationPrefs): Promise<void> {
  */
 export function TriggerRuntimeProvider({
   children,
-  deps = defaultDeps,
-  settings = defaultSettings,
+  deps: injectedDeps,
+  settings: injectedSettings,
 }: {
   children: ReactNode;
+  /** Inyectables para tests; por defecto, los repositorios locales del usuario. */
   deps?: TriggerSyncDeps;
   settings?: Pick<SettingsRepository, 'getAll'>;
 }) {
+  const local = useLocalRepositories();
+  const deps = injectedDeps ?? local;
+  const settings = injectedSettings ?? local.settings;
   const { user, loading } = useAuth();
   const userId = user?.id ?? null;
 
@@ -81,7 +82,7 @@ export function TriggerRuntimeProvider({
     if (previous && previous.ownerId !== userId) await disarm();
     try {
       await saveArmedTriggers({ ownerId: userId, triggers: await fetchArmedTriggers(deps) });
-      // Ajustes de la cuenta (otra instalación pudo cambiarlos). Sin fila, quedan los por defecto.
+      // Ajustes guardados en el teléfono. Sin fila, quedan los por defecto.
       const [row] = await settings.getAll();
       if (row) {
         const prefs = { snoozeMinutes: normalizeSnooze(row.snoozeMinutes), doNotDisturb: row.doNotDisturb, sound: row.sound };
@@ -89,7 +90,7 @@ export function TriggerRuntimeProvider({
         await registerNotificationActions(prefs.snoozeMinutes);
       }
     } catch (cause) {
-      // Sin red se sigue con la copia local (si es de esta cuenta).
+      // Si no se pudo leer, se sigue con la copia armada anterior (si es de esta cuenta).
       warn('fetch')(cause);
     }
     await runTriggerMaintenance();
