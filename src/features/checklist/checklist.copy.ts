@@ -26,6 +26,9 @@ export const partialMessage = (checked: number, total: number, omitted: readonly
 export const criticalSkipMessage = (label: string) => `«${label}» es un ítem crítico. ¿Omitirlo de todas formas?`;
 export const CRITICAL_SKIP_CONFIRM = 'Omitir';
 export const CRITICAL_SKIP_CANCEL = 'Revisar';
+/** 08-4: racha mínima, sin culpa (solo desde 2 días; nunca se dice que se perdió). Propuesto, pendiente de validar. */
+export const streakLabel = (days: number) => `${days} días seguidos`;
+
 /** Marca de ítem crítico (07-4) para lector de pantalla y en el resumen. */
 export const CRITICAL_LABEL = 'crítico';
 

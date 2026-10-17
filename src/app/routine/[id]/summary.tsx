@@ -4,8 +4,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
-import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage } from '@/features/checklist/checklist.copy';
+import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage, streakLabel } from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
+import { useRoutineStreak } from '@/features/history/useRoutineStreak';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDuration } from '@/shared/utils/formatDuration';
@@ -18,6 +19,7 @@ export default function SummaryScreen() {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const summary = fromSummaryParams(params);
+  const streak = useRoutineStreak(params.id ?? '');
   const complete = summary.outcome === 'completed';
   const message = complete ? COMPLETE_MESSAGE : partialMessage(summary.checked, summary.total, summary.omittedLabels);
 
@@ -68,7 +70,13 @@ export default function SummaryScreen() {
           <Text style={styles.duration}>{formatDuration(summary.durationSeconds)}</Text>
         </View>
 
-        {/* TODO(08-4, P2): racha. Requiere calcularla sobre el historial de registros, que aún no existe. */}
+        {/* 08-4: solo con 2 días o más; sin mensaje cuando se pierde. */}
+        {streak ? (
+          <View style={[styles.card, styles.streak]} accessible accessibilityLabel={streakLabel(streak)}>
+            <Ionicons name="flame-outline" size={iconSizes.md} color={colors.primary} />
+            <Text style={styles.duration}>{streakLabel(streak)}</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -142,6 +150,10 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     criticalText: {
       ...typography.caption,
       color: colors.criticalText,
+    },
+    streak: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     duration: {
       ...typography.bodyStrong,
