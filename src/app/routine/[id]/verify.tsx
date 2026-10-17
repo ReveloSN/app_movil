@@ -16,7 +16,7 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { ChecklistItemRow } from '@/components/molecules/ChecklistItemRow';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
-import { LoadingState } from '@/components/molecules/LoadingState';
+import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
@@ -106,7 +106,7 @@ export default function VerifyScreen() {
   }
 
   const body = loading ? (
-    <LoadingState accessibilityLabel="Cargando ítems" />
+    <SkeletonList variant="row" rows={4} accessibilityLabel="Cargando ítems" />
   ) : error ? (
     <ErrorState message={error} onRetry={retry} />
   ) : items.length === 0 ? (

@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
-import { LoadingState } from '@/components/molecules/LoadingState';
+import { SkeletonList } from '@/components/molecules/SkeletonList';
 import * as copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
@@ -61,7 +61,7 @@ export default function HistoryScreen() {
   const resultOptions = useMemo(() => [{ value: ALL, label: copy.ALL_RESULTS_LABEL }, ...RESULT_FILTERS], []);
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && records.length === 0) return <LoadingState accessibilityLabel="Cargando historial" />;
+  if (loading && records.length === 0) return <SkeletonList rows={5} accessibilityLabel="Cargando historial" />;
   if (error && records.length === 0) return <ErrorState message={error} onRetry={refresh} />;
   if (records.length === 0) return <EmptyState icon="time-outline" message={copy.EMPTY_MESSAGE} />;
 
