@@ -61,6 +61,15 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     if (canAddItem) setItems((current) => [...current, newEntry()]);
   }
 
+  /** Sugerencia (04-4): ocupa el primer ítem vacío o se añade al final si hay espacio. */
+  function addSuggested(item: ItemDraft) {
+    setItems((current) => {
+      const empty = current.findIndex((entry) => !entry.label.trim());
+      if (empty >= 0) return current.map((entry, index) => (index === empty ? { ...entry, ...item, id: entry.id } : entry));
+      return current.length < MAX_ITEMS ? [...current, newEntry(item)] : current;
+    });
+  }
+
   function removeItem(key: string) {
     setItems((current) => current.filter((item) => item.key !== key));
   }
@@ -85,5 +94,7 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     return result.status === 'saved';
   }
 
-  return { name, setName, items, addItem, removeItem, updateItem, canAddItem, errors, submitting, submitError, submit, dirty };
+  const hasRoom = canAddItem || items.some((entry) => !entry.label.trim());
+
+  return { name, setName, items, addItem, addSuggested, hasRoom, removeItem, updateItem, canAddItem, errors, submitting, submitError, submit, dirty };
 }
