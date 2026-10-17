@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
+import Animated, { FadeInUp, ReduceMotion, ZoomIn } from 'react-native-reanimated';
 
+import { durations, fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -10,15 +12,23 @@ interface EmptyStateProps {
   message: string;
 }
 
+const iconEntering = ZoomIn.duration(durations.slow).reduceMotion(ReduceMotion.System);
+const textEntering = FadeInUp.duration(durations.base).delay(80).reduceMotion(ReduceMotion.System);
+
 export function EmptyState({ icon, message }: EmptyStateProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
-    <View style={styles.container} accessible accessibilityLabel={message}>
-      <Ionicons name={icon} size={iconSizes.xl} color={colors.textSecondary} />
-      <Text style={styles.message}>{message}</Text>
-    </View>
+    // EV-01 / EV-02: el ícono entra con una escala suave y el texto lo sigue.
+    <Animated.View entering={fadeIn} style={styles.container} accessible accessibilityLabel={message}>
+      <Animated.View entering={iconEntering}>
+        <Ionicons name={icon} size={iconSizes.xl} color={colors.textSecondary} />
+      </Animated.View>
+      <Animated.View entering={textEntering}>
+        <Text style={styles.message}>{message}</Text>
+      </Animated.View>
+    </Animated.View>
   );
 }
 

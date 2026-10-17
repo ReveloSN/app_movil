@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -17,13 +19,13 @@ export function ErrorState({ message, onRetry, retryLabel = 'Reintentar' }: Erro
   const styles = useThemedStyles(createStyles);
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={fadeIn} style={styles.container}>
       <View style={styles.content} accessibilityRole="alert">
         <Ionicons name="cloud-offline-outline" size={iconSizes.xl} color={colors.danger} />
         <Text style={styles.message}>{message}</Text>
       </View>
       <PrimaryButton label={retryLabel} onPress={onRetry} />
-    </View>
+    </Animated.View>
   );
 }
 

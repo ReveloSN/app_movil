@@ -1,5 +1,7 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 
+import { fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -12,9 +14,10 @@ export function LoadingState({ accessibilityLabel = 'Cargando' }: LoadingStatePr
   const styles = useThemedStyles(createStyles);
 
   return (
-    <View style={styles.container} accessible accessibilityLabel={accessibilityLabel} accessibilityState={{ busy: true }}>
+    // Transición suave entre cargando, vacío, error y contenido: cada estado entra con un fundido.
+    <Animated.View entering={fadeIn} style={styles.container} accessible accessibilityLabel={accessibilityLabel} accessibilityState={{ busy: true }}>
       <ActivityIndicator size="large" color={colors.primary} />
-    </View>
+    </Animated.View>
   );
 }
 
