@@ -42,7 +42,14 @@ export async function updateRoutineWithItems(
 
   await Promise.all(
     draft.items.map((item, sortOrder) => {
-      const changes = { label: item.label.trim(), type: item.kind, critical: item.critical, sortOrder };
+      const changes = {
+        label: item.label.trim(),
+        type: item.kind,
+        critical: item.critical,
+        icon: item.icon ?? null,
+        note: item.note?.trim() || null,
+        sortOrder,
+      };
       return item.id ? deps.items.update(item.id, changes) : deps.items.create({ routineId, ...changes });
     }),
   );

@@ -4,6 +4,7 @@ import type { RoutineDraft, RoutineValidationErrors } from './routines.types';
 
 export const ROUTINE_NAME_MAX_LENGTH = 24;
 export const ITEM_LABEL_MAX_LENGTH = 32;
+export const ITEM_NOTE_MAX_LENGTH = 60;
 export const MIN_ITEMS = 1;
 export const MAX_ITEMS = 12;
 
@@ -36,6 +37,21 @@ export function validateRoutineDraft({ name, items, triggers = [] }: RoutineDraf
 
   if (triggers.length > MAX_TRIGGERS) errors.triggers = `Máximo ${MAX_TRIGGERS} avisos por rutina.`;
 
+  return errors;
+}
+
+export interface ItemValidationErrors {
+  label?: string;
+  note?: string;
+}
+
+/** P05: etiqueta* (máx. 32) y nota (máx. 60). */
+export function validateItemDraft({ label, note }: { label: string; note: string }): ItemValidationErrors {
+  const errors: ItemValidationErrors = {};
+  const trimmed = label.trim();
+  if (!trimmed) errors.label = 'Escribe el ítem.';
+  else if (trimmed.length > ITEM_LABEL_MAX_LENGTH) errors.label = `Máximo ${ITEM_LABEL_MAX_LENGTH} caracteres.`;
+  if (note.trim().length > ITEM_NOTE_MAX_LENGTH) errors.note = `Máximo ${ITEM_NOTE_MAX_LENGTH} caracteres.`;
   return errors;
 }
 

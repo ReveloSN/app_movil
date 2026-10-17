@@ -12,6 +12,10 @@ export interface ItemDraft {
   label: string;
   kind: ItemKind;
   critical: boolean;
+  /** Nombre de ícono de Ionicons (05-2). Sin él, se muestra el genérico. */
+  icon?: string;
+  /** 05-5: máx. 60. Se muestra en P07 bajo la etiqueta. */
+  note?: string;
 }
 
 export interface RoutineDraft {

@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
@@ -10,7 +10,7 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
 import { ColorPicker } from '@/components/molecules/ColorPicker';
 import { IconPicker } from '@/components/molecules/IconPicker';
-import { ItemFormRow } from '@/components/molecules/ItemFormRow';
+import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
@@ -25,15 +25,16 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
 
-import { ITEM_KIND_OPTIONS } from './item-kinds';
+import { resolveItemIcon } from './item-icons';
 import { pickSuggestions } from './item-suggestions';
 import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
-import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
+import { ItemEditSheet } from './ItemEditSheet';
+import { MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
 import type { RoutineDraft } from './routines.types';
 import { useRoutineDeletion } from './useRoutineDeletion';
-import { useRoutineForm } from './useRoutineForm';
+import { useRoutineForm, type ItemFormEntry } from './useRoutineForm';
 import { useRoutines } from './useRoutines';
 
 interface RoutineFormProps {
@@ -82,7 +83,9 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
     initialDraft,
     triggers,
   });
-  const suggestions = form.hasRoom ? pickSuggestions(form.items.map((item) => item.label)) : [];
+  // P05: ítem abierto en la hoja inferior (nuevo o existente).
+  const [editingItem, setEditingItem] = useState<{ entry: ItemFormEntry; isNew: boolean } | null>(null);
+  const suggestions = form.canAddItem ? pickSuggestions(form.items.map((item) => item.label)) : [];
   // DC-03: cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04.
   const guard = useUnsavedChangesGuard(form.dirty);
   const removal = useRoutineDeletion(editing?.routine.id, () => {
@@ -139,27 +142,31 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
         />
         {form.errors.items ? <StatusMessage tone="error" message={form.errors.items} /> : null}
 
+        {form.items.length === 0 ? <StatusMessage tone="info" message={copy.EMPTY_ITEMS_MESSAGE} /> : null}
         {form.items.map((item, index) => (
-          <ItemFormRow
+          <ItemSummaryRow
             key={item.key}
-            index={index}
             label={item.label}
-            labelMaxLength={ITEM_LABEL_MAX_LENGTH}
-            labelError={form.errors.itemLabels?.[index]}
-            onChangeLabel={(label) => form.updateItem(item.key, { label })}
-            type={item.kind}
-            typeOptions={ITEM_KIND_OPTIONS}
-            onChangeType={(kind) => form.updateItem(item.key, { kind })}
+            icon={resolveItemIcon(item.icon).icon}
             critical={item.critical}
-            onChangeCritical={(critical) => form.updateItem(item.key, { critical })}
-            removable={form.items.length > 1}
+            criticalLabel={copy.CRITICAL_LABEL}
+            note={item.note}
+            error={form.errors.itemLabels?.[index]}
+            onPress={() => setEditingItem({ entry: item, isNew: false })}
+            editHint={copy.editItemHint(item.label)}
             onRemove={() => form.removeItem(item.key)}
+            removeLabel={copy.removeItemLabel(item.label)}
           />
         ))}
 
         {/* ER-05: al llegar al máximo, se explica por qué ya no se puede añadir. */}
         {form.canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}
-        <SecondaryButton icon="add" label={copy.ADD_ITEM_LABEL} onPress={form.addItem} disabled={!form.canAddItem} />
+        <SecondaryButton
+          icon="add"
+          label={copy.ADD_ITEM_LABEL}
+          onPress={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
+          disabled={!form.canAddItem}
+        />
 
         {/* 04-4 */}
         {suggestions.length > 0 ? (
@@ -209,6 +216,18 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
           onConfirm={removal.confirm}
           onCancel={removal.cancel}
           confirmFirst
+        />
+      ) : null}
+      {editingItem ? (
+        <ItemEditSheet
+          key={editingItem.entry.key}
+          item={editingItem.entry}
+          isNew={editingItem.isNew}
+          onSave={(entry) => {
+            form.saveItem(entry);
+            setEditingItem(null);
+          }}
+          onClose={() => setEditingItem(null)}
         />
       ) : null}
       <UnsavedChangesDialog
