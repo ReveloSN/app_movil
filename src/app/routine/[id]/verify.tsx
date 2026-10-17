@@ -111,20 +111,25 @@ export default function VerifyScreen() {
       <View style={styles.footer}>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
         {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
-        {/* 07-6: primaria · secundaria · terciaria (Documento de Jerarquía). */}
+        {/* 07-6: fila 1 la primaria a todo el ancho; fila 2 secundaria y terciaria lado a lado. */}
         <PrimaryButton
           label={copy.DONE_LABEL}
           onPress={() => finishAsking('done')}
           loading={finishing}
           disabled={postponement.postponing}
         />
-        <SecondaryButton
-          icon="time-outline"
-          label={copy.postponeLabel(postponement.snoozeMinutes)}
-          onPress={() => void postpone()}
-          disabled={busy}
-        />
-        <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => finishAsking('skip')} disabled={busy} />
+        <View style={styles.secondaryActions}>
+          <View style={styles.half}>
+            <SecondaryButton
+              label={copy.postponeLabel(postponement.snoozeMinutes)}
+              onPress={() => void postpone()}
+              disabled={busy}
+            />
+          </View>
+          <View style={styles.half}>
+            <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => finishAsking('skip')} disabled={busy} />
+          </View>
+        </View>
       </View>
     </>
   );
@@ -167,7 +172,7 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
       gap: spacing.md,
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.lg,
+      paddingBottom: spacing.md,
     },
     titleRow: {
       flexDirection: 'row',
@@ -179,8 +184,10 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
       color: colors.textPrimary,
       flex: 1,
     },
-    // La lista se lleva todo el alto libre (>60% en un teléfono típico). No se fuerza un mínimo:
-    // en pantallas chicas empujaría "Listo" fuera de la vista.
+    // La lista se lleva todo el alto libre y hace scroll; el pie queda fijo. En 360×640 dp (barra de
+    // estado 24, navegación por gestos 24): encabezado 8+34+12+6+12 = 72, pie 12+52+8+44+12 = 128,
+    // lista 640−48−72−128 = 392 dp (61 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
+    // 368 dp (57,5 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
     list: {
       flex: 1,
     },
@@ -192,6 +199,14 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
     footer: {
       gap: spacing.sm,
       paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    secondaryActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    half: {
+      flex: 1,
     },
   });
