@@ -6,6 +6,7 @@ import type { Routine } from '@/shared/types/routine.types';
 
 import { deleteRoutineCascade, type RoutineDeleteDeps } from './routine-delete.service';
 import { updateRoutineWithItems, type RoutineOriginal } from './routine-edit.service';
+import { upsertRoutine } from './routine-list';
 import { createRoutineWithItems, type RoutineServiceDeps } from './routine.service';
 import { hasValidationErrors, validateRoutineDraft } from './routine.validation';
 import { RoutinesContext } from './routines.context';
@@ -96,7 +97,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
 
       try {
         const routine = await createRoutineWithItems(repositories, draft);
-        setRoutines((current) => [...current, routine]);
+        setRoutines((current) => upsertRoutine(current, routine));
         return { status: 'saved', routine };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.create]', cause);
@@ -113,7 +114,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
 
       try {
         const routine = await updateRoutineWithItems(repositories, routineId, draft, original);
-        setRoutines((current) => current.map((item) => (item.id === routine.id ? routine : item)));
+        setRoutines((current) => upsertRoutine(current, routine));
         return { status: 'saved', routine };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.update]', cause);
