@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
@@ -20,6 +21,8 @@ import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
 import { PendingSyncIndicator } from '@/features/sync/PendingSyncIndicator';
 import { clearFlashMessage, useFlashMessage } from '@/shared/events/flashMessage';
+import { useFirstAppearance } from '@/shared/hooks/useFirstAppearance';
+import { staggeredEntering } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -35,6 +38,8 @@ export default function RoutinesScreen() {
   const nextRoutine = next ? routines.find((routine) => routine.id === next.routineId) : undefined;
   const nextAccent = routineAccent(colors, nextRoutine?.color);
   const styles = useThemedStyles(createStyles);
+  // Las tarjetas entran escalonadas solo la primera vez que se ve Inicio en esta sesión.
+  const firstAppearance = useFirstAppearance('home-routines');
   // Avisos de la sincronización (conflicto, error); se descartan al salir de Inicio.
   const flash = useFlashMessage();
   useFocusEffect(useCallback(() => clearFlashMessage, []));
@@ -83,19 +88,21 @@ export default function RoutinesScreen() {
               ) : null}
             </View>
           }
-          renderItem={({ item }) => (
-            <RoutineCard
-              name={item.name}
-              icon={item.icon}
-              accentColor={routineAccent(colors, item.color).color}
-              accentTint={routineAccent(colors, item.color).tint}
-              active={item.active}
-              lastCompletedAt={item.lastCompletedAt}
-              actionLabel={VERIFY_NOW_LABEL}
-              onAction={() => openVerification(item.id)}
-              onPress={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
-              pressHint="Edita la rutina"
-            />
+          renderItem={({ item, index }) => (
+            <Animated.View entering={firstAppearance ? staggeredEntering(index) : undefined}>
+              <RoutineCard
+                name={item.name}
+                icon={item.icon}
+                accentColor={routineAccent(colors, item.color).color}
+                accentTint={routineAccent(colors, item.color).tint}
+                active={item.active}
+                lastCompletedAt={item.lastCompletedAt}
+                actionLabel={VERIFY_NOW_LABEL}
+                onAction={() => openVerification(item.id)}
+                onPress={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
+                pressHint="Edita la rutina"
+              />
+            </Animated.View>
           )}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} colors={[colors.primary]} />
