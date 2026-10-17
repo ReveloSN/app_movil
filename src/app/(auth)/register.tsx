@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
@@ -22,6 +23,9 @@ export default function RegisterScreen() {
     },
   });
 
+  // "Siguiente" en el correo lleva a la contraseña; "Ir" en la contraseña envía.
+  const passwordRef = useRef<TextInput>(null);
+
   return (
     <AuthFormTemplate
       title="Crear cuenta"
@@ -36,8 +40,12 @@ export default function RegisterScreen() {
         autoComplete="email"
         keyboardType="email-address"
         textContentType="emailAddress"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
       />
       <TextField
+        ref={passwordRef}
         label="Contraseña"
         placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
         value={form.password}

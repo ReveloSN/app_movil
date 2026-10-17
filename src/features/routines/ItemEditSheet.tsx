@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, type TextInput } from 'react-native';
 
 import { IconButton } from '@/components/atoms/IconButton';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
@@ -36,6 +36,7 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
   const styles = useThemedStyles(createStyles);
   const editor = useItemEditor(item);
   const [confirmingClose, setConfirmingClose] = useState(false);
+  const noteRef = useRef<TextInput>(null);
 
   function save() {
     const result = editor.commit();
@@ -75,6 +76,9 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
             showCounter
             error={editor.errors.label}
             autoFocus={isNew}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => noteRef.current?.focus()}
           />
           {/* 05-2 */}
           <SectionLabel label={copy.ICON_LABEL} />
@@ -96,6 +100,9 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
           <SwitchRow icon="flag-outline" label={copy.CRITICAL_SWITCH_LABEL} value={editor.critical} onValueChange={editor.setCritical} />
           {/* 05-5 */}
           <TextField
+            ref={noteRef}
+            returnKeyType="done"
+            onSubmitEditing={save}
             label={copy.ITEM_NOTE_FIELD}
             placeholder={copy.ITEM_NOTE_PLACEHOLDER}
             value={editor.note}

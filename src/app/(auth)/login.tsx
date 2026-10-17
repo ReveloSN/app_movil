@@ -1,4 +1,6 @@
 import { router } from 'expo-router';
+import { useRef } from 'react';
+import type { TextInput } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
@@ -22,6 +24,9 @@ export default function LoginScreen() {
   const guest = useGuestSignIn(goHome);
   const busy = form.submitting || guest.submitting;
 
+  // "Siguiente" en el correo lleva a la contraseña; "Ir" en la contraseña envía.
+  const passwordRef = useRef<TextInput>(null);
+
   return (
     <AuthFormTemplate
       title="Iniciar sesión"
@@ -36,8 +41,12 @@ export default function LoginScreen() {
         autoComplete="email"
         keyboardType="email-address"
         textContentType="emailAddress"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
       />
       <TextField
+        ref={passwordRef}
         label="Contraseña"
         value={form.password}
         onChangeText={form.setPassword}
