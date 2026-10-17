@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { appRepositories } from '@/db/app.repositories';
 import type { HomeNetworkRepository } from '@/db/repositories/home-network.repository';
 import type { TriggerRepository } from '@/db/repositories/trigger.repository';
+import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import { NETWORK_NAME_MAX_LENGTH } from '@/features/triggers/trigger.validation';
 import { loadNetworkLastSeen } from '@/features/triggers/wifi/networkLastSeen.store';
@@ -22,8 +22,6 @@ interface Deps {
   triggers: Pick<TriggerRepository, 'getAll'>;
 }
 
-const defaultDeps: Deps = appRepositories;
-
 /** Valida el nombre visible de una red. null si es válido. */
 export function validateNetworkName(name: string): string | null {
   const trimmed = name.trim();
@@ -33,7 +31,10 @@ export function validateNetworkName(name: string): string | null {
 }
 
 /** Redes de casa (11-1): lista con uso y última conexión; renombrar y eliminar. */
-export function useHomeNetworks(deps: Deps = defaultDeps) {
+export function useHomeNetworks(injected?: Deps) {
+  const local = useLocalRepositories();
+  const store = useLocalStore();
+  const deps = injected ?? local;
   const { rearm } = useTriggerRuntime();
   const [networks, setNetworks] = useState<HomeNetworkView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,15 @@ export function useHomeNetworks(deps: Deps = defaultDeps) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Redes que llegan o cambian desde otro dispositivo (al sincronizar).
+  useEffect(
+    () =>
+      store.subscribe((change) => {
+        if (change.source === 'sync' && change.tablesChanged) void load();
+      }),
+    [store, load],
+  );
 
   const refresh = useCallback(async () => {
     setLoading(true);

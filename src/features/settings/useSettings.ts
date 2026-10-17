@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { appRepositories } from '@/db/app.repositories';
 import type { SettingsRepository } from '@/db/repositories/settings.repository';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { normalizeSnooze } from '@/features/notifications/notification.prefs';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import type { Settings, UpdateSettingsInput } from '@/shared/types/settings.types';
@@ -19,10 +19,13 @@ const toPrefs = (settings: Settings) => ({
 });
 
 /**
- * Ajustes del usuario (tabla `settings`). Los cambios se ven al instante (optimista), se guardan en
- * Supabase y, si se guardaron, se aplican a los avisos. Si fallan, se revierte y se muestra el error.
+ * Ajustes del usuario (tabla `settings`). Los cambios se ven al instante (optimista), se guardan en la
+ * copia local (se suben al sincronizar) y, si se guardaron, se aplican a los avisos. Si fallan, se revierte.
  */
-export function useSettings(repository: Repository = appRepositories.settings) {
+export function useSettings(injected?: Repository) {
+  const local = useLocalRepositories();
+  const store = useLocalStore();
+  const repository = injected ?? local.settings;
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const { applyPrefs } = useTriggerRuntime();
@@ -31,7 +34,7 @@ export function useSettings(repository: Repository = appRepositories.settings) {
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const latestRequest = useRef(0);
-  // Último valor confirmado por el servidor: a él se vuelve si un cambio falla.
+  // Último valor guardado: a él se vuelve si un cambio falla.
   const confirmed = useRef<Settings | null>(null);
 
   const load = useCallback((): Promise<void> => {
@@ -56,6 +59,15 @@ export function useSettings(repository: Repository = appRepositories.settings) {
   useEffect(() => {
     if (userId) void load();
   }, [userId, load]);
+
+  // Ajustes cambiados en otro dispositivo (al sincronizar).
+  useEffect(
+    () =>
+      store.subscribe((change) => {
+        if (userId && change.source === 'sync' && change.tablesChanged) void load();
+      }),
+    [store, userId, load],
+  );
 
   const retry = useCallback(() => {
     setLoading(true);
