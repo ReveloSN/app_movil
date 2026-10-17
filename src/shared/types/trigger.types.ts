@@ -12,9 +12,13 @@ export interface Trigger {
   windowStart: string | null;
   windowEnd: string | null;
   active: boolean;
+  /** ISO 8601. Hora del último cambio en el dispositivo que lo hizo (resolución de conflictos). */
+  updatedAt: string;
 }
 
 export interface CreateTriggerInput {
+  /** Generado por el cliente para crear sin conexión; si falta, lo pone la base de datos. */
+  id?: string;
   routineId: string;
   type: string;
   time?: string | null;
@@ -23,7 +27,9 @@ export interface CreateTriggerInput {
   windowStart?: string | null;
   windowEnd?: string | null;
   active?: boolean;
+  /** Hora del cambio en el cliente; por defecto, el momento de inserción. */
+  updatedAt?: string;
 }
 
 /** Un disparador no cambia de rutina. */
-export type UpdateTriggerInput = Partial<Omit<CreateTriggerInput, 'routineId'>>;
+export type UpdateTriggerInput = Partial<Omit<CreateTriggerInput, 'id' | 'routineId' | 'updatedAt'>>;
