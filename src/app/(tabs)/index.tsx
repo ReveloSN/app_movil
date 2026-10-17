@@ -8,7 +8,7 @@ import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
-import { LoadingState } from '@/components/molecules/LoadingState';
+import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
@@ -45,7 +45,7 @@ export default function RoutinesScreen() {
   useFocusEffect(useCallback(() => clearFlashMessage, []));
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && routines.length === 0) return <LoadingState accessibilityLabel="Cargando rutinas" />;
+  if (loading && routines.length === 0) return <SkeletonList accessibilityLabel="Cargando rutinas" />;
   if (error && routines.length === 0) return <ErrorState message={error} onRetry={refresh} />;
 
   return (
