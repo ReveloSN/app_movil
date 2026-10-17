@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/ai/ai.copy';
 import { putAiDraft } from '@/features/ai/aiDraft.store';
 import { useAiDraft } from '@/features/ai/useAiDraft';
@@ -63,7 +64,7 @@ export default function CreateWithAiScreen() {
         />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <ScreenFooter bordered>
         {error ? <StatusMessage tone="error" message={error} /> : null}
         {isConnected ? null : <StatusMessage tone="info" message={copy.OFFLINE_HINT} />}
         {loading ? (
@@ -72,7 +73,7 @@ export default function CreateWithAiScreen() {
           </Text>
         ) : null}
         <PrimaryButton label={copy.CREATE_DRAFT_LABEL} onPress={() => void submit()} loading={loading} disabled={!isConnected} />
-      </View>
+      </ScreenFooter>
     </KeyboardAvoidingView>
   );
 }
@@ -89,13 +90,5 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
     hint: {
       ...typography.label,
       color: colors.textSecondary,
-    },
-    footer: {
-      gap: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.surface,
     },
   });

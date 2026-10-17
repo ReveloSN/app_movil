@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -15,11 +16,12 @@ interface AuthFormTemplateProps {
 
 export function AuthFormTemplate({ title, children, footer }: AuthFormTemplateProps) {
   const styles = useThemedStyles(createStyles);
+  const endPadding = useScrollEndPadding();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.content, endPadding]} keyboardShouldPersistTaps="handled">
           <Text style={styles.title} accessibilityRole="header">
             {title}
           </Text>

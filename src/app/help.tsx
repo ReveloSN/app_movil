@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HELP_ENTRIES, HELP_TITLE } from '@/features/settings/help.content';
+import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -9,6 +10,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 export default function HelpScreen() {
   const { colors, typography } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const endPadding = useScrollEndPadding();
 
   return (
     <>
@@ -23,7 +25,7 @@ export default function HelpScreen() {
           headerTitleStyle: typography.h2,
         }}
       />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, endPadding]}>
         {HELP_ENTRIES.map((entry) => (
           <View key={entry.question} style={styles.card}>
             <Text style={styles.question} accessibilityRole="header">

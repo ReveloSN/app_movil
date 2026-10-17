@@ -3,6 +3,7 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { TextButton } from '@/components/atoms/TextButton';
+import { useBottomInset } from '@/shared/hooks/useBottomInset';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -19,6 +20,7 @@ interface AiConsentSheetProps {
 export function AiConsentSheet({ visible, onAccept, onDecline }: AiConsentSheetProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const bottomInset = useBottomInset();
 
   const point = (icon: IoniconName, text: string) => (
     <View style={styles.point}>
@@ -28,9 +30,9 @@ export function AiConsentSheet({ visible, onAccept, onDecline }: AiConsentSheetP
   );
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDecline} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDecline} statusBarTranslucent navigationBarTranslucent>
       <View style={styles.scrim}>
-        <View style={styles.sheet} accessibilityViewIsModal>
+        <View style={[styles.sheet, { paddingBottom: styles.sheet.padding + bottomInset }]} accessibilityViewIsModal>
           <Text style={styles.title} accessibilityRole="header">
             {copy.CONSENT_TITLE}
           </Text>

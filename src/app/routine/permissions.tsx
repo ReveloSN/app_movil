@@ -15,6 +15,7 @@ import {
 import { isPermissionKind } from '@/features/permissions/permission.types';
 import { PermissionStatus } from '@/features/permissions/PermissionStatus';
 import { usePermission } from '@/features/permissions/usePermission';
+import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -36,6 +37,7 @@ export default function PermissionsScreen() {
   const kind = isPermissionKind(params.kind) ? params.kind : 'notifications';
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const endPadding = useScrollEndPadding();
   const { state, requesting, request } = usePermission(kind);
   const background = usePermission(kind, backgroundLocationService);
   const [servicesOff, setServicesOff] = useState(false);
@@ -54,7 +56,7 @@ export default function PermissionsScreen() {
   }, [kind, granted]);
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, endPadding]}>
       <View style={styles.iconCircle}>
         <Ionicons name={icon} size={iconSizes.xl} color={colors.primary} />
       </View>

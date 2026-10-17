@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -24,9 +25,9 @@ export function WelcomeStep({ onStart }: { onStart(): void }) {
         </Text>
         <Text style={styles.body}>{WELCOME_BODY}</Text>
       </ScrollView>
-      <View style={styles.footer}>
+      <ScreenFooter>
         <PrimaryButton label={START_LABEL} onPress={onStart} />
-      </View>
+      </ScreenFooter>
     </View>
   );
 }
@@ -65,9 +66,5 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       ...typography.body,
       color: colors.textPrimary,
       textAlign: 'center',
-    },
-    footer: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
     },
   });

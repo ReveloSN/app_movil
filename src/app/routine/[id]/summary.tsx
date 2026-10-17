@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage, streakLabel } from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
 import { useRoutineStreak } from '@/features/history/useRoutineStreak';
@@ -24,7 +25,7 @@ export default function SummaryScreen() {
   const message = complete ? COMPLETE_MESSAGE : partialMessage(summary.checked, summary.total, summary.omittedLabels);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.badge, complete ? styles.badgeComplete : styles.badgePartial]}>
           <Ionicons
@@ -79,9 +80,9 @@ export default function SummaryScreen() {
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <ScreenFooter>
         <PrimaryButton label={BACK_LABEL} onPress={() => router.dismissTo('/(tabs)')} />
-      </View>
+      </ScreenFooter>
     </SafeAreaView>
   );
 }
@@ -158,9 +159,5 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     duration: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-    },
-    footer: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
     },
   });

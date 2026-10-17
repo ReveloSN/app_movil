@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { Chip } from '@/components/atoms/Chip';
 import { IconButton } from '@/components/atoms/IconButton';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
+import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDuration } from '@/shared/utils/formatDuration';
@@ -22,6 +23,7 @@ interface RecordDetailSheetProps {
 export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const endPadding = useScrollEndPadding();
   const result = describeResult(entry.result);
   const items = parseCheckedItems(entry.itemsChecked);
   const checked = items.filter((item) => item.checked);
@@ -52,7 +54,7 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
     ) : null;
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <View style={styles.scrim}>
         <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={copy.DETAIL_CLOSE_LABEL} />
         <View style={styles.sheet} accessibilityViewIsModal>
@@ -62,7 +64,7 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
             </Text>
             <IconButton icon="close" accessibilityLabel={copy.DETAIL_CLOSE_LABEL} onPress={onClose} />
           </View>
-          <ScrollView contentContainerStyle={styles.content}>
+          <ScrollView contentContainerStyle={[styles.content, endPadding]}>
             <Chip tone={result.tone} icon={result.icon} label={result.label} />
             {itemList(copy.DETAIL_CHECKED_TITLE, checked, 'checkmark-circle')}
             {itemList(copy.DETAIL_SKIPPED_TITLE, skipped, 'close-circle-outline')}
