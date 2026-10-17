@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 
@@ -58,6 +58,8 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
   // Los errores se muestran tras el primer intento de guardar y luego se actualizan en vivo.
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Bloquea el doble toque al instante (el estado llega un render tarde).
+  const inFlight = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const draft = useMemo<RoutineDraft>(
@@ -96,20 +98,22 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     setItems((current) => current.filter((item) => item.key !== key));
   }
 
-  /** Devuelve true si se guardó. */
-  async function submit(): Promise<boolean> {
-    if (submitting) return false;
+  /** Devuelve el resultado (null si ya había un guardado en curso). */
+  async function submit(): Promise<SaveRoutineResult | null> {
+    if (inFlight.current) return null;
+    inFlight.current = true;
     setAttempted(true);
     setSubmitError(null);
 
     setSubmitting(true);
     const result = await save(draft);
     setSubmitting(false);
+    inFlight.current = false;
 
     if (result.status === 'saved') onSaved();
     else if (result.status === 'failed') setSubmitError(result.error);
     // 'invalid': los errores ya se ven porque attempted = true.
-    return result.status === 'saved';
+    return result;
   }
 
   return {
