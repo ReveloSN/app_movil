@@ -55,7 +55,8 @@ const createStyles = ({ radii, sizes, spacing, typography }: AppTheme) =>
       alignItems: 'center',
       alignSelf: 'flex-start',
       gap: spacing.xs,
-      height: sizes.badgeHeight,
+      // minHeight: con el texto al 130 % la etiqueta crece sin recortarse.
+      minHeight: sizes.badgeHeight,
       paddingHorizontal: spacing.sm,
       borderRadius: radii.sm,
     },
