@@ -7,6 +7,8 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 interface ConfirmDialogProps {
   visible: boolean;
+  /** Pregunta corta arriba del mensaje (opcional). */
+  title?: string;
   message: string;
   /** Acción que confirma (ej. "Omitir", "Salir"). */
   confirmLabel: string;
@@ -16,6 +18,8 @@ interface ConfirmDialogProps {
   onCancel(): void;
   /** Muestra la acción que confirma primero (ej. DC-01: "Eliminar · Cancelar"). */
   confirmFirst?: boolean;
+  /** Atrás de Android con el diálogo abierto. Por defecto, igual que `onCancel`. */
+  onDismiss?(): void;
 }
 
 /**
@@ -24,23 +28,32 @@ interface ConfirmDialogProps {
  */
 export function ConfirmDialog({
   visible,
+  title,
   message,
   confirmLabel,
   cancelLabel,
   onConfirm,
   onCancel,
   confirmFirst = false,
+  onDismiss,
 }: ConfirmDialogProps) {
   const styles = useThemedStyles(createStyles);
   const confirm = <SecondaryButton label={confirmLabel} onPress={onConfirm} />;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss ?? onCancel} statusBarTranslucent>
       <View style={styles.scrim}>
         <View style={styles.dialog} accessibilityViewIsModal>
-          <Text style={styles.message} accessibilityRole="alert">
-            {message}
-          </Text>
+          <View style={styles.texts}>
+            {title ? (
+              <Text style={styles.title} accessibilityRole="header">
+                {title}
+              </Text>
+            ) : null}
+            <Text style={title ? styles.body : styles.message} accessibilityRole="alert">
+              {message}
+            </Text>
+          </View>
           {/* El orden sigue al documento (y al lector de pantalla); la opción segura siempre es el botón primario. */}
           <View style={styles.actions}>
             {confirmFirst ? confirm : null}
@@ -67,8 +80,19 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
       borderRadius: radii.xxl,
       backgroundColor: colors.card,
     },
+    texts: {
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.h2,
+      color: colors.textPrimary,
+    },
     message: {
       ...typography.bodyStrong,
+      color: colors.textPrimary,
+    },
+    body: {
+      ...typography.body,
       color: colors.textPrimary,
     },
     actions: {
