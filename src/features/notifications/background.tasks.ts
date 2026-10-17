@@ -25,10 +25,10 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_RESPO
   }
 });
 
-// Chequeo periódico: Wi-Fi, próximos horarios y "sin respuesta".
+// Chequeo periódico: Wi-Fi, próximos horarios, "sin respuesta" y subir los cambios pendientes.
 TaskManager.defineTask(TRIGGER_MAINTENANCE_TASK, async () => {
   try {
-    await runTriggerMaintenance();
+    await runTriggerMaintenance(Date.now(), { push: true });
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch (cause) {
     if (__DEV__) console.warn('[triggers.backgroundMaintenance]', cause);
