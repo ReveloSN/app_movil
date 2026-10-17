@@ -10,6 +10,10 @@ export const SAVE_CHANGES_LABEL = 'Guardar cambios';
 export const ADD_ITEM_LABEL = 'Añadir ítem';
 export const ITEMS_SECTION_TITLE = 'Ítems';
 
+// 04-2. Sin código en el Documento de Contenido: propuestos, pendientes de validar.
+export const ICON_LABEL = 'Ícono';
+export const COLOR_LABEL = 'Color';
+
 // 04-4. Sin código en el Documento de Contenido: propuestos, pendientes de validar.
 export const SUGGESTIONS_TITLE = 'Sugerencias';
 export const addSuggestionLabel = (label: string) => `Añadir ${label}`;

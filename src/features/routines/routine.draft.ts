@@ -7,14 +7,16 @@ import type { ItemDraft, RoutineDraft } from './routines.types';
 export interface RoutineFormState {
   name: string;
   icon?: string;
+  color?: string;
   items: readonly (ItemDraft & { key?: string })[];
   triggers: readonly TriggerDraftEntry[];
 }
 
 /** Borrador para guardar: los ítems sin su clave de React. */
-export const toRoutineDraft = ({ name, icon, items, triggers }: RoutineFormState): RoutineDraft => ({
+export const toRoutineDraft = ({ name, icon, color, items, triggers }: RoutineFormState): RoutineDraft => ({
   name,
   icon,
+  color,
   items: items.map(({ key: _key, ...item }) => item),
   triggers: [...triggers],
 });

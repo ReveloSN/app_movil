@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 
 import { DEFAULT_ITEM_KIND } from './item-kinds';
+import { resolveRoutineColor, resolveRoutineIcon } from './routine-appearance';
 import { draftFingerprint, toRoutineDraft } from './routine.draft';
 import { MAX_ITEMS, validateRoutineDraft } from './routine.validation';
 import type { ItemDraft, RoutineDraft, RoutineValidationErrors, SaveRoutineResult } from './routines.types';
@@ -38,20 +39,28 @@ const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] =>
 /** Estado local del formulario de rutina. Lo escrito se conserva si el guardado falla. */
 export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS }: UseRoutineFormOptions) {
   const [name, setName] = useState(initialDraft?.name ?? '');
-  // Sin selector de ícono todavía (04-2): solo se conserva el que venga precargado.
-  const [icon] = useState(initialDraft?.icon);
+  // 04-2: siempre hay ícono y color (los de por defecto si la rutina o la plantilla no traen).
+  const [startIcon] = useState<string>(() => resolveRoutineIcon(initialDraft?.icon));
+  const [startColor] = useState<string>(() => resolveRoutineColor(initialDraft?.color).key);
+  const [icon, setIcon] = useState(startIcon);
+  const [color, setColor] = useState(startColor);
   const [startItems] = useState<ItemFormEntry[]>(() => initialEntries(initialDraft));
   const [items, setItems] = useState<ItemFormEntry[]>(startItems);
   // Lo que había al abrir (también los avisos ya sembrados): base para saber si hay cambios (DC-03).
   const [initialFingerprint] = useState(() =>
-    draftFingerprint(toRoutineDraft({ name: initialDraft?.name ?? '', icon: initialDraft?.icon, items: startItems, triggers })),
+    draftFingerprint(
+      toRoutineDraft({ name: initialDraft?.name ?? '', icon: startIcon, color: startColor, items: startItems, triggers }),
+    ),
   );
   // Los errores se muestran tras el primer intento de guardar y luego se actualizan en vivo.
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const draft = useMemo<RoutineDraft>(() => toRoutineDraft({ name, icon, items, triggers }), [name, icon, items, triggers]);
+  const draft = useMemo<RoutineDraft>(
+    () => toRoutineDraft({ name, icon, color, items, triggers }),
+    [name, icon, color, items, triggers],
+  );
   const dirty = useMemo(() => draftFingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
   const errors = useMemo(() => (attempted ? validateRoutineDraft(draft) : NO_ERRORS), [attempted, draft]);
 
@@ -96,5 +105,5 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
 
   const hasRoom = canAddItem || items.some((entry) => !entry.label.trim());
 
-  return { name, setName, items, addItem, addSuggested, hasRoom, removeItem, updateItem, canAddItem, errors, submitting, submitError, submit, dirty };
+  return { name, setName, icon, setIcon, color, setColor, items, addItem, addSuggested, hasRoom, removeItem, updateItem, canAddItem, errors, submitting, submitError, submit, dirty };
 }

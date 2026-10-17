@@ -16,8 +16,10 @@ export interface ItemDraft {
 
 export interface RoutineDraft {
   name: string;
-  /** Nombre de ícono de Ionicons (ej. el de una plantilla). Sin él, no se envía y la rutina queda como hasta ahora. */
+  /** Nombre de ícono de Ionicons (04-2). Sin él, se guarda el de por defecto (nunca null). */
   icon?: string;
+  /** Clave de color de 04-2 (ej. "green"). Sin ella, se guarda la de por defecto. */
+  color?: string;
   items: ItemDraft[];
   /** Avisos configurados en P06 (0–3). En edición, la clave de los ya guardados es su id. */
   triggers?: TriggerDraftEntry[];

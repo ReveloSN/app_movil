@@ -3,6 +3,7 @@ import type { RoutineRepository } from '@/db/repositories/routine.repository';
 import { createTriggersForRoutine, type TriggerServiceDeps } from '@/features/triggers/trigger.service';
 import type { Routine } from '@/shared/types/routine.types';
 
+import { DEFAULT_ROUTINE_COLOR, DEFAULT_ROUTINE_ICON } from './routine-appearance';
 import type { RoutineDraft } from './routines.types';
 
 export interface RoutineServiceDeps extends TriggerServiceDeps {
@@ -16,7 +17,11 @@ export interface RoutineServiceDeps extends TriggerServiceDeps {
  * Asume que el borrador ya fue validado.
  */
 export async function createRoutineWithItems(deps: RoutineServiceDeps, draft: RoutineDraft): Promise<Routine> {
-  const routine = await deps.routines.create({ name: draft.name.trim(), icon: draft.icon });
+  const routine = await deps.routines.create({
+    name: draft.name.trim(),
+    icon: draft.icon ?? DEFAULT_ROUTINE_ICON,
+    color: draft.color ?? DEFAULT_ROUTINE_COLOR,
+  });
 
   const results = await Promise.allSettled(
     draft.items.map((item, index) =>

@@ -3,6 +3,7 @@ import type { RoutineRepository } from '@/db/repositories/routine.repository';
 import { syncRoutineTriggers, type TriggerServiceDeps } from '@/features/triggers/trigger.service';
 import type { Routine } from '@/shared/types/routine.types';
 
+import { DEFAULT_ROUTINE_COLOR, DEFAULT_ROUTINE_ICON } from './routine-appearance';
 import type { RoutineDraft } from './routines.types';
 
 export interface RoutineEditDeps extends TriggerServiceDeps {
@@ -30,7 +31,11 @@ export async function updateRoutineWithItems(
   draft: RoutineDraft,
   original: RoutineOriginal,
 ): Promise<Routine> {
-  const routine = await deps.routines.update(routineId, { name: draft.name.trim(), icon: draft.icon });
+  const routine = await deps.routines.update(routineId, {
+    name: draft.name.trim(),
+    icon: draft.icon ?? DEFAULT_ROUTINE_ICON,
+    color: draft.color ?? DEFAULT_ROUTINE_COLOR,
+  });
 
   const keptItems = new Set(draft.items.flatMap((item) => (item.id ? [item.id] : [])));
   await Promise.all(original.itemIds.filter((id) => !keptItems.has(id)).map((id) => deps.items.delete(id)));

@@ -12,6 +12,8 @@ interface RoutineCardProps {
   name: string;
   /** Nombre de ícono de Ionicons; si no es válido se usa uno genérico. */
   icon: string | null;
+  /** Color de la rutina (ya resuelto al tema). Sin él, el principal. */
+  accentColor?: string;
   active: boolean;
   /** ISO 8601. */
   lastCompletedAt: string | null;
@@ -27,6 +29,7 @@ interface RoutineCardProps {
 export function RoutineCard({
   name,
   icon,
+  accentColor,
   active,
   lastCompletedAt,
   actionLabel,
@@ -52,7 +55,7 @@ export function RoutineCard({
         accessibilityLabel={`${name}. ${statusLabel}. ${lastCompletedText}.`}
       >
         <View style={styles.iconCircle}>
-          <Ionicons name={toIoniconName(icon, 'checkbox-outline')} size={iconSizes.lg} color={colors.primary} />
+          <Ionicons name={toIoniconName(icon, 'checkbox-outline')} size={iconSizes.lg} color={accentColor ?? colors.primary} />
         </View>
         <View style={styles.body}>
           <Text style={styles.name} numberOfLines={1}>
