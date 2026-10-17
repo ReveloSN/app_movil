@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, type TextInput } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
@@ -56,6 +56,7 @@ export default function TriggerScreen() {
   const guard = useUnsavedChangesGuard(form.dirty);
   const { detection, detect } = useCurrentWifi();
   const isWifi = form.kind !== 'schedule';
+  const networkNameRef = useRef<TextInput>(null);
   const { resume } = form;
 
   // Flujo C: al volver de P02 se retoma el guardado con todo lo que ya estaba llenado.
@@ -107,8 +108,13 @@ export default function TriggerScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               error={form.errors.ssid}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => networkNameRef.current?.focus()}
             />
             <TextField
+              ref={networkNameRef}
+              returnKeyType="done"
               label="¿Cómo la llamas?"
               placeholder="Ej. Casa"
               value={form.networkName}
