@@ -2,6 +2,13 @@
 
 import { formatClock } from '@/shared/utils/formatClock';
 
+/** 03-1: "Buenos días, Ana" o, sin nombre, "Buenos días". La franja sale de la hora local. */
+export function greeting(name: string | null, now: Date): string {
+  const hour = now.getHours();
+  const salute = hour >= 5 && hour < 12 ? 'Buenos días' : hour >= 12 && hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  return name ? `${salute}, ${name}` : salute;
+}
+
 /** 03-2 (nombre del bloque en el Documento de Contenido). */
 export const NEXT_ROUTINE_LABEL = 'Próxima rutina';
 
