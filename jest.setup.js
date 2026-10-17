@@ -11,3 +11,6 @@ jest.mock('@expo/vector-icons/Ionicons', () => {
   Ionicons.glyphMap = require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json');
   return { __esModule: true, default: Ionicons };
 });
+
+// Reanimated en Jest: animaciones con temporizadores simulados (los worklets corren en el hilo de JS).
+require('react-native-reanimated').setUpTests();
