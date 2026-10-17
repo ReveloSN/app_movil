@@ -42,3 +42,8 @@ export const SIGN_OUT_LABEL = 'Cerrar sesión';
 export const GUEST_SIGN_OUT_MESSAGE = 'Si cierras sesión perderás tus rutinas: un invitado no puede volver a entrar.';
 export const accountLabel = (user: AuthUser | null) =>
   !user ? '—' : user.isAnonymous ? 'Invitado (sin cuenta)' : (user.email ?? '—');
+const unsyncedSignOutMessage = (count: number) =>
+  `Tienes ${count} ${count === 1 ? 'cambio' : 'cambios'} sin sincronizar. Quedan guardados en este teléfono y se subirán cuando vuelvas a entrar con esta cuenta.`;
+/** Qué confirmar antes de cerrar sesión; null si no hace falta preguntar. */
+export const signOutWarning = (user: AuthUser | null, unsyncedCount: number): string | null =>
+  user?.isAnonymous ? GUEST_SIGN_OUT_MESSAGE : unsyncedCount > 0 ? unsyncedSignOutMessage(unsyncedCount) : null;

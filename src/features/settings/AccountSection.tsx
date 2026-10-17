@@ -6,7 +6,9 @@ import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { getLocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useSync } from '@/features/sync/SyncProvider';
 import { useThemeMode } from '@/shared/theme/themeMode.context';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -15,33 +17,44 @@ import {
   ACCOUNT_SECTION_TITLE,
   accountLabel,
   CANCEL_LABEL,
-  GUEST_SIGN_OUT_MESSAGE,
   SIGN_OUT_LABEL,
   SIGNED_IN_AS_LABEL,
+  signOutWarning,
 } from './settings.copy';
 
 /** Cuenta (al final de P11): quién tiene la sesión, modo oscuro y cerrar sesión. */
 export function AccountSection() {
   const { user, signOut } = useAuth();
+  const { pendingCount, failedChanges } = useSync();
   const { mode, toggle } = useThemeMode();
   const styles = useThemedStyles(createStyles);
-  const [confirming, setConfirming] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Al cerrar sesión, RequireSession redirige a login al quedar sin usuario.
   async function signOutNow() {
-    setConfirming(false);
+    // Un invitado no puede volver a entrar: su copia local ya no le sirve a nadie (ya se le advirtió).
+    const guestId = user?.isAnonymous ? user.id : null;
+    setWarning(null);
     setSigningOut(true);
     setError(null);
     const result = await signOut();
+    if (!result.error && guestId) {
+      await getLocalStore(guestId)
+        .clear()
+        .catch((cause: unknown) => {
+          if (__DEV__) console.warn('[account.clearGuestData]', cause);
+        });
+    }
     setSigningOut(false);
     setError(result.error);
   }
 
-  // Un invitado no puede volver a entrar a su cuenta: se confirma antes de cerrarla.
+  // Se confirma si hay algo que avisar: un invitado no puede volver a entrar, o quedan cambios sin subir.
   function requestSignOut() {
-    if (user?.isAnonymous) setConfirming(true);
+    const message = signOutWarning(user, pendingCount + failedChanges.length);
+    if (message) setWarning(message);
     else void signOutNow();
   }
 
@@ -56,12 +69,12 @@ export function AccountSection() {
       {error ? <StatusMessage tone="error" message={error} /> : null}
       <PrimaryButton label={SIGN_OUT_LABEL} onPress={requestSignOut} loading={signingOut} />
       <ConfirmDialog
-        visible={confirming}
-        message={GUEST_SIGN_OUT_MESSAGE}
+        visible={warning !== null}
+        message={warning ?? ''}
         confirmLabel={SIGN_OUT_LABEL}
         cancelLabel={CANCEL_LABEL}
         onConfirm={() => void signOutNow()}
-        onCancel={() => setConfirming(false)}
+        onCancel={() => setWarning(null)}
       />
     </View>
   );
