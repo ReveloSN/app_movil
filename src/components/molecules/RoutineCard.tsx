@@ -105,7 +105,7 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       color: colors.textPrimary,
     },
     meta: {
-      ...typography.captionRegular,
+      ...typography.label,
       color: colors.textSecondary,
     },
   });
