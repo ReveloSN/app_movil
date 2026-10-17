@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { CreateItemInput, Item, UpdateItemInput } from '@/shared/types/item.types';
 
-import type { Repository } from './repository.types';
+import type { LastWriteWins, Repository } from './repository.types';
 import { createSupabaseRepository } from './supabase.repository';
 
 interface ItemRow {
@@ -14,6 +14,7 @@ interface ItemRow {
   critical: boolean;
   note: string | null;
   sort_order: number;
+  updated_at: string;
 }
 
 export interface ItemRepository extends Repository<Item, CreateItemInput, UpdateItemInput> {
@@ -21,6 +22,8 @@ export interface ItemRepository extends Repository<Item, CreateItemInput, Update
   getByRoutine(routineId: string): Promise<Item[]>;
   deleteByRoutine(routineId: string): Promise<void>;
 }
+/** Lo que necesita la sincronización: además, la actualización "gana el más reciente". */
+export type RemoteItemRepository = ItemRepository & LastWriteWins<UpdateItemInput>;
 
 const toEntity = (row: ItemRow): Item => ({
   id: row.id,
@@ -31,6 +34,7 @@ const toEntity = (row: ItemRow): Item => ({
   critical: row.critical,
   note: row.note,
   sortOrder: row.sort_order,
+  updatedAt: row.updated_at,
 });
 
 const toUpdateRow = (changes: UpdateItemInput) => ({
@@ -42,9 +46,14 @@ const toUpdateRow = (changes: UpdateItemInput) => ({
   sort_order: changes.sortOrder,
 });
 
-const toInsertRow = (input: CreateItemInput) => ({ routine_id: input.routineId, ...toUpdateRow(input) });
+const toInsertRow = (input: CreateItemInput) => ({
+  id: input.id,
+  routine_id: input.routineId,
+  ...toUpdateRow(input),
+  updated_at: input.updatedAt,
+});
 
-export function createItemRepository(client: SupabaseClient): ItemRepository {
+export function createItemRepository(client: SupabaseClient): RemoteItemRepository {
   const { listWhere, deleteWhere, ...base } = createSupabaseRepository<ItemRow, Item, CreateItemInput, UpdateItemInput>({
     client,
     table: 'items',

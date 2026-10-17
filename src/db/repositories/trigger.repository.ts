@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { CreateTriggerInput, Trigger, UpdateTriggerInput } from '@/shared/types/trigger.types';
 
-import type { Repository } from './repository.types';
+import type { LastWriteWins, Repository } from './repository.types';
 import { createSupabaseRepository } from './supabase.repository';
 
 interface TriggerRow {
@@ -15,6 +15,7 @@ interface TriggerRow {
   window_start: string | null;
   window_end: string | null;
   active: boolean;
+  updated_at: string;
 }
 
 export interface TriggerRepository extends Repository<Trigger, CreateTriggerInput, UpdateTriggerInput> {
@@ -22,6 +23,8 @@ export interface TriggerRepository extends Repository<Trigger, CreateTriggerInpu
   getByRoutine(routineId: string): Promise<Trigger[]>;
   deleteByRoutine(routineId: string): Promise<void>;
 }
+/** Lo que necesita la sincronización: además, la actualización "gana el más reciente". */
+export type RemoteTriggerRepository = TriggerRepository & LastWriteWins<UpdateTriggerInput>;
 
 const toEntity = (row: TriggerRow): Trigger => ({
   id: row.id,
@@ -33,6 +36,7 @@ const toEntity = (row: TriggerRow): Trigger => ({
   windowStart: row.window_start,
   windowEnd: row.window_end,
   active: row.active,
+  updatedAt: row.updated_at,
 });
 
 const toUpdateRow = (changes: UpdateTriggerInput) => ({
@@ -45,9 +49,14 @@ const toUpdateRow = (changes: UpdateTriggerInput) => ({
   active: changes.active,
 });
 
-const toInsertRow = (input: CreateTriggerInput) => ({ routine_id: input.routineId, ...toUpdateRow(input) });
+const toInsertRow = (input: CreateTriggerInput) => ({
+  id: input.id,
+  routine_id: input.routineId,
+  ...toUpdateRow(input),
+  updated_at: input.updatedAt,
+});
 
-export function createTriggerRepository(client: SupabaseClient): TriggerRepository {
+export function createTriggerRepository(client: SupabaseClient): RemoteTriggerRepository {
   const { listWhere, deleteWhere, ...base } = createSupabaseRepository<
     TriggerRow,
     Trigger,

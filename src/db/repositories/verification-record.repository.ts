@@ -48,7 +48,8 @@ const toInsertRow = (input: CreateVerificationRecordInput) => ({
 });
 
 export function createVerificationRecordRepository(client: SupabaseClient): VerificationRecordRepository {
-  const { listWhere: _listWhere, deleteWhere, ...base } = createSupabaseRepository<
+  // records no tiene updated_at: un registro no se edita, así que no hay "gana el más reciente".
+  const { listWhere: _listWhere, updateIfOlder: _updateIfOlder, deleteWhere, ...base } = createSupabaseRepository<
     RecordRow,
     VerificationRecord,
     CreateVerificationRecordInput,

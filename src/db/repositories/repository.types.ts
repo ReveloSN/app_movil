@@ -9,7 +9,22 @@ export interface Repository<TEntity, TCreate, TUpdate, TId = string> {
   delete(id: TId): Promise<void>;
 }
 
-export type RepositoryOperation = 'create' | 'getAll' | 'listWhere' | 'update' | 'delete' | 'deleteWhere';
+/** Resultado de una actualización condicional: 'stale' si el servidor ya tenía un cambio más reciente (o la fila no existe). */
+export type UpdateOutcome = 'applied' | 'stale';
+
+/** Actualización "gana el más reciente": solo se aplica si la fila no tiene un cambio posterior a `at` (ISO 8601). */
+export interface LastWriteWins<TUpdate, TId = string> {
+  updateIfOlder(id: TId, changes: TUpdate, at: string): Promise<UpdateOutcome>;
+}
+
+export type RepositoryOperation =
+  | 'create'
+  | 'getAll'
+  | 'listWhere'
+  | 'update'
+  | 'updateIfOlder'
+  | 'delete'
+  | 'deleteWhere';
 
 /**
  * Tipo de fallo, independiente del proveedor:

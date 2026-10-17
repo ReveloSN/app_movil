@@ -2,10 +2,14 @@ import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 
 import {
   RepositoryError,
+  type LastWriteWins,
   type Repository,
   type RepositoryErrorKind,
   type RepositoryOperation,
 } from './repository.types';
+
+/** Hora del último cambio, puesta por el cliente (no hay trigger que la sobrescriba). */
+const UPDATED_AT_COLUMN = 'updated_at';
 
 /** Valores de columna a escribir; las claves son nombres de columna en snake_case. */
 type RowValues = Record<string, unknown>;
@@ -23,8 +27,13 @@ interface SupabaseRepositoryConfig<TRow, TEntity, TCreate, TUpdate> {
   toUpdateRow(changes: TUpdate): RowValues;
 }
 
-/** Repository + consulta filtrada, para que cada repositorio exponga sus propios métodos de búsqueda. */
-export interface SupabaseRepository<TEntity, TCreate, TUpdate> extends Repository<TEntity, TCreate, TUpdate> {
+/**
+ * Repository + consulta filtrada, para que cada repositorio exponga sus propios métodos de búsqueda.
+ * updateIfOlder solo sirve en tablas con updated_at: los repositorios de las demás no lo exponen.
+ */
+export interface SupabaseRepository<TEntity, TCreate, TUpdate>
+  extends Repository<TEntity, TCreate, TUpdate>,
+    LastWriteWins<TUpdate> {
   /** Filas donde `column` = `value`, con el orden por defecto. */
   listWhere(column: string, value: string): Promise<TEntity[]>;
   /** Borra las filas donde `column` = `value` (las que RLS deje ver). */
@@ -87,6 +96,18 @@ export function createSupabaseRepository<TRow, TEntity, TCreate, TUpdate>({
         .single();
       if (error) fail('update', error, status);
       return toEntity(data as TRow);
+    },
+
+    // `lte` y no `lt`: reenviar el mismo cambio (si se perdió la respuesta) vuelve a aplicarse, no es un conflicto.
+    async updateIfOlder(id, changes, at) {
+      const { data, error, status } = await client
+        .from(table)
+        .update({ ...toUpdateRow(changes), [UPDATED_AT_COLUMN]: at })
+        .eq(idColumn, id)
+        .lte(UPDATED_AT_COLUMN, at)
+        .select();
+      if (error) fail('updateIfOlder', error, status);
+      return (data as TRow[]).length > 0 ? 'applied' : 'stale';
     },
 
     async delete(id) {
