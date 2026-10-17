@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -18,7 +19,7 @@ export function SecondaryButton({ label, onPress, icon, disabled = false }: Seco
   const styles = useThemedStyles(createStyles);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
@@ -28,7 +29,7 @@ export function SecondaryButton({ label, onPress, icon, disabled = false }: Seco
     >
       {icon ? <Ionicons name={icon} size={iconSizes.md} color={colors.primary} /> : null}
       <Text style={styles.label}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

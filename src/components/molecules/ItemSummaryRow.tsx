@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '@/components/atoms/IconButton';
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -40,8 +41,9 @@ export function ItemSummaryRow({
 
   return (
     <View style={[styles.row, error ? styles.rowError : null]}>
-      <Pressable
-        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
+      <PressableScale
+        containerStyle={flexOne}
+        style={styles.main}
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={[label, critical ? criticalLabel : null, note, error].filter(Boolean).join('. ')}
@@ -66,11 +68,14 @@ export function ItemSummaryRow({
           </View>
         ) : null}
         <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
-      </Pressable>
+      </PressableScale>
       {onRemove ? <IconButton icon="trash-outline" tone="danger" accessibilityLabel={removeLabel} onPress={onRemove} /> : null}
     </View>
   );
 }
+
+// El contenedor animado ocupa el ancho libre de la fila, como antes el Pressable.
+const flexOne = { flex: 1 } as const;
 
 const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
@@ -94,9 +99,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       minHeight: sizes.checklistRowHeight,
       paddingVertical: spacing.sm,
       paddingLeft: spacing.lg,
-    },
-    pressed: {
-      opacity: 0.7,
     },
     texts: {
       flex: 1,

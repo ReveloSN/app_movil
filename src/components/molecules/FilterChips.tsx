@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -24,19 +25,19 @@ export function FilterChips({ label, options, value, onChange }: FilterChipsProp
         {options.map((option) => {
           const selected = option.value === value;
           return (
-            <Pressable
+            <PressableScale
               key={option.value}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
               accessibilityLabel={option.label}
               onPress={() => onChange(option.value)}
-              style={({ pressed }) => [styles.chip, selected && styles.selected, pressed && styles.pressed]}
+              style={[styles.chip, selected && styles.selected]}
             >
               {selected ? <Ionicons name="checkmark" size={iconSizes.sm} color={colors.primary} /> : null}
               <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]} numberOfLines={1}>
                 {option.label}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </ScrollView>
@@ -70,9 +71,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     selected: {
       borderColor: colors.primary,
       backgroundColor: colors.primaryTint,
-    },
-    pressed: {
-      opacity: 0.7,
     },
     chipLabel: {
       ...typography.labelMedium,

@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -19,18 +20,18 @@ export function ListActionRow({ label, onPress, disabled = false, disabledHint }
   const color = disabled ? colors.textSecondary : colors.primary;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={disabled ? disabledHint : undefined}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
     >
       <Ionicons name="add" size={iconSizes.md} color={color} />
       <Text style={[styles.label, { color }]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -42,9 +43,6 @@ const createStyles = ({ sizes, spacing, typography }: AppTheme) =>
       gap: spacing.sm,
       minHeight: sizes.checklistRowHeight,
       paddingHorizontal: spacing.lg,
-    },
-    pressed: {
-      opacity: 0.7,
     },
     label: {
       ...typography.labelMedium,
