@@ -13,17 +13,19 @@ interface SkeletonListProps {
   variant?: 'card' | 'row';
   /** Lo que oye el lector de pantalla (ej. "Cargando rutinas"). */
   accessibilityLabel: string;
+  /** false dentro de un contenedor que ya tiene márgenes. */
+  padded?: boolean;
 }
 
 /** Esqueleto de una lista mientras carga: anticipa la forma del contenido sin saltos al llegar. */
-export function SkeletonList({ rows = 3, variant = 'card', accessibilityLabel }: SkeletonListProps) {
+export function SkeletonList({ rows = 3, variant = 'card', accessibilityLabel, padded = true }: SkeletonListProps) {
   const styles = useThemedStyles(createStyles);
   const iconSize = variant === 'card' ? 48 : 24;
 
   return (
     <Animated.View
       entering={fadeIn}
-      style={styles.list}
+      style={[styles.list, padded && styles.padded]}
       accessible
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ busy: true }}
@@ -45,6 +47,8 @@ const createStyles = ({ colors, radii, sizes, spacing }: AppTheme) =>
   StyleSheet.create({
     list: {
       gap: spacing.md,
+    },
+    padded: {
       padding: spacing.xl,
     },
     item: {
