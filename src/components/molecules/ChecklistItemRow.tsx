@@ -1,7 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { AnimatedCheck } from '@/components/atoms/AnimatedCheck';
 import { PressableScale } from '@/components/atoms/PressableScale';
+import { durations, timing } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { toIoniconName } from '@/shared/utils/ioniconName';
@@ -26,6 +30,11 @@ interface ChecklistItemRowProps {
 export function ChecklistItemRow({ label, icon, critical, criticalLabel, note, checked, onToggle }: ChecklistItemRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const highlight = useSharedValue(checked ? 1 : 0);
+  useEffect(() => {
+    highlight.set(withTiming(checked ? 1 : 0, timing(durations.fast)));
+  }, [checked, highlight]);
+  const highlightStyle = useAnimatedStyle(() => ({ opacity: highlight.get() }));
 
   return (
     <PressableScale
@@ -35,11 +44,9 @@ export function ChecklistItemRow({ label, icon, critical, criticalLabel, note, c
       onPress={onToggle}
       style={[styles.row, checked && styles.rowChecked]}
     >
-      <Ionicons
-        name={checked ? 'checkmark-circle' : 'ellipse-outline'}
-        size={iconSizes.lg}
-        color={checked ? colors.primary : colors.textSecondary}
-      />
+      {/* Resaltado de la fila marcada: solo cambia la opacidad de una capa teñida. */}
+      <Animated.View pointerEvents="none" style={[styles.highlight, highlightStyle]} />
+      <AnimatedCheck checked={checked} />
       <Ionicons name={toIoniconName(icon, 'cube-outline')} size={iconSizes.md} color={colors.textMuted} />
       <View style={styles.texts}>
         <Text style={[styles.label, checked && styles.labelChecked]} numberOfLines={2}>
@@ -72,6 +79,10 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     },
     rowChecked: {
       borderColor: colors.primary,
+    },
+    highlight: {
+      ...StyleSheet.absoluteFill,
+      borderRadius: radii.lg,
       backgroundColor: colors.primaryTint,
     },
     texts: {

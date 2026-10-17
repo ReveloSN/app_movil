@@ -3,8 +3,10 @@ import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { usePreventRemove, type NavigationAction } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInLeft, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmphasisPulse } from '@/components/atoms/EmphasisPulse';
 import { IconButton } from '@/components/atoms/IconButton';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { ProgressBar } from '@/components/atoms/ProgressBar';
@@ -27,8 +29,14 @@ import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
+import { hapticConfirm, hapticToggleOff, hapticToggleOn } from '@/shared/haptics/haptics';
+import { durations, staggerDelay } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+
+// Entrada de los ítems críticos: corta y desde la izquierda; nunca retrasa poder marcarlos.
+const criticalEntering = (index: number) =>
+  FadeInLeft.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
 
 type Dialog = { kind: 'critical'; label: string; intent: FinishIntent } | { kind: 'exit'; action: NavigationAction } | null;
 
@@ -57,6 +65,7 @@ export default function VerifyScreen() {
   async function complete(intent: FinishIntent) {
     const summary = await finish(intent);
     if (!summary) return; // El error se muestra sobre los botones.
+    if (summary.outcome === 'completed') hapticConfirm();
     // Las notificaciones ya sonadas de esta rutina quedan respondidas (no cuentan como "sin respuesta").
     closeRoutineOccurrences(id, Date.now()).catch((cause: unknown) => {
       if (__DEV__) console.warn('[notifications.close]', cause);
@@ -71,6 +80,13 @@ export default function VerifyScreen() {
     leaving.current = true;
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
+  }
+
+  // Marcar es instantáneo; el háptico ligero acompaña (y sigue el ajuste del sistema).
+  function toggle(itemId: string, wasChecked: boolean) {
+    toggleItem(itemId);
+    if (wasChecked) hapticToggleOff();
+    else hapticToggleOn();
   }
 
   // DC-02 antes de dejar sin marcar un crítico, con "Listo" o con "Omitir por hoy".
@@ -102,28 +118,34 @@ export default function VerifyScreen() {
         contentContainerStyle={styles.listContent}
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ChecklistItemRow
-            label={item.label}
-            icon={item.icon}
-            critical={item.critical}
-            criticalLabel={copy.CRITICAL_LABEL}
-            note={item.note}
-            checked={item.checked}
-            onToggle={() => toggleItem(item.id)}
-          />
+        renderItem={({ item, index }) => (
+          // Los críticos (arriba) entran con un desplazamiento discreto para que se noten primero.
+          <Animated.View entering={item.critical ? criticalEntering(index) : undefined}>
+            <ChecklistItemRow
+              label={item.label}
+              icon={item.icon}
+              critical={item.critical}
+              criticalLabel={copy.CRITICAL_LABEL}
+              note={item.note}
+              checked={item.checked}
+              onToggle={() => toggle(item.id, item.checked)}
+            />
+          </Animated.View>
         )}
       />
       <ScreenFooter>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
         {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
         {/* 07-6: fila 1 la primaria a todo el ancho; fila 2 secundaria y terciaria lado a lado. */}
-        <PrimaryButton
-          label={copy.DONE_LABEL}
-          onPress={() => finishAsking('done')}
-          loading={finishing}
-          disabled={postponement.postponing}
-        />
+        {/* Énfasis único cuando todo está marcado: invita a cerrar sin bloquear nada. */}
+        <EmphasisPulse active={progress.total > 0 && progress.checked === progress.total}>
+          <PrimaryButton
+            label={copy.DONE_LABEL}
+            onPress={() => finishAsking('done')}
+            loading={finishing}
+            disabled={postponement.postponing}
+          />
+        </EmphasisPulse>
         <View style={styles.secondaryActions}>
           <View style={styles.half}>
             <SecondaryButton
