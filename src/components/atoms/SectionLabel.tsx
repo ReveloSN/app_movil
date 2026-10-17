@@ -11,7 +11,7 @@ interface SectionLabelProps {
   accessibilityLabel?: string;
 }
 
-/** Encabezado de bloque de formulario en mayúsculas (mockup P04: "ÍTEMS", "AVISOS"). */
+/** Encabezado de bloque de formulario (P04: "Ítems", "Avisos"). Mayúscula solo inicial (Documento de Contenido §08). */
 export function SectionLabel({ label, trailing, accessibilityLabel }: SectionLabelProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -35,8 +35,6 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
     label: {
       ...typography.caption,
       color: colors.textSecondary,
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
     },
     trailing: {
       ...typography.caption,
