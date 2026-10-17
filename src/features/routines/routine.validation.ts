@@ -1,5 +1,6 @@
 import { MAX_TRIGGERS } from '@/features/triggers/trigger.validation';
 
+import { ITEMS_REQUIRED, NAME_REQUIRED } from './routine.copy';
 import type { RoutineDraft, RoutineValidationErrors } from './routines.types';
 
 export const ROUTINE_NAME_MAX_LENGTH = 24;
@@ -16,13 +17,13 @@ export function validateRoutineDraft({ name, items, triggers = [] }: RoutineDraf
   const trimmedName = name.trim();
 
   if (!trimmedName) {
-    errors.name = 'Ponle un nombre a la rutina.';
+    errors.name = NAME_REQUIRED;
   } else if (trimmedName.length > ROUTINE_NAME_MAX_LENGTH) {
     errors.name = `Máximo ${ROUTINE_NAME_MAX_LENGTH} caracteres.`;
   }
 
   if (items.length < MIN_ITEMS) {
-    errors.items = 'Añade al menos un ítem.';
+    errors.items = ITEMS_REQUIRED;
   } else if (items.length > MAX_ITEMS) {
     errors.items = MAX_ITEMS_MESSAGE;
   }

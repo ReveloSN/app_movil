@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -10,9 +10,11 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   error?: string;
   /** Muestra "n/máx" junto a la etiqueta (requiere maxLength). */
   showCounter?: boolean;
+  /** Para llevar el foco al campo (ej. al primer error). */
+  ref?: Ref<TextInput>;
 }
 
-export function TextField({ label, error, showCounter = false, onFocus, onBlur, ...inputProps }: TextFieldProps) {
+export function TextField({ label, error, showCounter = false, onFocus, onBlur, ref, ...inputProps }: TextFieldProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const [focused, setFocused] = useState(false);
@@ -30,6 +32,7 @@ export function TextField({ label, error, showCounter = false, onFocus, onBlur, 
         ) : null}
       </View>
       <TextInput
+        ref={ref}
         accessibilityLabel={label}
         accessibilityHint={error}
         placeholderTextColor={colors.textSecondary}

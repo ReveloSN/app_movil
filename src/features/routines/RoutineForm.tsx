@@ -34,6 +34,7 @@ import type { RoutineOriginal } from './routine-edit.service';
 import { ItemEditSheet } from './ItemEditSheet';
 import { MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
 import type { RoutineDraft } from './routines.types';
+import { useFirstErrorFocus } from './useFirstErrorFocus';
 import { useRoutineDeletion } from './useRoutineDeletion';
 import { useRoutineForm, type ItemFormEntry } from './useRoutineForm';
 import { useRoutines } from './useRoutines';
@@ -65,6 +66,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   const { createRoutine, updateRoutine } = useRoutines();
   const { drafts: triggers, clear: clearTriggers } = useTriggerDrafts(formId);
   const { rearm } = useTriggerRuntime();
+  const { scrollRef, nameRef, onItemsLayout, onTriggersLayout, focusFirstError } = useFirstErrorFocus();
   useEffect(() => clearTriggers, [clearTriggers]);
 
   function handleSaved() {
@@ -99,10 +101,15 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
     backToRoutines();
   });
 
+  // Si no pasa la validación, se queda en P04 con los errores a la vista y lleva al primero.
+  async function submit() {
+    const result = await form.submit();
+    if (result?.status === 'invalid') focusFirstError(result.errors);
+  }
+
   function saveFromDialog() {
     guard.dismiss();
-    // Si no pasa la validación, se queda en P04 con los errores a la vista.
-    void form.submit();
+    void submit();
   }
 
   return (
@@ -113,9 +120,11 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           headerLeft: () => <TextButton label={copy.CANCEL_LABEL} onPress={cancel} />,
         }}
       />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {aiAssisted ? <AiDraftNotice suggestsWifiExit={aiAssisted.suggestsWifiExit} /> : null}
         <TextField
+          ref={nameRef}
+          returnKeyType="done"
           label="Nombre de la rutina"
           placeholder="Ej. Salir al trabajo"
           value={form.name}
@@ -142,11 +151,13 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           onChange={form.setColor}
         />
 
-        <SectionLabel
-          label={copy.ITEMS_SECTION_TITLE}
-          trailing={`${form.items.length}/${MAX_ITEMS}`}
-          accessibilityLabel={`${copy.ITEMS_SECTION_TITLE}, ${form.items.length} de ${MAX_ITEMS}`}
-        />
+        <View onLayout={onItemsLayout}>
+          <SectionLabel
+            label={copy.ITEMS_SECTION_TITLE}
+            trailing={`${form.items.length}/${MAX_ITEMS}`}
+            accessibilityLabel={`${copy.ITEMS_SECTION_TITLE}, ${form.items.length} de ${MAX_ITEMS}`}
+          />
+        </View>
         {form.errors.items ? <StatusMessage tone="error" message={form.errors.items} /> : null}
 
         {form.items.length === 0 ? <StatusMessage tone="info" message={copy.EMPTY_ITEMS_MESSAGE} /> : null}
@@ -184,7 +195,9 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         />
 
         {/* 04-5 */}
-        <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
+        <View onLayout={onTriggersLayout}>
+          <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
+        </View>
 
         {/* 04-7: solo al editar. */}
         {editing ? (
@@ -202,9 +215,10 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
 
       <ScreenFooter bordered>
         {form.submitError ? <StatusMessage tone="error" message={form.submitError} /> : null}
+        {/* Siempre activo: si falta algo, los errores en línea dicen qué (no un botón "muerto"). */}
         <PrimaryButton
-          label={copy.SAVE_CHANGES_LABEL}
-          onPress={form.submit}
+          label={editing ? copy.SAVE_CHANGES_LABEL : copy.CREATE_ROUTINE_LABEL}
+          onPress={() => void submit()}
           loading={form.submitting}
           disabled={removal.deleting}
         />

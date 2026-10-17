@@ -4,8 +4,17 @@ export const NEW_ROUTINE_TITLE = 'Nueva rutina';
 export const EDIT_ROUTINE_TITLE = 'Editar rutina';
 export const CANCEL_LABEL = 'Cancelar';
 
-/** Crear y editar: el Documento de Contenido solo registra este texto. */
+/** BTN: "Crear rutina" al crear y "Guardar cambios" al editar (también en la hoja P05). */
+export const CREATE_ROUTINE_LABEL = 'Crear rutina';
 export const SAVE_CHANGES_LABEL = 'Guardar cambios';
+
+// Errores en línea al guardar. Sin código en el Documento de Contenido: propuestos, pendientes de validar.
+export const NAME_REQUIRED = 'Ponle un nombre a tu rutina.';
+export const ITEMS_REQUIRED = 'Añade al menos un ítem.';
+
+// Avisos breves tras guardar o eliminar. CF-03 (con aviso) está en trigger.copy (routineSavedMessage).
+export const CHANGES_SAVED = 'Cambios guardados.';
+export const ROUTINE_DELETED = 'Rutina eliminada.';
 
 export const ADD_ITEM_LABEL = 'Añadir ítem';
 export const ITEMS_SECTION_TITLE = 'Ítems';
