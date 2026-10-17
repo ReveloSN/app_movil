@@ -9,6 +9,11 @@ import { OfflineBanner } from '@/components/molecules/OfflineBanner';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
 
+/** true si la ruta del grupo `routine` entra directo a P07 (/routine/[id]/verify). */
+function opensVerification(params: object | undefined): boolean {
+  return Boolean(params && 'screen' in params && params.screen === '[id]/verify');
+}
+
 /** Navegador raíz con el tema aplicado. Al montarse, todo (fuentes y modo de color) ya está listo. */
 export function RootStack() {
   const { colors, scheme } = useAppTheme();
@@ -26,7 +31,14 @@ export function RootStack() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {isConnected ? null : <OfflineBanner />}
       <SafeAreaInsetsContext.Provider value={stackInsets}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+        <Stack
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            // La verificación (P07) se abre como modal que sube desde abajo, también desde la notificación.
+            ...(opensVerification(route.params) ? { animation: 'slide_from_bottom' as const } : null),
+          })}
+        />
       </SafeAreaInsetsContext.Provider>
       {/* Sobre la franja (fondo claro) el texto de la barra de estado va oscuro en ambos modos. */}
       <StatusBar style={!isConnected || scheme === 'light' ? 'dark' : 'light'} />
