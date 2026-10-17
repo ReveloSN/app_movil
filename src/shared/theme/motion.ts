@@ -1,4 +1,4 @@
-import { Easing, FadeIn, FadeOut, ReduceMotion, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
+import { Easing, FadeIn, FadeInDown, FadeOut, FadeOutLeft, LinearTransition, ReduceMotion, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
 
 /**
  * Tokens de movimiento (ver docs/ux/04-motion-y-diseno.md). Animaciones cortas que ayudan a entender
@@ -53,3 +53,12 @@ export const staggerDelay = (index: number) => Math.min(index, stagger.maxItems)
 // Animaciones de diseño (entering/exiting) comunes.
 export const fadeIn = FadeIn.duration(durations.base).reduceMotion(ReduceMotion.System);
 export const fadeOut = FadeOut.duration(durations.fast).reduceMotion(ReduceMotion.System);
+
+// Listas editables (P04): entra desde abajo, sale hacia la izquierda y el resto se acomoda.
+export const listItemEntering = FadeInDown.duration(durations.base).reduceMotion(ReduceMotion.System);
+export const listItemExiting = FadeOutLeft.duration(durations.fast).reduceMotion(ReduceMotion.System);
+export const listLayout = LinearTransition.duration(durations.base).reduceMotion(ReduceMotion.System);
+
+/** Entrada escalonada del elemento `index` de una lista (ej. tarjetas de Inicio). */
+export const staggeredEntering = (index: number) =>
+  FadeInDown.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
