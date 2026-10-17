@@ -19,8 +19,9 @@ export const typography = {
 
 export const sizes = {
   primaryButtonHeight: 52,
-  secondaryRowHeight: 44,
-  inputHeight: 40,
+  /** Área táctil mínima de Android (48 dp): botones secundarios, íconos tocables, chips. */
+  secondaryRowHeight: 48,
+  inputHeight: 48,
   badgeHeight: 28,
   progressBarHeight: 6,
   largeIconCircle: 112,
