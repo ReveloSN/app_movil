@@ -27,7 +27,7 @@ import type { Routine } from '@/shared/types/routine.types';
 
 import { resolveItemIcon } from './item-icons';
 import { ItemSuggestions } from './ItemSuggestions';
-import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
+import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS, routineAccent } from './routine-appearance';
 import { savedRoutineMessage } from './routine-feedback';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
@@ -245,6 +245,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
             setEditingItem(null);
           }}
           onClose={() => setEditingItem(null)}
+          accentColor={routineAccent(colors, form.color).color}
         />
       ) : null}
       <UnsavedChangesDialog

@@ -26,10 +26,12 @@ interface ItemEditSheetProps<T extends ItemDraft> {
   isNew: boolean;
   onSave(item: T): void;
   onClose(): void;
+  /** Color de la rutina (ya resuelto al tema): franja superior de la hoja. */
+  accentColor?: string;
 }
 
 /** P05 como hoja inferior sobre P04: etiqueta*, ícono, tipo, crítico y nota. */
-export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClose }: ItemEditSheetProps<T>) {
+export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClose, accentColor }: ItemEditSheetProps<T>) {
   const styles = useThemedStyles(createStyles);
   const editor = useItemEditor(item);
   const [confirmingClose, setConfirmingClose] = useState(false);
@@ -50,7 +52,7 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
       <View style={styles.scrim}>
         <Pressable style={styles.backdrop} onPress={requestClose} accessibilityLabel={copy.CLOSE_ITEM_LABEL} />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.sheet} accessibilityViewIsModal>
+          <View style={[styles.sheet, accentColor ? { borderTopColor: accentColor } : null]} accessibilityViewIsModal>
             <View style={styles.header}>
               <Text style={styles.title} accessibilityRole="header">
                 {isNew ? copy.NEW_ITEM_TITLE : copy.EDIT_ITEM_TITLE}
@@ -132,6 +134,8 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     },
     sheet: {
       maxHeight: '90%',
+      borderTopWidth: spacing.xs,
+      borderTopColor: colors.primary,
       borderTopLeftRadius: radii.xxl,
       borderTopRightRadius: radii.xxl,
       backgroundColor: colors.surface,

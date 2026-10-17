@@ -14,7 +14,7 @@ import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { greeting, NEXT_ROUTINE_LABEL, nextRoutineWhen } from '@/features/home/home.copy';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
-import { resolveRoutineColor } from '@/features/routines/routine-appearance';
+import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
@@ -32,6 +32,8 @@ export default function RoutinesScreen() {
   const { next, now } = useNextRoutine();
   const displayName = useDisplayName();
   const { colors } = useAppTheme();
+  const nextRoutine = next ? routines.find((routine) => routine.id === next.routineId) : undefined;
+  const nextAccent = routineAccent(colors, nextRoutine?.color);
   const styles = useThemedStyles(createStyles);
   // Avisos de la sincronización (conflicto, error); se descartan al salir de Inicio.
   const flash = useFlashMessage();
@@ -74,6 +76,9 @@ export default function RoutinesScreen() {
                   when={nextRoutineWhen(next.at, now)}
                   actionLabel={VERIFY_NOW_LABEL}
                   onAction={() => openVerification(next.routineId)}
+                  icon={resolveRoutineIcon(nextRoutine?.icon)}
+                  accentColor={nextAccent.color}
+                  accentTint={nextAccent.tint}
                 />
               ) : null}
             </View>
@@ -82,7 +87,8 @@ export default function RoutinesScreen() {
             <RoutineCard
               name={item.name}
               icon={item.icon}
-              accentColor={colors[resolveRoutineColor(item.color).token]}
+              accentColor={routineAccent(colors, item.color).color}
+              accentTint={routineAccent(colors, item.color).tint}
               active={item.active}
               lastCompletedAt={item.lastCompletedAt}
               actionLabel={VERIFY_NOW_LABEL}
