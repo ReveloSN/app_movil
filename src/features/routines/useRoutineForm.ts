@@ -22,6 +22,8 @@ interface UseRoutineFormOptions {
   initialDraft?: RoutineDraft;
   /** Avisos configurados en P06 (viven fuera del formulario: los edita otra pantalla). */
   triggers?: readonly TriggerDraftEntry[];
+  /** El borrador inicial aún no es de la persona (ej. lo hizo la IA): salir sin guardar pregunta. */
+  startDirty?: boolean;
 }
 
 const NO_ERRORS: RoutineValidationErrors = {};
@@ -38,7 +40,7 @@ const newEntry = (item: ItemDraft = { label: '', kind: DEFAULT_ITEM_KIND, critic
 const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] => (draft ? draft.items.map(newEntry) : []);
 
 /** Estado local del formulario de rutina. Lo escrito se conserva si el guardado falla. */
-export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS }: UseRoutineFormOptions) {
+export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS, startDirty = false }: UseRoutineFormOptions) {
   const [name, setName] = useState(initialDraft?.name ?? '');
   // 04-2: siempre hay ícono y color (los de por defecto si la rutina o la plantilla no traen).
   const [startIcon] = useState<string>(() => resolveRoutineIcon(initialDraft?.icon));
@@ -62,7 +64,10 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     () => toRoutineDraft({ name, icon, color, items, triggers }),
     [name, icon, color, items, triggers],
   );
-  const dirty = useMemo(() => draftFingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
+  const dirty = useMemo(
+    () => startDirty || draftFingerprint(draft) !== initialFingerprint,
+    [startDirty, draft, initialFingerprint],
+  );
   const errors = useMemo(() => (attempted ? validateRoutineDraft(draft) : NO_ERRORS), [attempted, draft]);
 
   const canAddItem = items.length < MAX_ITEMS;

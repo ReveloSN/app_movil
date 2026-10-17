@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/molecules/ErrorState';
 import { LoadingState } from '@/components/molecules/LoadingState';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
+import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { greeting, NEXT_ROUTINE_LABEL, nextRoutineWhen } from '@/features/home/home.copy';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
@@ -45,7 +46,13 @@ export default function RoutinesScreen() {
       {/* Cambios sin subir o con error: ícono + texto. */}
       <PendingSyncIndicator style={styles.syncStatus} />
       {routines.length === 0 ? (
-        <EmptyState icon="checkbox-outline" message={EMPTY_MESSAGE} />
+        <View style={styles.empty}>
+          <EmptyState icon="checkbox-outline" message={EMPTY_MESSAGE} />
+          {/* Alternativa secundaria a crear o usar una plantilla (EV-01). */}
+          <View style={styles.emptyAction}>
+            <CreateWithAiButton />
+          </View>
+        </View>
       ) : (
         <FlatList
           data={routines}
@@ -106,6 +113,12 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
     },
     messages: {
       gap: spacing.md,
+    },
+    empty: {
+      flex: 1,
+    },
+    emptyAction: {
+      paddingHorizontal: spacing.xl,
     },
     greeting: {
       ...typography.body,
