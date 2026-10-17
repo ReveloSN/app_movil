@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
@@ -67,7 +67,8 @@ export function AccountSection() {
         <SwitchRow icon="contrast-outline" label="Modo oscuro" value={mode === 'dark'} onValueChange={() => toggle()} />
       </View>
       {error ? <StatusMessage tone="error" message={error} /> : null}
-      <PrimaryButton label={SIGN_OUT_LABEL} onPress={requestSignOut} loading={signingOut} />
+      {/* Con borde, no lleno: la primaria es para la tarea de la pantalla, y en P11 cerrar sesión es una acción de cuenta al final. */}
+      <SecondaryButton icon="log-out-outline" label={SIGN_OUT_LABEL} onPress={requestSignOut} disabled={signingOut} />
       <ConfirmDialog
         visible={warning !== null}
         message={warning ?? ''}
