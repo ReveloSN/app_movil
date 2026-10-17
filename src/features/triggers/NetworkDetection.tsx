@@ -47,12 +47,8 @@ export function NetworkDetection({ detection, onDetect, onRequestPermission, onU
         </View>
       );
     default: {
-      const message =
-        detection.status === 'services-off'
-          ? LOCATION_SERVICES_OFF
-          : detection.status === 'not-on-wifi'
-            ? copy.NOT_ON_WIFI_MESSAGE
-            : copy.HIDDEN_SSID_MESSAGE;
+      // Sin permiso (arriba) o con la ubicación apagada se dice qué activar; si no, ER-03.
+      const message = detection.status === 'services-off' ? LOCATION_SERVICES_OFF : copy.NETWORK_NOT_FOUND_MESSAGE;
       return (
         <View style={styles.group}>
           <StatusMessage tone="info" message={message} />
