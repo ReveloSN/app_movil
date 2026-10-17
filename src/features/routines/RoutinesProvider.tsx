@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { appRepositories } from '@/db/app.repositories';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { deleteRoutineCascade, type RoutineDeleteDeps } from './routine-delete.service';
@@ -17,21 +17,16 @@ const DELETE_ERROR = 'No se pudo eliminar la rutina. Revisa tu conexión e inté
 
 type RoutinesRepositories = RoutineServiceDeps & RoutineDeleteDeps;
 
-const defaultRepositories: RoutinesRepositories = {
-  routines: appRepositories.routines,
-  items: appRepositories.items,
-  triggers: appRepositories.triggers,
-  homeNetworks: appRepositories.homeNetworks,
-  records: appRepositories.records,
-};
-
 interface RoutinesProviderProps {
   children: ReactNode;
-  /** Inyectable para tests; por defecto los repositorios de Supabase. */
+  /** Inyectable para tests; por defecto los repositorios locales del usuario. */
   repositories?: RoutinesRepositories;
 }
 
-export function RoutinesProvider({ children, repositories = defaultRepositories }: RoutinesProviderProps) {
+export function RoutinesProvider({ children, repositories: injected }: RoutinesProviderProps) {
+  const local = useLocalRepositories();
+  const store = useLocalStore();
+  const repositories = injected ?? local;
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -76,6 +71,16 @@ export function RoutinesProvider({ children, repositories = defaultRepositories 
     if (userId) void fetchRoutines();
     else latestRequest.current += 1;
   }, [userId, fetchRoutines]);
+
+  // Lo que cambia en la copia local fuera de esta pantalla (lo que trae la sincronización, o "Última vez"
+  // al terminar una verificación) se ve sin recargar.
+  useEffect(
+    () =>
+      store.subscribe((change) => {
+        if (userId && change.tablesChanged) void fetchRoutines();
+      }),
+    [store, userId, fetchRoutines],
+  );
 
   const refresh = useCallback(async () => {
     if (!userId) return;

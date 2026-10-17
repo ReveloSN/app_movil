@@ -1,36 +1,28 @@
 import * as Crypto from 'expo-crypto';
 
-import { appRepositories } from '@/db/app.repositories';
-import { isNetworkError } from '@/db/repositories/repository.types';
-import type { VerificationRecordRepository } from '@/db/repositories/verification-record.repository';
-import { enqueue, type PendingRecord } from '@/features/checklist/pendingSync';
+import { createLocalRepositories, type LocalRepositories } from '@/db/local/local.repositories';
+import { getLocalStore } from '@/db/local/local.store';
 
 /** Resultados que se registran desde una notificación, sin pasar por la verificación (P07). */
 export type NotificationOutcome = 'skipped' | 'no_response';
 
 /**
- * Crea el registro sin abrir la app. Sin red, queda en la cola de pendientes (la misma de P07)
- * y se envía cuando la app vuelva a tener conexión.
+ * Crea el registro sin abrir la app (también desde la tarea en segundo plano): va a la cola local del
+ * dueño de los avisos y se sube cuando haya sincronización.
  */
 export async function writeNotificationRecord(
   routineId: string,
   ownerId: string,
   result: NotificationOutcome,
   at: number,
-  repository: Pick<VerificationRecordRepository, 'create'> = appRepositories.records,
+  repository: Pick<LocalRepositories['records'], 'create'> = createLocalRepositories(getLocalStore(ownerId)).records,
 ): Promise<void> {
-  const record: PendingRecord = {
+  await repository.create({
     id: Crypto.randomUUID(),
     routineId,
     result,
     date: new Date(at).toISOString(),
     itemsChecked: null,
     durationSeconds: null,
-  };
-  try {
-    await repository.create(record);
-  } catch (cause) {
-    if (!isNetworkError(cause)) throw cause;
-    await enqueue(ownerId, record);
-  }
+  });
 }

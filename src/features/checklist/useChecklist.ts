@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { appRepositories } from '@/db/app.repositories';
 import type { ItemRepository } from '@/db/repositories/item.repository';
-import { isNetworkError } from '@/db/repositories/repository.types';
+import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
 import type { Item } from '@/shared/types/item.types';
 
 import type { ChecklistItemState, ChecklistProgress } from './checklist.types';
 
 const LOAD_ERROR = 'No pudimos cargar los ítems de esta rutina.';
-const OFFLINE_ERROR = 'Sin conexión: no pudimos cargar los ítems de esta rutina.';
 
 const toState = (item: Item): ChecklistItemState => ({
   id: item.id,
@@ -19,13 +17,15 @@ const toState = (item: Item): ChecklistItemState => ({
 });
 
 /**
- * Ítems de una rutina para verificar. Marcar/desmarcar es solo estado local (instantáneo, sin red);
- * el resultado se guarda al terminar (useFinishChecklist).
+ * Ítems de una rutina para verificar, desde la copia local: abre igual sin conexión. Marcar/desmarcar es
+ * solo estado de la pantalla (instantáneo); el resultado se guarda al terminar (useFinishChecklist).
  */
 export function useChecklist(
   routineId: string,
-  itemRepository: Pick<ItemRepository, 'getByRoutine'> = appRepositories.items,
+  injected?: Pick<ItemRepository, 'getByRoutine'>,
 ) {
+  const local = useLocalRepositories();
+  const itemRepository = injected ?? local.items;
   const [items, setItems] = useState<ChecklistItemState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function useChecklist(
       (cause: unknown) => {
         if (!isLatest()) return;
         if (__DEV__) console.warn('[checklist.load]', cause);
-        setError(isNetworkError(cause) ? OFFLINE_ERROR : LOAD_ERROR);
+        setError(LOAD_ERROR);
         setLoading(false);
       },
     );
