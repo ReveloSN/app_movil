@@ -15,6 +15,9 @@ const BADGES: Record<string, ResultBadge> = {
   no_response: { tone: 'neutral', icon: 'time', label: 'Sin respuesta' },
 };
 
+/** Opciones del filtro por resultado (09-3), en el orden del modelo de contenido. */
+export const RESULT_FILTERS = Object.entries(BADGES).map(([value, badge]) => ({ value, label: badge.label }));
+
 const UNKNOWN_BADGE: ResultBadge = { tone: 'neutral', icon: 'help-circle', label: 'Sin resultado' };
 
 /** Chip (tono + ícono + texto) que representa el resultado de una verificación. */

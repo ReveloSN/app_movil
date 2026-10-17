@@ -1,37 +1,41 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { remoteRepositories } from '@/db/app.repositories';
-import type { OutboxOp } from '@/db/local/local-document.types';
-import type { VerificationRecordRepository } from '@/db/repositories/verification-record.repository';
+import type { LocalDocument } from '@/db/local/local-document.types';
+import type { LocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useRoutines } from '@/features/routines/useRoutines';
-import type { VerificationRecord } from '@/shared/types/verification-record.types';
+import { useSync } from '@/features/sync/SyncProvider';
 
-import { groupRecordsByDay } from './history.grouping';
-import { withPendingRecords } from './history.pending';
-import type { HistoryState } from './history.types';
+import { withPendingRecords, type HistoryRecord } from './history.pending';
 
-const LOAD_ERROR = 'No pudimos cargar tu historial. Revisa tu conexión e inténtalo de nuevo.';
+const LOAD_ERROR = 'No pudimos leer tu historial en este teléfono. Inténtalo de nuevo.';
+
+export interface HistoryData {
+  /** Del historial local, con `pending` si la verificación aún espera en la cola. */
+  records: HistoryRecord[];
+  loading: boolean;
+  error: string | null;
+  refresh(): Promise<void>;
+}
+
+const recordsOf = (doc: LocalDocument) => withPendingRecords(doc.records ?? [], doc.outbox);
 
 /**
- * Historial del usuario agrupado por día local. Carga todos los registros en una sola consulta
- * (RLS limita a los del usuario), suma las verificaciones que aún esperan en la cola (marcadas como
- * pendientes, se ven también sin conexión) y resuelve la rutina de cada uno con las rutinas ya cargadas.
+ * Historial del usuario desde la copia local (funciona sin red): lo bajado del servidor más lo
+ * verificado aquí. Se actualiza solo al terminar una verificación y tras cada sincronización;
+ * "refrescar" pide una sincronización.
  */
-export function useHistory(
-  repository: Pick<VerificationRecordRepository, 'getAll'> = remoteRepositories.records,
-): HistoryState {
+export function useHistory(injectedStore?: Pick<LocalStore, 'read' | 'subscribe'>): HistoryData {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const { routines, loading: routinesLoading, error: routinesError, refresh: refreshRoutines } = useRoutines();
-
-  const store = useLocalStore();
-  const [records, setRecords] = useState<VerificationRecord[]>([]);
-  const [outbox, setOutbox] = useState<OutboxOp[]>([]);
+  const localStore = useLocalStore();
+  const store = injectedStore ?? localStore;
+  const { syncNow } = useSync();
+  const { refresh: refreshRoutines } = useRoutines();
+  const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(userId !== null);
   const [error, setError] = useState<string | null>(null);
-  // Descarta respuestas de peticiones viejas (ej. tras cerrar sesión o un refresh más nuevo).
   const latestRequest = useRef(0);
 
   // Al cambiar de usuario se reinicia el estado durante el render: nunca se ve el historial de otra sesión.
@@ -39,69 +43,41 @@ export function useHistory(
   if (stateOwner !== userId) {
     setStateOwner(userId);
     setRecords([]);
-    setOutbox([]);
     setError(null);
     setLoading(userId !== null);
   }
 
-  // Pide los registros; el estado solo se toca en los callbacks de la promesa (nunca de forma síncrona).
-  const fetchRecords = useCallback((): Promise<void> => {
+  const load = useCallback((): Promise<void> => {
     const request = ++latestRequest.current;
-    const isLatest = () => request === latestRequest.current;
-
-    return repository.getAll().then(
-      (data) => {
-        if (!isLatest()) return;
-        setRecords(data);
+    return store.read().then(
+      (doc) => {
+        if (request !== latestRequest.current) return;
+        setRecords(recordsOf(doc));
         setError(null);
         setLoading(false);
       },
       (cause: unknown) => {
-        if (!isLatest()) return;
-        if (__DEV__) console.warn('[records.getAll]', cause);
+        if (request !== latestRequest.current) return;
+        if (__DEV__) console.warn('[history.load]', cause);
         setError(LOAD_ERROR);
         setLoading(false);
       },
     );
-  }, [repository]);
+  }, [store]);
 
-  useEffect(() => {
-    if (userId) void fetchRecords();
-    else latestRequest.current += 1;
-  }, [userId, fetchRecords]);
-
-  // Verificaciones en la cola: al abrir y cada vez que cambia (se termina una, o se suben).
   useEffect(() => {
     if (!userId) return;
-    const readOutbox = () =>
-      store
-        .read()
-        .then((doc) => setOutbox(doc.outbox))
-        .catch((cause: unknown) => {
-          if (__DEV__) console.warn('[history.outbox]', cause);
-        });
-    void readOutbox();
+    void load();
     return store.subscribe((change) => {
-      if (change.outboxChanged) void readOutbox();
+      if (change.recordsChanged || change.outboxChanged) void load();
     });
-  }, [store, userId]);
+  }, [store, userId, load]);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
-    setError(null);
-    await Promise.all([fetchRecords(), refreshRoutines()]);
-  }, [userId, fetchRecords, refreshRoutines]);
+    syncNow(); // Si hay red, trae lo de otros dispositivos; el resultado llega por la suscripción.
+    await Promise.all([load(), refreshRoutines()]);
+  }, [userId, syncNow, load, refreshRoutines]);
 
-  const groups = useMemo(() => groupRecordsByDay(withPendingRecords(records, outbox), routines), [records, outbox, routines]);
-
-  // Sin rutinas cargadas, todo saldría como "Rutina eliminada": se espera a tenerlas o se muestra el error.
-  const routinesMissing = routines.length === 0;
-
-  return {
-    groups,
-    loading: loading || (routinesMissing && routinesLoading),
-    error: error ?? (routinesMissing && routinesError ? LOAD_ERROR : null),
-    refresh,
-  };
+  return { records, loading, error, refresh };
 }
