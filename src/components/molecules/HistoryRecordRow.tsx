@@ -14,10 +14,12 @@ interface HistoryRecordRowProps {
   /** ISO 8601. */
   date: string;
   result: { tone: ChipTone; icon: IoniconName; label: string };
+  /** Si llega, la verificación aún no se subió: se muestra este texto con un ícono. */
+  pendingLabel?: string;
 }
 
 /** Fila del historial (P09): rutina, hora y resultado. El resultado va con ícono + texto, no solo color. */
-export function HistoryRecordRow({ routineName, routineIcon, date, result }: HistoryRecordRowProps) {
+export function HistoryRecordRow({ routineName, routineIcon, date, result, pendingLabel }: HistoryRecordRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const time = formatTime(date);
@@ -26,7 +28,7 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result }: His
     <View
       style={styles.row}
       accessible
-      accessibilityLabel={[routineName, time, result.label].filter(Boolean).join('. ')}
+      accessibilityLabel={[routineName, time, result.label, pendingLabel].filter(Boolean).join('. ')}
     >
       <View style={styles.iconCircle}>
         <Ionicons name={toIoniconName(routineIcon, 'checkbox-outline')} size={iconSizes.md} color={colors.primary} />
@@ -36,6 +38,12 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result }: His
           {routineName}
         </Text>
         {time ? <Text style={styles.time}>{time}</Text> : null}
+        {pendingLabel ? (
+          <View style={styles.pending}>
+            <Ionicons name="cloud-upload-outline" size={iconSizes.sm} color={colors.textSecondary} />
+            <Text style={styles.time}>{pendingLabel}</Text>
+          </View>
+        ) : null}
       </View>
       <Chip tone={result.tone} icon={result.icon} label={result.label} />
     </View>
@@ -71,5 +79,10 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     time: {
       ...typography.captionRegular,
       color: colors.textSecondary,
+    },
+    pending: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
     },
   });

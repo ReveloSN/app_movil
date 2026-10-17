@@ -4,6 +4,8 @@ import type { VerificationRecord } from '@/shared/types/verification-record.type
 export interface HistoryEntry extends VerificationRecord {
   routineName: string;
   routineIcon: string | null;
+  /** Todavía espera en la cola para subir al servidor. */
+  pending?: boolean;
 }
 
 export interface HistoryGroup {

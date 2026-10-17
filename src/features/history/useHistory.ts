@@ -1,28 +1,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { appRepositories } from '@/db/app.repositories';
+import { remoteRepositories } from '@/db/app.repositories';
+import type { OutboxOp } from '@/db/local/local-document.types';
 import type { VerificationRecordRepository } from '@/db/repositories/verification-record.repository';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useRoutines } from '@/features/routines/useRoutines';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 import { groupRecordsByDay } from './history.grouping';
+import { withPendingRecords } from './history.pending';
 import type { HistoryState } from './history.types';
 
 const LOAD_ERROR = 'No pudimos cargar tu historial. Revisa tu conexión e inténtalo de nuevo.';
 
 /**
  * Historial del usuario agrupado por día local. Carga todos los registros en una sola consulta
- * (RLS limita a los del usuario) y resuelve la rutina de cada uno con las rutinas ya cargadas.
+ * (RLS limita a los del usuario), suma las verificaciones que aún esperan en la cola (marcadas como
+ * pendientes, se ven también sin conexión) y resuelve la rutina de cada uno con las rutinas ya cargadas.
  */
 export function useHistory(
-  repository: Pick<VerificationRecordRepository, 'getAll'> = appRepositories.records,
+  repository: Pick<VerificationRecordRepository, 'getAll'> = remoteRepositories.records,
 ): HistoryState {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const { routines, loading: routinesLoading, error: routinesError, refresh: refreshRoutines } = useRoutines();
 
+  const store = useLocalStore();
   const [records, setRecords] = useState<VerificationRecord[]>([]);
+  const [outbox, setOutbox] = useState<OutboxOp[]>([]);
   const [loading, setLoading] = useState(userId !== null);
   const [error, setError] = useState<string | null>(null);
   // Descarta respuestas de peticiones viejas (ej. tras cerrar sesión o un refresh más nuevo).
@@ -33,6 +39,7 @@ export function useHistory(
   if (stateOwner !== userId) {
     setStateOwner(userId);
     setRecords([]);
+    setOutbox([]);
     setError(null);
     setLoading(userId !== null);
   }
@@ -63,6 +70,22 @@ export function useHistory(
     else latestRequest.current += 1;
   }, [userId, fetchRecords]);
 
+  // Verificaciones en la cola: al abrir y cada vez que cambia (se termina una, o se suben).
+  useEffect(() => {
+    if (!userId) return;
+    const readOutbox = () =>
+      store
+        .read()
+        .then((doc) => setOutbox(doc.outbox))
+        .catch((cause: unknown) => {
+          if (__DEV__) console.warn('[history.outbox]', cause);
+        });
+    void readOutbox();
+    return store.subscribe((change) => {
+      if (change.outboxChanged) void readOutbox();
+    });
+  }, [store, userId]);
+
   const refresh = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
@@ -70,7 +93,7 @@ export function useHistory(
     await Promise.all([fetchRecords(), refreshRoutines()]);
   }, [userId, fetchRecords, refreshRoutines]);
 
-  const groups = useMemo(() => groupRecordsByDay(records, routines), [records, routines]);
+  const groups = useMemo(() => groupRecordsByDay(withPendingRecords(records, outbox), routines), [records, outbox, routines]);
 
   // Sin rutinas cargadas, todo saldría como "Rutina eliminada": se espera a tenerlas o se muestra el error.
   const routinesMissing = routines.length === 0;

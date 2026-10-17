@@ -10,6 +10,7 @@ import { LoadingState } from '@/components/molecules/LoadingState';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { describeResult } from '@/features/history/history.result';
 import { useHistory } from '@/features/history/useHistory';
+import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -59,6 +60,7 @@ export default function HistoryScreen() {
             routineIcon={item.routineIcon}
             date={item.date}
             result={describeResult(item.result)}
+            pendingLabel={item.pending ? PENDING_SYNC_LABEL : undefined}
           />
         )}
         ItemSeparatorComponent={Separator}
