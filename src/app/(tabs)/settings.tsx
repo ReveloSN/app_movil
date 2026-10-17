@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { AccountSection } from '@/features/settings/AccountSection';
+import { AiSettingsSection } from '@/features/settings/AiSettingsSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { PermissionsSection } from '@/features/settings/PermissionsSection';
@@ -21,6 +22,7 @@ export default function SettingsScreen() {
       <HomeNetworksSection />
       <PermissionsSection />
       <NotificationPrefsSection />
+      <AiSettingsSection />
 
       {/* 11-6 */}
       <SecondaryButton icon="help-circle-outline" label={HELP_LABEL} onPress={() => router.push('/help')} />
