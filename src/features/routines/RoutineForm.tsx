@@ -9,6 +9,7 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
 import { ItemFormRow } from '@/components/molecules/ItemFormRow';
+import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
@@ -23,6 +24,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { ITEM_KIND_OPTIONS } from './item-kinds';
+import { pickSuggestions } from './item-suggestions';
 import * as copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
 import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, MAX_ITEMS_MESSAGE, ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
@@ -76,6 +78,7 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
     initialDraft,
     triggers,
   });
+  const suggestions = form.hasRoom ? pickSuggestions(form.items.map((item) => item.label)) : [];
   // DC-03: cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04.
   const guard = useUnsavedChangesGuard(form.dirty);
   const removal = useRoutineDeletion(editing?.routine.id, () => {
@@ -137,6 +140,18 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
         {form.canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}
         <SecondaryButton icon="add" label={copy.ADD_ITEM_LABEL} onPress={form.addItem} disabled={!form.canAddItem} />
 
+        {/* 04-4 */}
+        {suggestions.length > 0 ? (
+          <View style={styles.suggestions}>
+            <SectionLabel label={copy.SUGGESTIONS_TITLE} />
+            <SuggestionChips
+              labels={suggestions.map((item) => item.label)}
+              onPick={(index) => form.addSuggested(suggestions[index])}
+              accessibilityLabelFor={copy.addSuggestionLabel}
+            />
+          </View>
+        ) : null}
+
         {/* 04-5 */}
         <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
 
@@ -193,6 +208,9 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
     content: {
       gap: spacing.lg,
       padding: spacing.xl,
+    },
+    suggestions: {
+      gap: spacing.sm,
     },
     deleteZone: {
       gap: spacing.sm,
