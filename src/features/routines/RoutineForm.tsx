@@ -10,6 +10,8 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
 import { ItemFormRow } from '@/components/molecules/ItemFormRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
@@ -50,11 +52,10 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
   const { createRoutine, updateRoutine } = useRoutines();
   const { drafts: triggers, clear: clearTriggers } = useTriggerDrafts(formId);
   const { rearm } = useTriggerRuntime();
-  const removal = useRoutineDeletion(editing?.routine.id, backToRoutines);
-
   useEffect(() => clearTriggers, [clearTriggers]);
 
   function handleSaved() {
+    guard.allowExit();
     // CF-03 adaptado a los avisos.
     if (triggers.length > 0) {
       showFlashMessage(routineSavedMessage(triggers.map((trigger) => strategyFor(trigger).describe(trigger))));
@@ -75,6 +76,18 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
     initialDraft,
     triggers,
   });
+  // DC-03: cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04.
+  const guard = useUnsavedChangesGuard(form.dirty);
+  const removal = useRoutineDeletion(editing?.routine.id, () => {
+    guard.allowExit();
+    backToRoutines();
+  });
+
+  function saveFromDialog() {
+    guard.dismiss();
+    // Si no pasa la validación, se queda en P04 con los errores a la vista.
+    void form.submit();
+  }
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -160,6 +173,12 @@ export function RoutineForm({ formId, initialDraft, editing }: RoutineFormProps)
           confirmFirst
         />
       ) : null}
+      <UnsavedChangesDialog
+        visible={guard.confirming}
+        onSave={saveFromDialog}
+        onDiscard={guard.discard}
+        onDismiss={guard.dismiss}
+      />
     </KeyboardAvoidingView>
   );
 }

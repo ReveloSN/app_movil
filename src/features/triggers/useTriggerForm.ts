@@ -4,6 +4,7 @@ import { PERMISSION_COPY } from '@/features/permissions/permission.copy';
 import { firstMissingPermission } from '@/features/permissions/permission.service';
 import type { PermissionKind } from '@/features/permissions/permission.types';
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
+import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
 import { summarySentence } from './trigger.copy';
@@ -27,6 +28,26 @@ interface UseTriggerFormOptions {
   findMissingPermission?: (kinds: readonly PermissionKind[]) => Promise<PermissionKind | null>;
 }
 
+interface TriggerFormFields {
+  kind: TriggerKind;
+  time: ClockTime;
+  days: Weekday[];
+  ssid: string;
+  networkName: string;
+  windowEnabled: boolean;
+  timeWindow: TimeWindow;
+}
+
+/** El aviso que representa lo que hay en pantalla (solo los campos del tipo elegido). */
+const toDraft = ({ kind, time, days, ssid, networkName, windowEnabled, timeWindow }: TriggerFormFields): TriggerDraft =>
+  kind === 'schedule'
+    ? { type: kind, time, days }
+    : { type: kind, ssid, networkName, window: windowEnabled ? timeWindow : null };
+
+/** Huella para saber si cambió algo (DC-03). Los días se comparan sin importar el orden en que se tocaron. */
+const fingerprint = (draft: TriggerDraft) =>
+  stableStringify(draft.type === 'schedule' ? { ...draft, days: [...draft.days].sort((a, b) => a - b) } : draft);
+
 const requiredPermissions = (draft: TriggerDraft): PermissionKind[] =>
   strategyFor(draft).needsLocation ? ['notifications', 'location'] : ['notifications'];
 
@@ -48,6 +69,10 @@ export function useTriggerForm({
   const [networkName, setNetworkName] = useState(wifi?.networkName ?? DEFAULT_NETWORK_NAME);
   const [windowEnabled, setWindowEnabled] = useState(Boolean(wifi?.window));
   const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? DEFAULT_WINDOW);
+  // Lo que había al abrir P06: base para saber si hay cambios sin guardar.
+  const [initialFingerprint] = useState(() =>
+    fingerprint(toDraft({ kind, time, days, ssid, networkName, windowEnabled, timeWindow })),
+  );
 
   const [attempted, setAttempted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,12 +81,10 @@ export function useTriggerForm({
   const pendingPermission = useRef<PermissionKind | null>(null);
 
   const draft = useMemo<TriggerDraft>(
-    () =>
-      kind === 'schedule'
-        ? { type: kind, time, days }
-        : { type: kind, ssid, networkName, window: windowEnabled ? timeWindow : null },
+    () => toDraft({ kind, time, days, ssid, networkName, windowEnabled, timeWindow }),
     [kind, time, days, ssid, networkName, windowEnabled, timeWindow],
   );
+  const dirty = useMemo(() => fingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
 
   const errors = useMemo(() => (attempted ? validateTriggerDraft(draft) : NO_ERRORS), [attempted, draft]);
 
@@ -134,5 +157,6 @@ export function useTriggerForm({
     permissionError,
     save,
     resume,
+    dirty,
   };
 }

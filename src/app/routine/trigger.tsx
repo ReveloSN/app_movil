@@ -10,6 +10,8 @@ import { DayPicker, type DayOption } from '@/components/molecules/DayPicker';
 import { SegmentedControl } from '@/components/molecules/SegmentedControl';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { TimeField } from '@/components/molecules/TimeField';
+import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
 import { strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
 import * as copy from '@/features/triggers/trigger.copy';
@@ -44,10 +46,13 @@ export default function TriggerScreen() {
     initial: existing,
     onCommit: (draft) => {
       upsert({ ...draft, key: entryKey });
+      guard.allowExit();
       router.back();
     },
     onNeedPermission: (kind) => router.push({ pathname: '/routine/permissions', params: { kind } }),
   });
+  // DC-03 al salir de P06 con cambios sin guardar.
+  const guard = useUnsavedChangesGuard(form.dirty);
   const { detection, detect } = useCurrentWifi();
   const isWifi = form.kind !== 'schedule';
   const { resume } = form;
@@ -157,6 +162,16 @@ export default function TriggerScreen() {
         {form.permissionError ? <StatusMessage tone="error" message={form.permissionError} /> : null}
         <PrimaryButton label={copy.SAVE_TRIGGER_LABEL} onPress={form.save} loading={form.saving} />
       </ScrollView>
+      <UnsavedChangesDialog
+        visible={guard.confirming}
+        onSave={() => {
+          guard.dismiss();
+          // Valida y pide permisos igual que el botón: si algo falta, se queda en P06.
+          void form.save();
+        }}
+        onDiscard={guard.discard}
+        onDismiss={guard.dismiss}
+      />
     </KeyboardAvoidingView>
   );
 }
