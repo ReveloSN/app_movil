@@ -6,12 +6,13 @@ import { AccountSection } from '@/features/settings/AccountSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { PermissionsSection } from '@/features/settings/PermissionsSection';
+import { ProfileSection } from '@/features/settings/ProfileSection';
 import { HELP_LABEL } from '@/features/settings/settings.copy';
 import { SyncStatusSection } from '@/features/sync/SyncStatusSection';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-/** P11. Bloques en el orden del documento de jerarquía (11-1 … 11-6); la cuenta va al final. */
+/** P11. Bloques en el orden del documento de jerarquía (11-1 … 11-6); nombre y cuenta van al final. */
 export default function SettingsScreen() {
   const styles = useThemedStyles(createStyles);
 
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
 
       <SyncStatusSection />
 
+      <ProfileSection />
       <AccountSection />
     </ScrollView>
   );

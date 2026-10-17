@@ -12,6 +12,9 @@ import { loadOrCreateSettings } from './settings.service';
 
 type Repository = Pick<SettingsRepository, 'getAll' | 'create' | 'update'>;
 
+/** Ajustes que cambian cómo suenan los avisos. */
+const PREF_KEYS = ['snoozeMinutes', 'doNotDisturb', 'sound'] as const;
+
 const toPrefs = (settings: Settings) => ({
   snoozeMinutes: normalizeSnooze(settings.snoozeMinutes),
   doNotDisturb: settings.doNotDisturb,
@@ -91,6 +94,8 @@ export function useSettings(injected?: Repository) {
       }
       confirmed.current = saved;
       setSettings(saved);
+      // El nombre no cambia los avisos: no hace falta reprogramar.
+      if (!PREF_KEYS.some((key) => key in changes)) return;
       // Ya está guardado: si reprogramar falla, se reintenta en el próximo mantenimiento (no se revierte).
       applyPrefs(toPrefs(saved)).catch((cause: unknown) => {
         if (__DEV__) console.warn('[settings.applyPrefs]', cause);

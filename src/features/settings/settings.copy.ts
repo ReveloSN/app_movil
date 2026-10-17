@@ -36,6 +36,12 @@ export const SOUND_LABEL = 'Sonido';
 // 11-6
 export const HELP_LABEL = 'Ayuda';
 
+// "Nombre" de Ajustes (modelo de contenido). Propuestos, pendientes de validar.
+export const PROFILE_SECTION_TITLE = 'Tu nombre';
+export const DISPLAY_NAME_LABEL = 'Nombre';
+export const DISPLAY_NAME_PLACEHOLDER = 'Opcional';
+export const DISPLAY_NAME_HINT = 'Lo usamos para saludarte en Inicio.';
+
 export const ACCOUNT_SECTION_TITLE = 'Cuenta';
 export const SIGNED_IN_AS_LABEL = 'Sesión iniciada como';
 export const SIGN_OUT_LABEL = 'Cerrar sesión';
