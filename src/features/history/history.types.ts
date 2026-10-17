@@ -14,10 +14,3 @@ export interface HistoryGroup {
   /** Del más reciente al más antiguo. */
   records: HistoryEntry[];
 }
-
-export interface HistoryState {
-  groups: HistoryGroup[];
-  loading: boolean;
-  error: string | null;
-  refresh(): Promise<void>;
-}

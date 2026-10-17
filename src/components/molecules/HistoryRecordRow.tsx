@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Chip, type ChipTone } from '@/components/atoms/Chip';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -16,18 +16,25 @@ interface HistoryRecordRowProps {
   result: { tone: ChipTone; icon: IoniconName; label: string };
   /** Si llega, la verificación aún no se subió: se muestra este texto con un ícono. */
   pendingLabel?: string;
+  /** Abre el detalle del registro. */
+  onPress?(): void;
+  pressHint?: string;
 }
 
 /** Fila del historial (P09): rutina, hora y resultado. El resultado va con ícono + texto, no solo color. */
-export function HistoryRecordRow({ routineName, routineIcon, date, result, pendingLabel }: HistoryRecordRowProps) {
+export function HistoryRecordRow({ routineName, routineIcon, date, result, pendingLabel, onPress, pressHint }: HistoryRecordRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const time = formatTime(date);
 
   return (
-    <View
-      style={styles.row}
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      onPress={onPress}
+      disabled={!onPress}
       accessible
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityHint={onPress ? pressHint : undefined}
       accessibilityLabel={[routineName, time, result.label, pendingLabel].filter(Boolean).join('. ')}
     >
       <View style={styles.iconCircle}>
@@ -46,12 +53,15 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result, pendi
         ) : null}
       </View>
       <Chip tone={result.tone} icon={result.icon} label={result.label} />
-    </View>
+    </Pressable>
   );
 }
 
 const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
+    pressed: {
+      opacity: 0.7,
+    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',

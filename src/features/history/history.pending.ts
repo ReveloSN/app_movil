@@ -13,11 +13,16 @@ const toRecord = (record: PendingRecord): VerificationRecord => ({
   durationSeconds: record.durationSeconds ?? null,
 });
 
-/** Lo del servidor más las verificaciones que aún esperan en la cola (sin repetir las que ya llegaron). */
-export function withPendingRecords(remote: readonly VerificationRecord[], outbox: readonly OutboxOp[]): HistoryRecord[] {
-  const remoteIds = new Set(remote.map((record) => record.id));
-  const pending = outbox.flatMap((op) =>
-    op.kind === 'insertRecord' && !remoteIds.has(op.record.id) ? [{ ...toRecord(op.record), pending: true }] : [],
-  );
-  return [...remote.map((record) => ({ ...record, pending: false })), ...pending];
+/**
+ * El historial local más lo que espera en la cola y aún no está en él (p. ej. lo encolado por una
+ * versión anterior de la app), sin repetir. Pendiente = todavía en la cola.
+ */
+export function withPendingRecords(local: readonly VerificationRecord[], outbox: readonly OutboxOp[]): HistoryRecord[] {
+  const queued = new Map(outbox.flatMap((op) => (op.kind === 'insertRecord' ? [[op.record.id, op.record] as const] : [])));
+  const localIds = new Set(local.map((record) => record.id));
+  const onlyQueued = [...queued.values()].filter((record) => !localIds.has(record.id));
+  return [
+    ...local.map((record) => ({ ...record, pending: queued.has(record.id) })),
+    ...onlyQueued.map((record) => ({ ...toRecord(record), pending: true })),
+  ];
 }
