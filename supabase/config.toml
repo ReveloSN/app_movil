@@ -1,0 +1,7 @@
+# Configuración mínima para la CLI de Supabase (solo lo que usa este proyecto).
+# El proyecto real se vincula con `npx supabase link --project-ref mjxcpnqbhlnwvpsuszza`.
+project_id = "verificador-salida"
+
+[functions.ai-routine]
+# Solo con un JWT válido (los invitados anónimos también lo tienen).
+verify_jwt = true

@@ -3,9 +3,21 @@
   "compilerOptions": {
     "strict": true,
     "types": ["jest"],
+    // La Edge Function (Deno) importa con extensión .ts; su lógica pura se prueba con Jest.
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  // Solo el punto de entrada usa APIs de Deno (Deno.serve, Deno.env).
+  "exclude": [
+    "${configDir}/node_modules",
+    "${configDir}/babel.config.js",
+    "${configDir}/metro.config.js",
+    "${configDir}/jest.config.js",
+    "${configDir}/android",
+    "${configDir}/ios",
+    "${configDir}/supabase/functions/*/index.ts"
+  ]
 }
