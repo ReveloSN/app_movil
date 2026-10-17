@@ -114,7 +114,7 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       backgroundColor: colors.criticalBg,
     },
     message: {
-      ...typography.h2,
+      ...typography.h1,
       color: colors.textPrimary,
       textAlign: 'center',
     },
