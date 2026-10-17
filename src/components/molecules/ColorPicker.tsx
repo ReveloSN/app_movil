@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -21,16 +22,16 @@ export function ColorPicker<K extends string>({ accessibilityLabel, options, val
       {options.map((option) => {
         const selected = option.key === value;
         return (
-          <Pressable
+          <PressableScale
             key={option.key}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             accessibilityLabel={option.label}
             onPress={() => onChange(option.key)}
-            style={({ pressed }) => [styles.swatch, { backgroundColor: option.color }, selected && styles.selected, pressed && styles.pressed]}
+            style={[styles.swatch, { backgroundColor: option.color }, selected && styles.selected]}
           >
             {selected ? <Ionicons name="checkmark" size={iconSizes.md} color={colors.card} /> : null}
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>
@@ -54,8 +55,5 @@ const createStyles = ({ colors, radii, sizes, spacing }: AppTheme) =>
     selected: {
       borderWidth: 3,
       borderColor: colors.textPrimary,
-    },
-    pressed: {
-      opacity: 0.7,
     },
   });

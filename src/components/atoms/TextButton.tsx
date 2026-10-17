@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -17,16 +18,16 @@ export function TextButton({ label, onPress, tone = 'primary', disabled = false 
   const styles = useThemedStyles(createStyles);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed, disabled && styles.disabled]}
+      style={[styles.button, disabled && styles.disabled]}
     >
       <Text style={[styles.label, { color: tone === 'danger' ? colors.danger : colors.primary }]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -37,9 +38,6 @@ const createStyles = ({ sizes, spacing, typography }: AppTheme) =>
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: spacing.sm,
-    },
-    pressed: {
-      opacity: 0.6,
     },
     disabled: {
       opacity: 0.4,

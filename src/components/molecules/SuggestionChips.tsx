@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -19,7 +20,7 @@ export function SuggestionChips({ labels, onPick, accessibilityLabelFor }: Sugge
   return (
     <View style={styles.row}>
       {labels.map((label, index) => (
-        <Pressable
+        <PressableScale
           key={label}
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabelFor(label)}
@@ -28,7 +29,7 @@ export function SuggestionChips({ labels, onPick, accessibilityLabelFor }: Sugge
         >
           <Ionicons name="add" size={iconSizes.sm} color={colors.primary} />
           <Text style={styles.label}>{label}</Text>
-        </Pressable>
+        </PressableScale>
       ))}
     </View>
   );

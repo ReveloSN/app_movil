@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { Chip } from '@/components/atoms/Chip';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -49,8 +50,8 @@ export function RoutineCard({
   return (
     // La franja y el ícono llevan el color de la rutina; el nombre y el ícono la identifican sin él.
     <View style={[styles.card, { borderLeftColor: accentColor ?? colors.primary }]}>
-      <Pressable
-        style={({ pressed }) => [styles.summary, pressed && styles.pressed]}
+      <PressableScale
+        style={styles.summary}
         onPress={onPress}
         disabled={!onPress}
         accessible
@@ -69,7 +70,7 @@ export function RoutineCard({
         </View>
         <Chip tone={active ? 'active' : 'paused'} label={statusLabel} />
         {onPress ? <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} /> : null}
-      </Pressable>
+      </PressableScale>
       {actionLabel && onAction ? <SecondaryButton icon="checkmark-done" label={actionLabel} onPress={onAction} /> : null}
     </View>
   );
@@ -88,9 +89,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-    },
-    pressed: {
-      opacity: 0.7,
     },
     iconCircle: {
       // Mismo alto que una fila secundaria del mockup.

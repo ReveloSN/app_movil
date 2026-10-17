@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { toIoniconName } from '@/shared/utils/ioniconName';
@@ -27,12 +28,12 @@ export function ChecklistItemRow({ label, icon, critical, criticalLabel, note, c
   const styles = useThemedStyles(createStyles);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={[critical ? `${label}, ${criticalLabel}` : label, note].filter(Boolean).join('. ')}
       onPress={onToggle}
-      style={({ pressed }) => [styles.row, checked && styles.rowChecked, pressed && styles.pressed]}
+      style={[styles.row, checked && styles.rowChecked]}
     >
       <Ionicons
         name={checked ? 'checkmark-circle' : 'ellipse-outline'}
@@ -51,7 +52,7 @@ export function ChecklistItemRow({ label, icon, critical, criticalLabel, note, c
         ) : null}
       </View>
       {critical ? <Ionicons name="flag" size={iconSizes.md} color={colors.criticalText} /> : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -72,9 +73,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
     rowChecked: {
       borderColor: colors.primary,
       backgroundColor: colors.primaryTint,
-    },
-    pressed: {
-      opacity: 0.85,
     },
     texts: {
       flex: 1,

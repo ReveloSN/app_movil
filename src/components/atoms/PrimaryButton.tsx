@@ -1,5 +1,6 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -20,7 +21,7 @@ export function PrimaryButton({ label, onPress, loading = false, disabled = fals
   const inactive = disabled || loading;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
@@ -31,7 +32,7 @@ export function PrimaryButton({ label, onPress, loading = false, disabled = fals
       style={({ pressed }) => [styles.button, pressed && styles.pressed, inactive && styles.inactive]}
     >
       {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.label}>{label}</Text>}
-    </Pressable>
+    </PressableScale>
   );
 }
 

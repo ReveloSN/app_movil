@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -26,20 +27,19 @@ export function IconPicker({ accessibilityLabel, options, value, onChange, accen
       {options.map((option) => {
         const selected = option.icon === value;
         return (
-          <Pressable
+          <PressableScale
             key={option.icon}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             accessibilityLabel={option.label}
             onPress={() => onChange(option.icon)}
-            style={({ pressed }) => [
+            style={[
               styles.cell,
               selected && [styles.selected, { borderColor: accent }],
-              pressed && styles.pressed,
             ]}
           >
             <Ionicons name={option.icon} size={iconSizes.lg} color={selected ? accent : colors.textSecondary} />
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>
@@ -66,8 +66,5 @@ const createStyles = ({ colors, radii, sizes, spacing }: AppTheme) =>
     selected: {
       borderWidth: 3,
       backgroundColor: colors.neutralSurface,
-    },
-    pressed: {
-      opacity: 0.7,
     },
   });

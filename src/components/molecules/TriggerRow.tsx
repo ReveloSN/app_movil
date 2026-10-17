@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { IconButton } from '@/components/atoms/IconButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -26,12 +27,13 @@ export function TriggerRow({ icon, summary, typeLabel, onEdit, onRemove }: Trigg
 
   return (
     <View style={styles.row}>
-      <Pressable
+      <PressableScale
+        containerStyle={flexOne}
         accessibilityRole="button"
         accessibilityLabel={`${summary} ${typeLabel}.`}
         accessibilityHint="Edita el aviso"
         onPress={onEdit}
-        style={({ pressed }) => [styles.body, pressed && styles.pressed]}
+        style={styles.body}
       >
         <Ionicons name={icon} size={iconSizes.lg} color={colors.primary} />
         <View style={styles.texts}>
@@ -39,11 +41,14 @@ export function TriggerRow({ icon, summary, typeLabel, onEdit, onRemove }: Trigg
           <Text style={styles.type}>{typeLabel}</Text>
         </View>
         <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
-      </Pressable>
+      </PressableScale>
       <IconButton icon="trash-outline" tone="danger" accessibilityLabel={`Quitar aviso: ${summary}`} onPress={onRemove} />
     </View>
   );
 }
+
+// El contenedor animado ocupa el ancho libre de la fila, como antes el Pressable.
+const flexOne = { flex: 1 } as const;
 
 const createStyles = ({ colors, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
@@ -63,9 +68,6 @@ const createStyles = ({ colors, sizes, spacing, typography }: AppTheme) =>
       alignItems: 'center',
       gap: spacing.md,
       paddingVertical: spacing.sm,
-    },
-    pressed: {
-      opacity: 0.7,
     },
     texts: {
       flex: 1,

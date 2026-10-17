@@ -1,8 +1,9 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { ClockTime } from '@/shared/types/clock.types';
@@ -44,17 +45,17 @@ export function TimeField({ label, value, valueLabel, onChange }: TimeFieldProps
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${valueLabel}`}
         accessibilityHint="Cambia la hora"
         onPress={open}
-        style={({ pressed }) => [styles.field, pressed && styles.pressed]}
+        style={styles.field}
       >
         <Ionicons name="time-outline" size={iconSizes.md} color={colors.textMuted} />
         <Text style={styles.label}>{label}</Text>
         <Text style={styles.value}>{valueLabel}</Text>
-      </Pressable>
+      </PressableScale>
       {Platform.OS === 'ios' && iosOpen ? (
         <DateTimePicker
           value={toDate(value)}
@@ -82,9 +83,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       borderColor: colors.border,
       borderRadius: radii.lg,
       backgroundColor: colors.card,
-    },
-    pressed: {
-      opacity: 0.85,
     },
     label: {
       ...typography.body,

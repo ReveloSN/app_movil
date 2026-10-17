@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -36,15 +37,15 @@ export function Toast({ message, tone, actionLabel, onAction }: ToastProps) {
       />
       <Text style={styles.message}>{message}</Text>
       {actionLabel && onAction ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
           onPress={onAction}
           hitSlop={8}
-          style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+          style={styles.action}
         >
           <Text style={styles.actionLabel}>{actionLabel}</Text>
-        </Pressable>
+        </PressableScale>
       ) : null}
     </View>
   );
@@ -76,9 +77,6 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       minHeight: sizes.secondaryRowHeight,
       justifyContent: 'center',
       paddingHorizontal: spacing.sm,
-    },
-    pressed: {
-      opacity: 0.6,
     },
     actionLabel: {
       ...typography.labelMedium,

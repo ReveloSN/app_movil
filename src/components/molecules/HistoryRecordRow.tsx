@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/atoms/PressableScale';
 import { Chip, type ChipTone } from '@/components/atoms/Chip';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -28,8 +29,8 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result, pendi
   const time = formatTime(date);
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+    <PressableScale
+      style={styles.row}
       onPress={onPress}
       disabled={!onPress}
       accessible
@@ -53,15 +54,12 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result, pendi
         ) : null}
       </View>
       <Chip tone={result.tone} icon={result.icon} label={result.label} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
-    pressed: {
-      opacity: 0.7,
-    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
