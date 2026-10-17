@@ -49,6 +49,8 @@ export const routineSavedMessage = (phrases: readonly string[]) =>
 // Textos de P04/P06 sin código en el Documento de Contenido.
 export const TRIGGERS_SECTION_TITLE = 'Avisos';
 export const ADD_TRIGGER_LABEL = 'Añadir aviso';
+/** Aviso breve al quitar un aviso (con "Deshacer"). */
+export const TRIGGER_REMOVED = 'Quitaste el aviso.';
 export const MAX_TRIGGERS_REACHED = 'Una rutina admite hasta 3 avisos. Quita uno para añadir otro.';
 export const SAVE_TRIGGER_LABEL = 'Guardar aviso';
 export const CONFIGURE_TRIGGER_TITLE = 'Configurar aviso';

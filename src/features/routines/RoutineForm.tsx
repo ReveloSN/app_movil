@@ -15,6 +15,7 @@ import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvid
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
+import { UNDO_LABEL } from '@/features/feedback/feedback.copy';
 import { useToast } from '@/features/feedback/toast.context';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -97,6 +98,17 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
     backToRoutines();
   });
 
+  // Quitar no pide confirmación: se hace al instante y el aviso breve permite deshacerlo.
+  function removeItem(key: string) {
+    const removed = form.removeItem(key);
+    if (!removed) return;
+    toast.show({
+      message: copy.itemRemovedMessage(removed.entry.label),
+      tone: 'info',
+      action: { label: UNDO_LABEL, onPress: () => form.restoreItem(removed) },
+    });
+  }
+
   // Si no pasa la validación, se queda en P04 con los errores a la vista y lleva al primero.
   async function submit() {
     const result = await form.submit();
@@ -140,7 +152,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           onLayout={onItemsLayout}
           onEdit={(entry) => setEditingItem({ entry, isNew: false })}
           onAdd={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
-          onRemove={form.removeItem}
+          onRemove={removeItem}
         />
 
         {/* 04-4 */}
