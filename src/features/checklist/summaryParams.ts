@@ -11,6 +11,8 @@ export type SummaryParams = {
   omitted: string;
   /** JSON con las etiquetas no marcadas que eran críticas. */
   omittedCritical: string;
+  /** Id del registro guardado ('' si no hay). */
+  record: string;
 };
 
 export const toSummaryParams = (routineId: string, summary: VerificationSummary): SummaryParams => ({
@@ -21,6 +23,7 @@ export const toSummaryParams = (routineId: string, summary: VerificationSummary)
   duration: String(summary.durationSeconds),
   omitted: JSON.stringify(summary.omittedLabels),
   omittedCritical: JSON.stringify(summary.omittedCriticalLabels),
+  record: summary.recordId ?? '',
 });
 
 const OUTCOMES: readonly VerificationOutcome[] = ['completed', 'partial', 'skipped'];
@@ -49,5 +52,6 @@ export function fromSummaryParams(params: Partial<Record<keyof SummaryParams, st
     durationSeconds: toCount(params.duration),
     omittedLabels: toLabels(params.omitted),
     omittedCriticalLabels: toLabels(params.omittedCritical),
+    ...(params.record ? { recordId: params.record } : {}),
   };
 }

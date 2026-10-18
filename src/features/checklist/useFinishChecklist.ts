@@ -38,16 +38,17 @@ export function useFinishChecklist(
 
       setFinishing(true);
       setError(null);
+      const recordId = Crypto.randomUUID();
       try {
         await repository.create({
-          id: Crypto.randomUUID(),
+          id: recordId,
           routineId,
           result: summary.outcome,
           itemsChecked: toCheckedEntries(items),
           durationSeconds,
           date: new Date(now).toISOString(),
         });
-        return summary;
+        return { ...summary, recordId };
       } catch (cause) {
         if (__DEV__) console.warn('[checklist.finish]', cause);
         setError(SAVE_ERROR);
