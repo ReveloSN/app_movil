@@ -36,7 +36,7 @@ export function summarize(
 }
 
 export const toCheckedEntries = (items: readonly ChecklistItemState[]): CheckedItemEntry[] =>
-  items.map(({ id, label, critical, checked }) => ({ itemId: id, label, critical, checked }));
+  items.map(({ id, label, critical, checked, origin }) => ({ itemId: id, label, critical, checked, ...(origin ? { origin } : {}) }));
 
 /** Primer ítem crítico sin marcar (dispara DC-02 al tocar "Listo"). */
 export const firstUncheckedCritical = (items: readonly ChecklistItemState[]) =>

@@ -17,6 +17,8 @@ export interface CheckedItem {
   label: string;
   critical: boolean;
   checked: boolean;
+  /** Ítem temporal de esa verificación (ej. sugerido por el clima). */
+  origin?: 'weather';
 }
 
 /** Lee items_checked de forma tolerante (es jsonb: puede venir de otra versión o de otro dispositivo). */
@@ -24,9 +26,9 @@ export function parseCheckedItems(value: Json | null): CheckedItem[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
-    const { label, critical, checked } = entry;
+    const { label, critical, checked, origin } = entry;
     return typeof label === 'string' && label.trim()
-      ? [{ label: label.trim(), critical: critical === true, checked: checked === true }]
+      ? [{ label: label.trim(), critical: critical === true, checked: checked === true, ...(origin === 'weather' ? { origin } : {}) }]
       : [];
   });
 }
@@ -47,7 +49,7 @@ export function mostSkippedItems(records: readonly VerificationRecord[], limit =
   for (const record of records) {
     const at = Date.parse(record.date) || 0;
     for (const item of parseCheckedItems(record.itemsChecked)) {
-      if (item.checked) continue;
+      if (item.checked || item.origin) continue;
       const key = normalize(item.label);
       const current = byLabel.get(key);
       if (current) {
