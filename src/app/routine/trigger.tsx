@@ -14,6 +14,7 @@ import { TimeField } from '@/components/molecules/TimeField';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useCloseAfterSave } from '@/features/forms/useCloseAfterSave';
+import { useAfterAppear } from '@/features/navigation/useAfterAppear';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
 import { strategyFor, strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
 import * as copy from '@/features/triggers/trigger.copy';
@@ -68,12 +69,9 @@ export default function TriggerScreen() {
   const networkNameRef = useRef<TextInput>(null);
   const { resume } = form;
 
-  // Flujo C: al volver de P02 se retoma el guardado con todo lo que ya estaba llenado.
-  useFocusEffect(
-    useCallback(() => {
-      void resume();
-    }, [resume]),
-  );
+  // Flujo C: al volver de P02 se retoma el guardado con todo lo que ya estaba llenado. Espera a que
+  // P02 termine de cerrarse: guardar cierra P06 y dos cierres encadenados hacen fallar a Android.
+  useAfterAppear(() => void resume());
 
   // La red se vuelve a leer al entrar y al volver (de P02 o de los ajustes del sistema).
   useFocusEffect(
