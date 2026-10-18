@@ -1,6 +1,8 @@
 // Contrato de la Edge Function `ai-routine`: límites, conjuntos cerrados y errores.
 // Sin APIs de Deno ni imports npm:/jsr:, para probarlo con Jest desde la app.
 
+import type { Insight, InsightsRequest, WeeklyRequest, WeeklySummary } from './stats.ts';
+
 /** Límites de entrada (los mismos de la app: docs/ux/01-contenido.md §03). */
 export const INPUT_LIMITS = {
   prompt: 200,
@@ -42,7 +44,7 @@ export const ITEM_TYPES = ['carry', 'do', 'check'] as const;
 export type RoutineIcon = (typeof ROUTINE_ICONS)[number];
 export type RoutineColor = (typeof ROUTINE_COLORS)[number];
 export type ItemType = (typeof ITEM_TYPES)[number];
-export type AiMode = 'draft' | 'suggest';
+export type AiMode = 'draft' | 'suggest' | 'insights' | 'weekly_summary';
 
 export interface DraftRequest {
   mode: 'draft';
@@ -55,7 +57,7 @@ export interface SuggestRequest {
   items: string[];
 }
 
-export type AiRequest = DraftRequest | SuggestRequest;
+export type AiRequest = DraftRequest | SuggestRequest | InsightsRequest | WeeklyRequest;
 
 export interface DraftItem {
   label: string;
@@ -75,7 +77,11 @@ export interface RoutineDraft {
   trigger?: DraftTrigger;
 }
 
-export type AiResponse = { mode: 'draft'; draft: RoutineDraft } | { mode: 'suggest'; suggestions: string[] };
+export type AiResponse =
+  | { mode: 'draft'; draft: RoutineDraft }
+  | { mode: 'suggest'; suggestions: string[] }
+  | { mode: 'insights'; insight: Insight }
+  | { mode: 'weekly_summary'; summary: WeeklySummary };
 
 /** Códigos de error que la app interpreta (src/features/ai/ai.errors.ts). */
 export type AiErrorCode =

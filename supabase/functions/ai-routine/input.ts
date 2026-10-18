@@ -1,6 +1,7 @@
 // Validación de la entrada (servidor). Rechaza, no recorta: la app ya respeta los límites.
 
 import { AiError, INPUT_LIMITS, type AiRequest } from './contract.ts';
+import { parseInsightsRequest, parseWeeklyRequest } from './stats.ts';
 import { cleanText } from './text.ts';
 
 const fail = (message: string): never => {
@@ -36,7 +37,9 @@ function itemList(value: unknown): string[] {
 export function parseRequest(body: unknown): AiRequest {
   if (!isRecord(body)) return fail('El cuerpo debe ser un objeto JSON.');
   const { mode } = body;
-  if (mode !== 'draft' && mode !== 'suggest') return fail('"mode" debe ser "draft" o "suggest".');
+  if (mode === 'insights') return parseInsightsRequest(body);
+  if (mode === 'weekly_summary') return parseWeeklyRequest(body);
+  if (mode !== 'draft' && mode !== 'suggest') return fail('"mode" debe ser "draft", "suggest", "insights" o "weekly_summary".');
 
   const prompt = optionalText(body.prompt, 'prompt', INPUT_LIMITS.prompt);
   const name = optionalText(body.name, 'name', INPUT_LIMITS.name);
