@@ -30,6 +30,7 @@ import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
+import { WeatherHint } from '@/features/weather/WeatherHint';
 import { hapticConfirm, hapticToggleOff, hapticToggleOn } from '@/shared/haptics/haptics';
 import { durations, staggerDelay } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -49,7 +50,7 @@ export default function VerifyScreen() {
   const routine = useRoutines().routines.find((candidate) => candidate.id === id);
   const routineName = routine?.name ?? '';
   const accent = routineAccent(colors, routine?.color);
-  const { items, loading, error, retry, toggleItem, progress, startedAt } = useChecklist(id);
+  const { items, loading, error, retry, toggleItem, addTemporaryItem, progress, startedAt } = useChecklist(id);
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
   const busy = finishing || postponement.postponing;
@@ -116,6 +117,8 @@ export default function VerifyScreen() {
     <>
       <FlatList
         style={styles.list}
+        // Sugerencia del clima (si llega a tiempo): discreta, encima de la lista y sin bloquear nada.
+        ListHeaderComponent={<WeatherHint onAdd={addTemporaryItem} />}
         contentContainerStyle={styles.listContent}
         data={items}
         keyExtractor={(item) => item.id}
