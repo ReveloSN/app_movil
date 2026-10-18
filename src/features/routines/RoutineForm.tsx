@@ -1,4 +1,3 @@
-import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -48,11 +47,6 @@ interface RoutineFormProps {
    * (salir pregunta DC-03). Aparte se dice si sugirió un aviso por Wi-Fi (la red la elige la persona).
    */
   aiAssisted?: { suggestsWifiExit: boolean };
-}
-
-function cancel() {
-  if (router.canGoBack()) router.back();
-  else router.replace('/(tabs)');
 }
 
 /** P04: el mismo formulario crea o edita según reciba `editing`. */
@@ -115,12 +109,6 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen
-        options={{
-          title: editing ? copy.EDIT_ROUTINE_TITLE : copy.NEW_ROUTINE_TITLE,
-          headerLeft: () => <TextButton label={copy.CANCEL_LABEL} onPress={cancel} />,
-        }}
-      />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {aiAssisted ? <AiDraftNotice suggestsWifiExit={aiAssisted.suggestsWifiExit} /> : null}
         <TextField

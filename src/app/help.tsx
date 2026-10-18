@@ -1,41 +1,26 @@
-import { Stack } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { HELP_ENTRIES, HELP_TITLE } from '@/features/settings/help.content';
+import { HELP_ENTRIES } from '@/features/settings/help.content';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
-import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
+import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 /** Ayuda (11-6): preguntas frecuentes. Se abre desde Ajustes. */
 export default function HelpScreen() {
-  const { colors, typography } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const endPadding = useScrollEndPadding();
 
   return (
-    <>
-      {/* El Stack raíz oculta los encabezados: esta pantalla muestra el suyo para poder volver. */}
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: HELP_TITLE,
-          headerBackTitle: 'Volver',
-          headerStyle: { backgroundColor: colors.surface },
-          headerTintColor: colors.textPrimary,
-          headerTitleStyle: typography.h2,
-        }}
-      />
-      <ScrollView contentContainerStyle={[styles.content, endPadding]}>
-        {HELP_ENTRIES.map((entry) => (
-          <View key={entry.question} style={styles.card}>
-            <Text style={styles.question} accessibilityRole="header">
-              {entry.question}
-            </Text>
-            <Text style={styles.answer}>{entry.answer}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </>
+    <ScrollView contentContainerStyle={[styles.content, endPadding]}>
+      {HELP_ENTRIES.map((entry) => (
+        <View key={entry.question} style={styles.card}>
+          <Text style={styles.question} accessibilityRole="header">
+            {entry.question}
+          </Text>
+          <Text style={styles.answer}>{entry.answer}</Text>
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
