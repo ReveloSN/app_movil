@@ -10,9 +10,11 @@ interface SwitchRowProps {
   value: boolean;
   onValueChange(value: boolean): void;
   icon?: ComponentProps<typeof Ionicons>['name'];
+  /** Desactivado (ej. falta elegir algo antes); quien lo usa explica por qué. */
+  disabled?: boolean;
 }
 
-export function SwitchRow({ label, value, onValueChange, icon }: SwitchRowProps) {
+export function SwitchRow({ label, value, onValueChange, icon, disabled = false }: SwitchRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -24,6 +26,8 @@ export function SwitchRow({ label, value, onValueChange, icon }: SwitchRowProps)
         accessibilityLabel={label}
         value={value}
         onValueChange={onValueChange}
+        disabled={disabled}
+        accessibilityState={{ disabled, checked: value }}
         trackColor={{ false: colors.border, true: colors.primary }}
         thumbColor={value ? colors.onPrimary : colors.card}
         ios_backgroundColor={colors.border}
