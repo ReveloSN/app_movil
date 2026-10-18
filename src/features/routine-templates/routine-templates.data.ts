@@ -86,6 +86,53 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     suggestedTrigger: 'Manual',
     suggestedTriggerDraft: null,
   },
+  // Añadidas el 2026-10-18 (Estudiante, Casa/Familia, Gimnasio). "Trabajo" ya estaba (Saliendo del trabajo).
+  {
+    id: 'to-class',
+    name: 'Saliendo a clase',
+    description: 'Lo de la universidad, listo antes de salir.',
+    icon: 'school-outline',
+    items: [
+      item('Carné estudiantil', 'carry', true),
+      item('Portátil cargado', 'carry'),
+      item('Cargador', 'carry'),
+      item('Cuaderno', 'carry'),
+      item('Botella de agua', 'carry'),
+    ],
+    suggestedTrigger: '6:30 a. m., L a V',
+    suggestedTriggerDraft: { type: 'schedule', time: { hour: 6, minute: 30 }, days: [...WEEKDAYS] },
+  },
+  {
+    id: 'family-outing',
+    name: 'Salida en familia',
+    description: 'Que nadie se quede sin lo suyo al salir juntos.',
+    icon: 'car-outline',
+    items: [
+      item('Llaves del carro', 'carry', true),
+      item('Documentos', 'carry', true),
+      item('Agua y meriendas', 'carry'),
+      item('Medicamentos', 'carry'),
+      item('Luces apagadas', 'check'),
+    ],
+    suggestedTrigger: 'Manual',
+    suggestedTriggerDraft: null,
+  },
+  {
+    id: 'gym',
+    name: 'Al gimnasio',
+    description: 'Lo necesario para entrenar sin volver a casa.',
+    icon: 'barbell-outline',
+    items: [
+      item('Ropa deportiva', 'carry'),
+      item('Tenis', 'carry'),
+      item('Toalla', 'carry'),
+      item('Botella de agua', 'carry'),
+      item('Candado del casillero', 'carry'),
+      item('Audífonos', 'carry'),
+    ],
+    suggestedTrigger: 'Manual',
+    suggestedTriggerDraft: null,
+  },
 ];
 
 export const findPresetTemplate = (id: string | undefined): PresetTemplate | undefined =>
