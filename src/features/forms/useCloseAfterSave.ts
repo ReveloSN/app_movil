@@ -22,8 +22,8 @@ export function closeTo(destination: SaveDestination): void {
 
 /**
  * Mecanismo único de "guardar y cerrar" para las pantallas con DC-03: protege los cambios sin guardar y,
- * tras un guardado correcto, muestra el aviso breve y cierra la pantalla (primero apaga la protección y
- * luego navega, en el render siguiente). Si el guardado falla, quien llama simplemente no llama a `close`.
+ * tras un guardado correcto, muestra el aviso breve y cierra la pantalla (la protección deja pasar esa
+ * salida sin apagarse). Si el guardado falla, quien llama simplemente no llama a `close`.
  */
 export function useCloseAfterSave(dirty: boolean, destination: SaveDestination) {
   const guard = useUnsavedChangesGuard(dirty);
