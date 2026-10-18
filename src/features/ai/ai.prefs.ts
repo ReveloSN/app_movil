@@ -12,19 +12,28 @@ export interface AiPrefs {
 }
 
 export const DEFAULT_AI_PREFS: AiPrefs = { enabled: true, consented: false };
+
+/**
+ * Versión del aviso de privacidad. Sube cuando cambia qué se envía (2: también estadísticas agregadas
+ * para los resúmenes): quien aceptó una versión anterior lo vuelve a ver una vez.
+ */
+export const AI_CONSENT_VERSION = 2;
 const STORAGE_KEY = 'ai-prefs';
 
 export async function loadAiPrefs(storage: KeyValueStorage = AsyncStorage): Promise<AiPrefs> {
   try {
-    const parsed = JSON.parse((await storage.getItem(STORAGE_KEY)) ?? 'null') as Partial<AiPrefs> | null;
-    return { enabled: parsed?.enabled !== false, consented: parsed?.consented === true };
+    const parsed = JSON.parse((await storage.getItem(STORAGE_KEY)) ?? 'null') as (Partial<AiPrefs> & { consentVersion?: number }) | null;
+    return {
+      enabled: parsed?.enabled !== false,
+      consented: parsed?.consented === true && parsed.consentVersion === AI_CONSENT_VERSION,
+    };
   } catch {
     return DEFAULT_AI_PREFS;
   }
 }
 
 export async function saveAiPrefs(prefs: AiPrefs, storage: KeyValueStorage = AsyncStorage): Promise<void> {
-  await storage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  await storage.setItem(STORAGE_KEY, JSON.stringify({ ...prefs, consentVersion: prefs.consented ? AI_CONSENT_VERSION : 0 }));
 }
 
 // Copia en memoria compartida por las pantallas (Observer): cambiar el interruptor se ve en todas.

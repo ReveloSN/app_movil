@@ -177,6 +177,13 @@ describe('consentimiento y ajuste local', () => {
     expect(await loadAiPrefs(storage)).toEqual({ enabled: false, consented: true });
   });
 
+  it('una aceptación del aviso anterior (sin estadísticas) se vuelve a pedir una vez', async () => {
+    const storage = memoryStorage({ 'ai-prefs': JSON.stringify({ enabled: true, consented: true }) });
+    expect(await loadAiPrefs(storage)).toEqual({ enabled: true, consented: false });
+    await saveAiPrefs({ enabled: true, consented: true }, storage);
+    expect(await loadAiPrefs(storage)).toEqual({ enabled: true, consented: true });
+  });
+
   it('un valor corrupto vuelve a los valores por defecto', async () => {
     expect(await loadAiPrefs(memoryStorage({ 'ai-prefs': '{roto' }))).toEqual(DEFAULT_AI_PREFS);
   });
