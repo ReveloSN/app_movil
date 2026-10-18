@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineBanner } from '@/components/molecules/OfflineBanner';
+import { HELP_TITLE } from '@/features/settings/help.content';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
 
@@ -16,7 +17,7 @@ function opensVerification(params: object | undefined): boolean {
 
 /** Navegador raíz con el tema aplicado. Al montarse, todo (fuentes y modo de color) ya está listo. */
 export function RootStack() {
-  const { colors, scheme } = useAppTheme();
+  const { colors, scheme, typography } = useAppTheme();
   const { isConnected } = useNetworkStatus();
   const insets = useSafeAreaInsets();
 
@@ -38,7 +39,20 @@ export function RootStack() {
             // La verificación (P07) se abre como modal que sube desde abajo, también desde la notificación.
             ...(opensVerification(route.params) ? { animation: 'slide_from_bottom' as const } : null),
           })}
-        />
+        >
+          {/* Opciones fijas aquí y no dentro de la pantalla: aplicarlas al cerrarse hace fallar a Android. */}
+          <Stack.Screen
+            name="help"
+            options={{
+              headerShown: true,
+              title: HELP_TITLE,
+              headerBackTitle: 'Volver',
+              headerStyle: { backgroundColor: colors.surface },
+              headerTintColor: colors.textPrimary,
+              headerTitleStyle: typography.h2,
+            }}
+          />
+        </Stack>
       </SafeAreaInsetsContext.Provider>
       {/* Sobre la franja (fondo claro) el texto de la barra de estado va oscuro en ambos modos. */}
       <StatusBar style={!isConnected || scheme === 'light' ? 'dark' : 'light'} />

@@ -4,6 +4,7 @@ import { RequireSession } from '@/features/auth/RequireSession';
 import { PERMISSIONS_TITLE } from '@/features/permissions/permission.copy';
 import { EDIT_ROUTINE_TITLE, NEW_ROUTINE_TITLE } from '@/features/routines/routine.copy';
 import { CREATE_TITLE as CREATE_WITH_AI_TITLE } from '@/features/ai/ai.copy';
+import { renderCancelHeader } from '@/features/routines/routineFormHeader';
 import { IMPORT_TITLE } from '@/features/routines/share/share.copy';
 import { CONFIGURE_TRIGGER_TITLE } from '@/features/triggers/trigger.copy';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
@@ -24,8 +25,8 @@ export default function RoutineLayout() {
         }}
       >
         {/* P04: crear y editar comparten formulario (RoutineForm). */}
-        <Stack.Screen name="new" options={{ title: NEW_ROUTINE_TITLE }} />
-        <Stack.Screen name="[id]/edit" options={{ title: EDIT_ROUTINE_TITLE }} />
+        <Stack.Screen name="new" options={{ title: NEW_ROUTINE_TITLE, headerLeft: renderCancelHeader }} />
+        <Stack.Screen name="[id]/edit" options={{ title: EDIT_ROUTINE_TITLE, headerLeft: renderCancelHeader }} />
         <Stack.Screen name="templates" options={{ title: 'Plantillas' }} />
         <Stack.Screen name="ai" options={{ title: CREATE_WITH_AI_TITLE }} />
         <Stack.Screen name="import" options={{ title: IMPORT_TITLE }} />
