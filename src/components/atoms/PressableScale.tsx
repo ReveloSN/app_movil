@@ -7,6 +7,8 @@ import { durations, pressFeedback, springs, timing } from '@/shared/theme/motion
 interface PressableScaleProps extends PressableProps {
   /** Estilo del contenedor animado (ej. flex: 1 dentro de una fila). */
   containerStyle?: StyleProp<ViewStyle>;
+  /** Escala al presionar (por defecto la de motion.ts; ej. 0,98 en tarjetas grandes). */
+  pressedScale?: number;
 }
 
 /**
@@ -14,13 +16,20 @@ interface PressableScaleProps extends PressableProps {
  * Nunca retrasa el toque: onPress se dispara como en un Pressable normal. Con "Quitar animaciones",
  * solo cambia la opacidad, al instante.
  */
-export function PressableScale({ containerStyle, onPressIn, onPressOut, disabled, ...props }: PressableScaleProps) {
+export function PressableScale({
+  containerStyle,
+  pressedScale = pressFeedback.scale,
+  onPressIn,
+  onPressOut,
+  disabled,
+  ...props
+}: PressableScaleProps) {
   const pressed = useSharedValue(0);
   const reducedMotion = useReducedMotion();
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: 1 - (1 - pressFeedback.opacity) * pressed.get(),
-    transform: [{ scale: reducedMotion ? 1 : 1 - (1 - pressFeedback.scale) * pressed.get() }],
+    transform: [{ scale: reducedMotion ? 1 : 1 - (1 - pressedScale) * pressed.get() }],
   }));
 
   const handlePressIn = (event: GestureResponderEvent) => {

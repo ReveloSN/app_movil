@@ -51,6 +51,8 @@ export function RoutineCard({
     // La franja y el ícono llevan el color de la rutina; el nombre y el ícono la identifican sin él.
     <View style={[styles.card, { borderLeftColor: accentColor ?? colors.primary }]}>
       <PressableScale
+        // Tarjeta grande: se encoge apenas (0,98) para no parecer que salta.
+        pressedScale={0.98}
         style={styles.summary}
         onPress={onPress}
         disabled={!onPress}
