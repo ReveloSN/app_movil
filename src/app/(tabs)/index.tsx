@@ -21,6 +21,7 @@ import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-a
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
+import { usePrefetchWeather } from '@/features/weather/WeatherHint';
 import { PendingSyncIndicator } from '@/features/sync/PendingSyncIndicator';
 import { clearFlashMessage, useFlashMessage } from '@/shared/events/flashMessage';
 import { useFirstAppearance } from '@/shared/hooks/useFirstAppearance';
@@ -43,6 +44,8 @@ export default function RoutinesScreen() {
   const nextRoutine = next ? routines.find((routine) => routine.id === next.routineId) : undefined;
   const nextAccent = routineAccent(colors, nextRoutine?.color);
   const sky = homeSky(now);
+  // Clima en caché al abrir la app, para que la verificación no espere.
+  usePrefetchWeather();
   // Las tarjetas entran escalonadas solo la primera vez que se ve Inicio en esta sesión.
   const firstAppearance = useFirstAppearance('home-routines');
   // Avisos de la sincronización (conflicto, error); se descartan al salir de Inicio.

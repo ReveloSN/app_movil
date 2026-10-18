@@ -59,3 +59,11 @@ export async function currentWeatherSuggestion(city: City, deps: WeatherDeps = {
     return null;
   }
 }
+
+/** Al abrir la app: si el clima está activo, deja la consulta en caché sin esperar a nadie. */
+export async function prefetchWeather(city: City | null, enabled: boolean): Promise<void> {
+  if (!enabled || !city) return;
+  await hourlyRainFor(city).catch((cause: unknown) => {
+    if (__DEV__) console.warn('[weather.prefetch]', cause);
+  });
+}
