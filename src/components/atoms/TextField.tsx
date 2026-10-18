@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState, type Ref } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import type { IoniconName } from '@/shared/utils/ioniconName';
 
 interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
@@ -12,9 +13,13 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   showCounter?: boolean;
   /** Para llevar el foco al campo (ej. al primer error). */
   ref?: Ref<TextInput>;
+  /** Ícono decorativo al inicio del campo (ej. sobre de "Correo"). */
+  icon?: IoniconName;
+  /** Acción al final del campo (ej. mostrar u ocultar la contraseña). */
+  trailing?: ReactNode;
 }
 
-export function TextField({ label, error, showCounter = false, onFocus, onBlur, ref, ...inputProps }: TextFieldProps) {
+export function TextField({ label, error, showCounter = false, onFocus, onBlur, ref, icon, trailing, ...inputProps }: TextFieldProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const [focused, setFocused] = useState(false);
@@ -31,23 +36,29 @@ export function TextField({ label, error, showCounter = false, onFocus, onBlur, 
           </Text>
         ) : null}
       </View>
-      <TextInput
-        ref={ref}
-        accessibilityLabel={label}
-        accessibilityHint={error}
-        placeholderTextColor={colors.textSecondary}
-        selectionColor={colors.primary}
-        onFocus={(event) => {
-          setFocused(true);
-          onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          setFocused(false);
-          onBlur?.(event);
-        }}
-        style={[styles.input, focused && styles.inputFocused, error ? styles.inputError : null]}
-        {...inputProps}
-      />
+      <View style={[styles.field, focused && styles.fieldFocused, error ? styles.fieldError : null]}>
+        {icon ? (
+          <Ionicons name={icon} size={iconSizes.md} color={colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no" />
+        ) : null}
+        <TextInput
+          ref={ref}
+          accessibilityLabel={label}
+          accessibilityHint={error}
+          placeholderTextColor={colors.textSecondary}
+          selectionColor={colors.primary}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
+          style={styles.input}
+          {...inputProps}
+        />
+        {trailing}
+      </View>
       {error ? (
         // Ícono + texto: el error no se comunica solo con color.
         <View style={styles.errorRow} accessibilityRole="alert" accessibilityLiveRegion="polite">
@@ -79,23 +90,34 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       ...typography.captionRegular,
       color: colors.textSecondary,
     },
-    input: {
-      ...typography.body,
+    // El borde va en la fila (ícono + campo + acción); el foco y el error lo engrosan.
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
       minHeight: sizes.inputHeight,
+      paddingHorizontal: spacing.md,
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: radii.md,
-      paddingHorizontal: spacing.md,
-      color: colors.textPrimary,
       backgroundColor: colors.card,
     },
-    inputFocused: {
+    fieldFocused: {
       borderColor: colors.primary,
       borderWidth: 2,
+      paddingHorizontal: spacing.md - 1,
     },
-    inputError: {
+    fieldError: {
       borderColor: colors.danger,
       borderWidth: 2,
+      paddingHorizontal: spacing.md - 1,
+    },
+    input: {
+      ...typography.body,
+      flex: 1,
+      minHeight: sizes.inputHeight - 2,
+      paddingHorizontal: 0,
+      color: colors.textPrimary,
     },
     errorRow: {
       flexDirection: 'row',

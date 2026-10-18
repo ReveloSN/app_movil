@@ -21,7 +21,8 @@ export const sizes = {
   primaryButtonHeight: 52,
   /** Área táctil mínima de Android (48 dp): botones secundarios, íconos tocables, chips. */
   secondaryRowHeight: 48,
-  inputHeight: 48,
+  /** Campos de texto: mismo alto que el botón principal (escala de docs/ux). */
+  inputHeight: 52,
   badgeHeight: 28,
   progressBarHeight: 6,
   largeIconCircle: 112,
