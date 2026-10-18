@@ -10,6 +10,7 @@ import { PermissionsSection } from '@/features/settings/PermissionsSection';
 import { ProfileSection } from '@/features/settings/ProfileSection';
 import { HELP_LABEL } from '@/features/settings/settings.copy';
 import { SyncStatusSection } from '@/features/sync/SyncStatusSection';
+import { WeatherSettingsSection } from '@/features/weather/WeatherSettingsSection';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
       <PermissionsSection />
       <NotificationPrefsSection />
       <AiSettingsSection />
+      <WeatherSettingsSection />
       <ProfileSection />
       <SyncStatusSection />
 
