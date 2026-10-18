@@ -10,6 +10,7 @@ import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage, STREAK_SUFFIX, streakLabel } from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
 import { useRoutineStreak } from '@/features/history/useRoutineStreak';
+import { SummaryInsights } from '@/features/insights/SummaryInsights';
 import { durations, springs } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -55,6 +56,8 @@ export default function SummaryScreen() {
         </Animated.Text>
 
         <Animated.View entering={detailsEntering} style={styles.details}>
+          {/* Aprender de los olvidos: sugerencia (si se repite uno) y "Olvidé algo". */}
+          <SummaryInsights routineId={params.id ?? ''} recordId={summary.recordId ?? null} />
           {summary.omittedLabels.length > 0 ? (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Omitidos</Text>
