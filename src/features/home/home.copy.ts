@@ -4,9 +4,13 @@ import { formatClock } from '@/shared/utils/formatClock';
 
 /** 03-1: "Buenos días, Ana" o, sin nombre, "Buenos días". La franja sale de la hora local. */
 export function greeting(name: string | null, now: Date): string {
-  const hour = now.getHours();
-  const salute = hour >= 5 && hour < 12 ? 'Buenos días' : hour >= 12 && hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const salute = saluteForHour(now.getHours());
   return name ? `${salute}, ${name}` : salute;
+}
+
+/** "Buenos días" (5–11), "Buenas tardes" (12–18) o "Buenas noches". También lo usa la escena de Bienvenida. */
+export function saluteForHour(hour: number): string {
+  return hour >= 5 && hour < 12 ? 'Buenos días' : hour >= 12 && hour < 19 ? 'Buenas tardes' : 'Buenas noches';
 }
 
 /** 03-2 (nombre del bloque en el Documento de Contenido). */
