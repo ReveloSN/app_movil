@@ -2,6 +2,14 @@ import { supabase } from '@/shared/lib/supabase';
 
 import { createAiClient, type AiClient } from './ai.client';
 import { toRoutineSeed, toSuggestions, type AiRoutineSeed } from './ai.draft';
+import {
+  requestInsight,
+  requestWeeklySummary,
+  type AiInsight,
+  type AiWeeklySummary,
+  type InsightPatternInput,
+  type WeeklyStatsInput,
+} from './ai.stats';
 import { sessionSuggestionCache, type SuggestionCache } from './suggestion.cache';
 
 /** Cliente real: la Edge Function `ai-routine` con el JWT de la sesión (supabase-js lo agrega). */
@@ -25,3 +33,11 @@ export async function requestItemSuggestions(
   cache.set(name, items, suggestions);
   return suggestions;
 }
+
+/** Mensaje de un olvido que se repite (datos agregados), cacheado por patrón. */
+export const requestPatternInsight = (pattern: InsightPatternInput, client: AiClient = defaultClient): Promise<AiInsight> =>
+  requestInsight(pattern, { client });
+
+/** Resumen de la semana a partir de estadísticas agregadas (lo pide la persona). */
+export const requestWeekSummary = (stats: WeeklyStatsInput, client: AiClient = defaultClient): Promise<AiWeeklySummary> =>
+  requestWeeklySummary(stats, client);

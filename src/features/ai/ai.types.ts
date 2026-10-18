@@ -20,7 +20,25 @@ export interface AiDraft {
 
 export type AiRequest =
   | { mode: 'draft'; prompt: string }
-  | { mode: 'suggest'; name: string; items: string[] };
+  | { mode: 'suggest'; name: string; items: string[] }
+  | {
+      mode: 'insights';
+      pattern: { item: string; routine: string; weekday: number | null; misses: number; observations: number; critical: boolean };
+    }
+  | {
+      mode: 'weekly_summary';
+      stats: {
+        weekStart: string;
+        completed: number;
+        partial: number;
+        skipped: number;
+        streak: number;
+        previousCompleted: number;
+        topSkipped: { label: string; count: number }[];
+        bestDay: number | null;
+        worstDay: number | null;
+      };
+    };
 
 /** Lo que la app distingue para orientar a la persona (ai.copy.ts tiene el texto de cada uno). */
 export type AiErrorKind =
