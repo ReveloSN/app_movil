@@ -24,6 +24,7 @@ import type { Routine } from '@/shared/types/routine.types';
 import { ItemSuggestions } from './ItemSuggestions';
 import { RoutineAppearanceFields } from './RoutineAppearanceFields';
 import { RoutineItemsSection } from './RoutineItemsSection';
+import { ShareRoutineButton } from './share/ShareRoutineButton';
 import { routineAccent } from './routine-appearance';
 import { savedRoutineMessage } from './routine-feedback';
 import * as copy from './routine.copy';
@@ -159,6 +160,18 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         <View onLayout={onTriggersLayout}>
           <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
         </View>
+
+        {/* Compartir como copia (solo al editar): lo que se ve en el formulario, sin avisos. */}
+        {editing ? (
+          <ShareRoutineButton
+            routine={{
+              name: form.name,
+              icon: form.icon,
+              color: form.color,
+              items: form.items.map(({ label, kind, critical }) => ({ label, kind, critical })),
+            }}
+          />
+        ) : null}
 
         {/* 04-7: solo al editar. */}
         {editing ? (
