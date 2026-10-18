@@ -173,7 +173,7 @@ export const starsOpacity = (hour: number) => stageWeights(hour).night;
 
 /** "07:05": hora que muestra el modo demostración. */
 export function formatSceneHour(hour: number): string {
-  const h = normalizeHour(hour);
-  const minutes = Math.floor((h % 1) * 60);
-  return `${String(Math.floor(h)).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  // El margen evita que 7,9999… (suma de pasos de 0,1 h) se lea como 07:59.
+  const total = Math.floor(normalizeHour(hour) * 60 + 1e-6) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
