@@ -17,6 +17,10 @@ export function saluteForHour(hour: number): string {
 export const NEXT_ROUTINE_LABEL = 'Próxima rutina';
 
 const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/** Fecha de la banda de Inicio: "Sábado, 17 de octubre". */
+export const todayLabel = (now: Date) => `${WEEKDAYS[now.getDay()]}, ${now.getDate()} de ${MONTHS[now.getMonth()]}`;
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 const DAY_MS = 24 * 60 * 60_000;
