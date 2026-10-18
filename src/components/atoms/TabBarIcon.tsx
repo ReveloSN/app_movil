@@ -14,24 +14,48 @@ interface TabBarIconProps {
   size: number;
 }
 
-/** Ícono de pestaña: la activa lleva una píldora teñida y el ícono lleno (no solo cambia el color). */
+/** La píldora sobresale del ícono a cada lado y por arriba y abajo. */
+export const PILL_INSET = { x: 16, y: 4 } as const;
+
+/**
+ * Ícono de pestaña: la activa lleva una píldora teñida y el ícono lleno (no solo cambia el color).
+ *
+ * La barra de pestañas da al ícono una celda fija del tamaño del ícono (24×24). La píldora va detrás y
+ * en posición absoluta, sin padding en el contenedor del ícono: con padding, el ícono se quedaba sin
+ * ancho (24 − 2×16 < 0) y desaparecía, dejando solo la píldora vacía.
+ */
 export function TabBarIcon({ icon, activeIcon, focused, color, size }: TabBarIconProps) {
   const styles = useThemedStyles(createStyles);
   return (
-    <View style={[styles.pill, focused && styles.pillActive]}>
-      <Ionicons name={focused ? activeIcon : icon} size={size} color={color} />
+    <View testID="tab-icon-cell" style={[styles.cell, { width: size, height: size }]}>
+      {focused ? (
+        <View
+          testID="tab-icon-pill"
+          style={[
+            styles.pill,
+            {
+              left: -PILL_INSET.x,
+              right: -PILL_INSET.x,
+              top: -PILL_INSET.y,
+              bottom: -PILL_INSET.y,
+              borderRadius: size,
+            },
+          ]}
+        />
+      ) : null}
+      <Ionicons testID="tab-icon" name={focused ? activeIcon : icon} size={size} color={color} />
     </View>
   );
 }
 
-const createStyles = ({ colors, radii, spacing }: AppTheme) =>
+const createStyles = ({ colors }: AppTheme) =>
   StyleSheet.create({
-    pill: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 2,
-      borderRadius: radii.full,
+    cell: {
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    pillActive: {
+    pill: {
+      position: 'absolute',
       backgroundColor: colors.primaryTint,
     },
   });
