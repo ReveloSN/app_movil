@@ -1,3 +1,4 @@
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 
@@ -79,6 +80,8 @@ export function SkyHouseScene({ topInset, reducedMotion: forcedReduced }: SkyHou
       style={[styles.scene, { minHeight: width, backgroundColor: skyGradient(hour).top }]}
       onLayout={onSceneLayout}
     >
+      {/* La barra de estado se lee sobre el cielo: iconos claros de noche y oscuros de día. */}
+      <StatusBar style={tone === 'light' ? 'light' : 'dark'} />
       <View style={StyleSheet.absoluteFill} accessible accessibilityRole="image" accessibilityLabel={SCENE_ALT}>
         <SceneLayers weights={weights} size={width} top={imageTop} transitionMs={transitionMs} zoom={moving}>
           <FloatingBubbles toScene={toScene} floating={moving} night={tone === 'light'} />
