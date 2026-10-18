@@ -1,10 +1,19 @@
 // Orquestación de una solicitud (servidor), con sus dependencias inyectadas. Sin APIs de Deno.
 
-import { AiError, ERROR_STATUS, type AiErrorCode, type AiMode, type AiResponse, type ErrorBody } from './contract.ts';
+import {
+  AiError,
+  ERROR_STATUS,
+  type AiErrorCode,
+  type AiMode,
+  type AiRequest,
+  type AiResponse,
+  type ErrorBody,
+} from './contract.ts';
 import { parseRequest } from './input.ts';
 import { parseModelJson, sanitizeDraft, sanitizeSuggestions } from './output.ts';
 import { responseSchemaFor, systemPromptFor, userMessageFor } from './prompt.ts';
 import type { AiProvider } from './provider.ts';
+import { sanitizeInsight, sanitizeWeekly } from './stats.ts';
 
 export interface HandlerDeps {
   provider: AiProvider;
@@ -25,6 +34,19 @@ const errorResult = (code: AiErrorCode, message: string, mode: AiMode | null): H
   log: { mode, code },
 });
 
+function toResponse(request: AiRequest, raw: Record<string, unknown>): AiResponse {
+  switch (request.mode) {
+    case 'draft':
+      return { mode: 'draft', draft: sanitizeDraft(raw) };
+    case 'suggest':
+      return { mode: 'suggest', suggestions: sanitizeSuggestions(raw, request.items) };
+    case 'insights':
+      return { mode: 'insights', insight: sanitizeInsight(raw, request) };
+    case 'weekly_summary':
+      return { mode: 'weekly_summary', summary: sanitizeWeekly(raw) };
+  }
+}
+
 /**
  * Valida la entrada, cobra la cuota, llama al proveedor y valida su salida. La cuota se cobra antes
  * de llamar (así un abuso nunca llega al proveedor): un intento fallido también cuenta.
@@ -42,10 +64,7 @@ export async function handleAiRequest(body: unknown, deps: HandlerDeps): Promise
       schema: responseSchemaFor(request.mode),
     });
     const raw = parseModelJson(text);
-    const result: AiResponse =
-      request.mode === 'draft'
-        ? { mode: 'draft', draft: sanitizeDraft(raw) }
-        : { mode: 'suggest', suggestions: sanitizeSuggestions(raw, request.items) };
+    const result = toResponse(request, raw);
     return { status: 200, body: result, log: { mode, code: null } };
   } catch (cause) {
     if (cause instanceof AiError) return errorResult(cause.code, cause.message, mode);
