@@ -76,6 +76,8 @@ export function detectPatterns(records: readonly VerificationRecord[], now: Date
     if (!Number.isFinite(at) || at > now.getTime()) continue;
     const weekday = new Date(at).getDay();
     for (const item of parseCheckedItems(record.itemsChecked)) {
+      // Los ítems temporales (ej. "Paraguas" por el clima) no son de la rutina: no forman patrones.
+      if (item.origin) continue;
       const key = `${record.routineId}|${itemKey(item.label)}`;
       let tally = tallies.get(key);
       if (!tally) {

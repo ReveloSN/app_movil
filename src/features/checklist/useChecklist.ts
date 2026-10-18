@@ -57,6 +57,13 @@ export function useChecklist(
     void load();
   }, [load]);
 
+  /** Ítem solo para esta verificación (ej. "Paraguas" por el clima): no cambia la rutina. Si ya está, no se repite. */
+  const addTemporaryItem = useCallback((item: Pick<ChecklistItemState, 'id' | 'label' | 'icon' | 'origin'>) => {
+    setItems((current) =>
+      current.some((existing) => existing.id === item.id) ? current : [...current, { ...item, critical: false, note: null, checked: false }],
+    );
+  }, []);
+
   const toggleItem = useCallback((itemId: string) => {
     setItems((current) => current.map((item) => (item.id === itemId ? { ...item, checked: !item.checked } : item)));
   }, []);
@@ -66,5 +73,5 @@ export function useChecklist(
     [items],
   );
 
-  return { items, loading, error, retry, toggleItem, progress, startedAt };
+  return { items, loading, error, retry, toggleItem, addTemporaryItem, progress, startedAt };
 }

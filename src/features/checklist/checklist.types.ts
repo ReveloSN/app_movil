@@ -6,6 +6,8 @@ export interface ChecklistItemState {
   /** 07-5: se muestra bajo la etiqueta. */
   note: string | null;
   checked: boolean;
+  /** Ítem añadido solo para esta verificación (no está en la rutina): de dónde salió. */
+  origin?: 'weather';
 }
 
 /** Valor guardado en records.result (el constraint admite además 'no_response', que no sale de esta pantalla). */
@@ -20,6 +22,8 @@ export type CheckedItemEntry = {
   label: string;
   critical: boolean;
   checked: boolean;
+  /** Solo en ítems temporales (ej. "Paraguas" sugerido por el clima). */
+  origin?: 'weather';
 };
 
 export interface ChecklistProgress {
