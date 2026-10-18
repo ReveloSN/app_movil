@@ -12,9 +12,9 @@ import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { TimeField } from '@/components/molecules/TimeField';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
-import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { useCloseAfterSave } from '@/features/forms/useCloseAfterSave';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
-import { strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
+import { strategyFor, strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
 import * as copy from '@/features/triggers/trigger.copy';
 import type { TriggerKind } from '@/features/triggers/trigger.types';
 import { NETWORK_NAME_MAX_LENGTH, SSID_MAX_LENGTH } from '@/features/triggers/trigger.validation';
@@ -46,14 +46,15 @@ export default function TriggerScreen() {
   const form = useTriggerForm({
     initial: existing,
     onCommit: (draft) => {
-      upsert({ ...draft, key: entryKey });
-      guard.allowExit();
-      router.back();
+      const entry = { ...draft, key: entryKey };
+      upsert(entry);
+      // Vuelve a P04 (o al paso del onboarding) con la frase resumen del aviso (06-6) como aviso breve.
+      guard.close(copy.summarySentence(strategyFor(entry).describe(entry)));
     },
     onNeedPermission: (kind) => router.push({ pathname: '/routine/permissions', params: { kind } }),
   });
-  // DC-03 al salir de P06 con cambios sin guardar.
-  const guard = useUnsavedChangesGuard(form.dirty);
+  // DC-03 al salir de P06 con cambios sin guardar, y el cierre tras guardar.
+  const guard = useCloseAfterSave(form.dirty, 'back');
   const { detection, detect } = useCurrentWifi();
   const isWifi = form.kind !== 'schedule';
   const networkNameRef = useRef<TextInput>(null);

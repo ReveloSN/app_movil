@@ -26,6 +26,7 @@ import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
 import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
+import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
@@ -58,7 +59,7 @@ export default function VerifyScreen() {
 
   // Cubre la X, el botón atrás de Android y el gesto de iOS: solo pregunta si ya hay algo marcado.
   usePreventRemove(progress.checked > 0, ({ data }) => {
-    if (leaving.current) navigation.dispatch(data.action);
+    if (leaving.current) dispatchToOwner(navigation, data.action);
     else setDialog({ kind: 'exit', action: data.action });
   });
 
@@ -100,7 +101,7 @@ export default function VerifyScreen() {
     if (dialog?.kind === 'critical') void complete(dialog.intent);
     if (dialog?.kind === 'exit') {
       leaving.current = true;
-      navigation.dispatch(dialog.action);
+      dispatchToOwner(navigation, dialog.action);
     }
     setDialog(null);
   }

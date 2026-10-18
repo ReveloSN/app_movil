@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
-import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { useCloseAfterSave } from '@/features/forms/useCloseAfterSave';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
@@ -49,8 +49,6 @@ interface RoutineFormProps {
   aiAssisted?: { suggestsWifiExit: boolean };
 }
 
-const backToRoutines = () => router.dismissTo('/(tabs)');
-
 function cancel() {
   if (router.canGoBack()) router.back();
   else router.replace('/(tabs)');
@@ -68,17 +66,15 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   useEffect(() => clearTriggers, [clearTriggers]);
 
   function handleSaved() {
-    guard.allowExit();
-    // CF-03 adaptado a los avisos; el aviso sobrevive a la vuelta a Inicio.
-    toast.show(savedRoutineMessage(Boolean(editing), triggers.map((trigger) => strategyFor(trigger).describe(trigger))));
     // Reprograma en el teléfono: avisos nuevos, cambiados o quitados, y el nombre en las notificaciones.
     if (triggers.length > 0 || editing) {
       rearm().catch((cause: unknown) => {
         if (__DEV__) console.warn('[triggers.rearm]', cause);
       });
     }
-    // Vuelve a Inicio también desde Plantillas (flujo B), sin dejar P10 ni P06 en la pila.
-    backToRoutines();
+    // CF-03 adaptado a los avisos (sobrevive a la vuelta). Cierra todo el flujo hasta Inicio, también
+    // desde Plantillas (flujo B), sin dejar P10 ni P06 en la pila.
+    guard.close(savedRoutineMessage(Boolean(editing), triggers.map((trigger) => strategyFor(trigger).describe(trigger))));
   }
 
   const form = useRoutineForm({
@@ -90,13 +86,9 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   });
   // P05: ítem abierto en la hoja inferior (nuevo o existente).
   const [editingItem, setEditingItem] = useState<{ entry: ItemFormEntry; isNew: boolean } | null>(null);
-  // DC-03: cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04.
-  const guard = useUnsavedChangesGuard(form.dirty);
-  const removal = useRoutineDeletion(editing?.routine.id, () => {
-    guard.allowExit();
-    toast.show(copy.ROUTINE_DELETED);
-    backToRoutines();
-  });
+  // DC-03 (cubre "Cancelar", el atrás de Android y cualquier navegación que saque de P04) y el cierre tras guardar.
+  const guard = useCloseAfterSave(form.dirty, 'home');
+  const removal = useRoutineDeletion(editing?.routine.id, () => guard.close(copy.ROUTINE_DELETED));
 
   // Quitar no pide confirmación: se hace al instante y el aviso breve permite deshacerlo.
   function removeItem(key: string) {
