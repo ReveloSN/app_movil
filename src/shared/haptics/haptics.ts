@@ -19,3 +19,6 @@ export const hapticToggleOff = () => perform(Haptics.AndroidHaptics.Toggle_Off, 
 /** Al completar una rutina. */
 export const hapticConfirm = () =>
   perform(Haptics.AndroidHaptics.Confirm, () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+
+/** Al cambiar de pestaña (tocando o deslizando). */
+export const hapticTick = () => perform(Haptics.AndroidHaptics.Segment_Tick, Haptics.selectionAsync);
