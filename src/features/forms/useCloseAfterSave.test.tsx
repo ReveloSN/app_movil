@@ -1,4 +1,5 @@
 import { router, Stack, Tabs } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 import { Pressable, Text } from 'react-native';
@@ -7,6 +8,12 @@ import { ToastProvider } from '@/features/feedback/ToastProvider';
 import { TestProviders } from '@/shared/testing/TestProviders';
 
 import { useCloseAfterSave, type SaveDestination } from './useCloseAfterSave';
+
+// Se espía la protección para comprobar que no se apaga al salir (ver la prueba de regresión).
+jest.mock('expo-router/react-navigation', () => {
+  const actual = jest.requireActual('expo-router/react-navigation');
+  return { ...actual, usePreventRemove: jest.fn(actual.usePreventRemove) };
+});
 
 jest.setTimeout(30000);
 
@@ -92,5 +99,21 @@ describe('useCloseAfterSave', () => {
     await fireEvent.press(screen.getByText('Descartar'));
 
     expect(result.getPathname()).toBe('/');
+  });
+
+  it('al salir no apaga la protección (apagarla cambia el encabezado nativo y Android falla al cerrar)', async () => {
+    const result = renderApp();
+    await result;
+    await act(async () => {
+      router.push('/routine/new');
+      router.push('/routine/trigger');
+    });
+    const prevented = usePreventRemove as jest.Mock;
+    prevented.mockClear();
+
+    await fireEvent.press(screen.getAllByText('Guardar').at(-1)!);
+
+    expect(result.getPathname()).toBe('/routine/new');
+    expect(prevented.mock.calls.every(([enabled]) => enabled === true)).toBe(true);
   });
 });

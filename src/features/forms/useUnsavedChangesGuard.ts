@@ -5,7 +5,7 @@ import {
   type NavigationProp,
   type ParamListBase,
 } from 'expo-router/react-navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 /** Lo mínimo de un navegador para re-despachar una acción. */
 interface Navigation {
@@ -28,31 +28,34 @@ export function dispatchToOwner(navigation: Navigation, action: NavigationAction
  * DC-03: con cambios sin guardar, salir de la pantalla (botón de la barra, atrás de Android o una
  * navegación del código) se detiene y pide decidir.
  *
- * Para salir a propósito (tras guardar o eliminar) se usa `leave(navigate)`: primero se apaga la
- * protección y, ya en el render siguiente, se navega. No se re-despacha la acción interceptada: una
- * acción como `dismissTo` re-despachada desde una pila anidada (routine/…) no llegaba a ninguna parte y
- * la pantalla se quedaba abierta tras guardar.
+ * Para salir a propósito (tras guardar o eliminar) se usa `leave(navigate)`, y "Descartar" sale como se
+ * había pedido. En ambos casos la protección sigue activa y la acción interceptada se re-despacha (React
+ * Navigation la deja pasar) en el navegador al que iba (`dispatchToOwner`). No se apaga la protección
+ * antes de salir: apagarla cambia el encabezado nativo justo cuando la pantalla se cierra y Android
+ * falla con "ScreenStackFragment added into a non-stack container".
  */
 export function useUnsavedChangesGuard(dirty: boolean) {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [blocked, setBlocked] = useState<NavigationAction | null>(null);
-  // Salida decidida: la protección se apaga y, tras ese render, se ejecuta la navegación pendiente.
-  const [exit, setExit] = useState<{ navigate: () => void } | null>(null);
+  // Salida decidida (tras guardar o eliminar): lo que se intercepte a partir de aquí se deja pasar.
+  const leaving = useRef(false);
 
-  usePreventRemove(dirty && exit === null, ({ data }) => setBlocked(data.action));
+  usePreventRemove(dirty, ({ data }) => {
+    if (leaving.current) dispatchToOwner(navigation, data.action);
+    else setBlocked(data.action);
+  });
 
-  useEffect(() => {
-    exit?.navigate();
-  }, [exit]);
-
-  /** Sale sin preguntar (tras guardar o eliminar): apaga la protección y luego navega. */
-  const leave = useCallback((navigate: () => void) => setExit({ navigate }), []);
+  /** Sale sin preguntar (tras guardar o eliminar). */
+  const leave = useCallback((navigate: () => void) => {
+    leaving.current = true;
+    navigate();
+  }, []);
 
   /** "Descartar": sale como se había pedido. */
   const discard = useCallback(() => {
     const action = blocked;
     setBlocked(null);
-    if (action) setExit({ navigate: () => dispatchToOwner(navigation, action) });
+    if (action) dispatchToOwner(navigation, action);
   }, [blocked, navigation]);
 
   /** Cierra el diálogo y se queda en la pantalla (también al elegir "Guardar"). */
