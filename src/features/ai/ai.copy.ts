@@ -38,8 +38,8 @@ export const OFFLINE_HINT = 'La IA necesita internet. Las sugerencias de siempre
 
 // Aviso de privacidad de primer uso ("tono Permisos": transparente).
 export const CONSENT_TITLE = 'Sugerencias con IA';
-export const CONSENT_SENT = 'Enviamos solo lo que escribes: la descripción, el nombre de la rutina y sus ítems.';
-export const CONSENT_NOT_SENT = 'No enviamos tu ubicación, tus redes Wi-Fi ni tu historial.';
+export const CONSENT_SENT = 'Enviamos solo lo que escribes (la descripción, el nombre de la rutina y sus ítems) y, para los resúmenes y consejos, estadísticas agregadas: conteos y los ítems que más omites.';
+export const CONSENT_NOT_SENT = 'No enviamos tu ubicación, tus redes Wi-Fi ni tu historial completo.';
 export const CONSENT_PROVIDER = 'Lo procesa Gemini, de Google, en su capa gratuita: Google puede usar ese texto para mejorar sus servicios. No escribas datos personales.';
 export const CONSENT_ACCEPT = 'Aceptar y continuar';
 export const CONSENT_DECLINE = 'Ahora no';
