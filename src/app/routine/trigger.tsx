@@ -2,12 +2,13 @@ import * as Crypto from 'expo-crypto';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, type TextInput } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { DayPicker, type DayOption } from '@/components/molecules/DayPicker';
-import { SegmentedControl } from '@/components/molecules/SegmentedControl';
+import { RadioCardGroup, type RadioCardOption } from '@/components/molecules/RadioCardGroup';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { TimeField } from '@/components/molecules/TimeField';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
@@ -22,10 +23,17 @@ import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
 import { useTriggerForm } from '@/features/triggers/useTriggerForm';
 import { useCurrentWifi } from '@/features/triggers/wifi/useCurrentWifi';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
+import { listItemEntering } from '@/shared/theme/motion';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatClock } from '@/shared/utils/formatClock';
 
-const KIND_OPTIONS = TRIGGER_KINDS.map((kind) => ({ value: kind, label: strategyForKind(kind).label }));
+// 06-1: reloj para Horario; Wi-Fi con salida o llegada para los avisos por red (mismos textos de siempre).
+const KIND_ICONS: Record<TriggerKind, Pick<RadioCardOption<TriggerKind>, 'icon' | 'badgeIcon'>> = {
+  schedule: { icon: 'time-outline' },
+  wifi_exit: { icon: 'wifi-outline', badgeIcon: 'exit-outline' },
+  wifi_enter: { icon: 'wifi-outline', badgeIcon: 'enter-outline' },
+};
+const KIND_OPTIONS = TRIGGER_KINDS.map((kind) => ({ value: kind, label: strategyForKind(kind).label, ...KIND_ICONS[kind] }));
 const DAY_OPTIONS: DayOption[] = copy.WEEK_ORDER.map((day) => ({
   value: day,
   short: copy.DAY_LETTERS[day],
@@ -81,86 +89,89 @@ export default function TriggerScreen() {
         <Text style={styles.sectionTitle} accessibilityRole="header">
           Tipo
         </Text>
-        <SegmentedControl<TriggerKind>
+        <RadioCardGroup<TriggerKind>
           accessibilityLabel="Tipo de aviso"
           options={KIND_OPTIONS}
           value={form.kind}
           onChange={form.setKind}
         />
 
-        {isWifi ? (
-          <>
-            {/* 06-3 + 06-4 */}
-            <Text style={styles.sectionTitle} accessibilityRole="header">
-              Red
-            </Text>
-            <NetworkDetection
-              detection={detection}
-              onDetect={detect}
-              onRequestPermission={openLocationPermission}
-              onUse={(ssid) => form.setSsid(ssid)}
-            />
-            <TextField
-              label="Nombre de la red Wi-Fi"
-              placeholder="Como aparece en tu teléfono"
-              value={form.ssid}
-              onChangeText={form.setSsid}
-              maxLength={SSID_MAX_LENGTH}
-              autoCapitalize="none"
-              autoCorrect={false}
-              error={form.errors.ssid}
-              returnKeyType="next"
-              submitBehavior="submit"
-              onSubmitEditing={() => networkNameRef.current?.focus()}
-            />
-            <TextField
-              ref={networkNameRef}
-              returnKeyType="done"
-              label="¿Cómo la llamas?"
-              placeholder="Ej. Casa"
-              value={form.networkName}
-              onChangeText={form.setNetworkName}
-              maxLength={NETWORK_NAME_MAX_LENGTH}
-              showCounter
-              error={form.errors.networkName}
-            />
+        {/* Al cambiar de tipo, lo de debajo entra con una transición breve (sigue "Quitar animaciones"). */}
+        <Animated.View key={isWifi ? 'wifi' : 'schedule'} entering={listItemEntering} style={styles.kindFields}>
+          {isWifi ? (
+            <>
+              {/* 06-3 + 06-4 */}
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                Red
+              </Text>
+              <NetworkDetection
+                detection={detection}
+                onDetect={detect}
+                onRequestPermission={openLocationPermission}
+                onUse={(ssid) => form.setSsid(ssid)}
+              />
+              <TextField
+                label="Nombre de la red Wi-Fi"
+                placeholder="Como aparece en tu teléfono"
+                value={form.ssid}
+                onChangeText={form.setSsid}
+                maxLength={SSID_MAX_LENGTH}
+                autoCapitalize="none"
+                autoCorrect={false}
+                error={form.errors.ssid}
+                returnKeyType="next"
+                submitBehavior="submit"
+                onSubmitEditing={() => networkNameRef.current?.focus()}
+              />
+              <TextField
+                ref={networkNameRef}
+                returnKeyType="done"
+                label="¿Cómo la llamas?"
+                placeholder="Ej. Casa"
+                value={form.networkName}
+                onChangeText={form.setNetworkName}
+                maxLength={NETWORK_NAME_MAX_LENGTH}
+                showCounter
+                error={form.errors.networkName}
+              />
 
-            {/* 06-5 */}
-            <SwitchRow
-              icon="time-outline"
-              label={copy.WINDOW_SWITCH_LABEL}
-              value={form.windowEnabled}
-              onValueChange={form.setWindowEnabled}
-            />
-            {form.windowEnabled ? (
-              <View style={styles.group}>
-                <TimeField
-                  label="Desde"
-                  value={form.timeWindow.start}
-                  valueLabel={formatClock(form.timeWindow.start)}
-                  onChange={(start) => form.setTimeWindow((current) => ({ ...current, start }))}
-                />
-                <TimeField
-                  label="Hasta"
-                  value={form.timeWindow.end}
-                  valueLabel={formatClock(form.timeWindow.end)}
-                  onChange={(end) => form.setTimeWindow((current) => ({ ...current, end }))}
-                />
-                {form.errors.window ? <StatusMessage tone="error" message={form.errors.window} /> : null}
-              </View>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {/* 06-2 */}
-            <Text style={styles.sectionTitle} accessibilityRole="header">
-              Hora y días
-            </Text>
-            <TimeField label="Hora" value={form.time} valueLabel={formatClock(form.time)} onChange={form.setTime} />
-            <DayPicker options={DAY_OPTIONS} value={form.days} onChange={form.setDays} />
-            {form.errors.days ? <StatusMessage tone="error" message={form.errors.days} /> : null}
-          </>
-        )}
+              {/* 06-5 */}
+              <SwitchRow
+                icon="time-outline"
+                label={copy.WINDOW_SWITCH_LABEL}
+                value={form.windowEnabled}
+                onValueChange={form.setWindowEnabled}
+              />
+              {form.windowEnabled ? (
+                <View style={styles.group}>
+                  <TimeField
+                    label="Desde"
+                    value={form.timeWindow.start}
+                    valueLabel={formatClock(form.timeWindow.start)}
+                    onChange={(start) => form.setTimeWindow((current) => ({ ...current, start }))}
+                  />
+                  <TimeField
+                    label="Hasta"
+                    value={form.timeWindow.end}
+                    valueLabel={formatClock(form.timeWindow.end)}
+                    onChange={(end) => form.setTimeWindow((current) => ({ ...current, end }))}
+                  />
+                  {form.errors.window ? <StatusMessage tone="error" message={form.errors.window} /> : null}
+                </View>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {/* 06-2 */}
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                Hora y días
+              </Text>
+              <TimeField label="Hora" value={form.time} valueLabel={formatClock(form.time)} onChange={form.setTime} />
+              <DayPicker options={DAY_OPTIONS} value={form.days} onChange={form.setDays} />
+              {form.errors.days ? <StatusMessage tone="error" message={form.errors.days} /> : null}
+            </>
+          )}
+        </Animated.View>
 
         {/* 06-6 */}
         <View style={styles.summary} accessibilityLiveRegion="polite">
@@ -203,6 +214,12 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     },
     group: {
       gap: spacing.md,
+    },
+    // Mismo ritmo que el resto del formulario.
+    kindFields: {
+      gap: spacing.lg,
+      // 24 dp entre el selector de tipo y la sección siguiente (16 del formulario + 8).
+      marginTop: spacing.sm,
     },
     summary: {
       padding: spacing.lg,
