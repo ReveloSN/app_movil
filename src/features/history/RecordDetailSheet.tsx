@@ -4,6 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '@/components/atoms/Chip';
 import { IconButton } from '@/components/atoms/IconButton';
 import { BottomSheet } from '@/components/organisms/BottomSheet';
+import { forgotInHistory } from '@/features/insights/insights.copy';
+import { useForgotLabels } from '@/features/insights/useForgotEvents';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -29,6 +31,7 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
   const items = parseCheckedItems(entry.itemsChecked);
   const checked = items.filter((item) => item.checked);
   const skipped = items.filter((item) => !item.checked);
+  const forgotten = useForgotLabels(entry.id);
 
   const itemList = (title: string, list: CheckedItem[], icon: 'checkmark-circle' | 'close-circle-outline') =>
     list.length > 0 ? (
@@ -39,7 +42,7 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
             key={`${item.label}-${index}`}
             style={styles.itemRow}
             accessible
-            accessibilityLabel={item.critical ? `${item.label}, ${copy.CRITICAL_LABEL}` : item.label}
+            accessibilityLabel={[item.label, item.critical ? copy.CRITICAL_LABEL : null, item.origin ? copy.WEATHER_ORIGIN_LABEL : null].filter(Boolean).join(', ')}
           >
             <Ionicons name={icon} size={iconSizes.md} color={item.checked ? colors.primary : colors.textMuted} />
             <Text style={styles.itemLabel}>{item.label}</Text>
@@ -49,6 +52,8 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
                 <Text style={styles.criticalText}>{copy.CRITICAL_LABEL}</Text>
               </View>
             ) : null}
+            {/* Ítem temporal de esa verificación, sugerido por el clima. */}
+            {item.origin ? <Chip tone="neutral" icon="umbrella-outline" label={copy.WEATHER_ORIGIN_LABEL} /> : null}
           </View>
         ))}
       </View>
@@ -72,6 +77,7 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
         <Chip tone={result.tone} icon={result.icon} label={result.label} />
         {itemList(copy.DETAIL_CHECKED_TITLE, checked, 'checkmark-circle')}
         {itemList(copy.DETAIL_SKIPPED_TITLE, skipped, 'close-circle-outline')}
+        {forgotten.length > 0 ? <Text style={styles.secondary}>{forgotInHistory(forgotten)}</Text> : null}
         {items.length > 0 && checked.length === 0 ? <Text style={styles.secondary}>{copy.DETAIL_NO_ITEMS}</Text> : null}
         {/* Datos del sistema, debajo del contenido de la persona (Documento de Jerarquía). */}
         <View style={styles.block}>

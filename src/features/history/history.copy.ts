@@ -35,3 +35,6 @@ export function recordDateTime(iso: string, now: Date = new Date()): string | nu
   const clock = formatClock({ hour: date.getHours(), minute: date.getMinutes() });
   return `${formatDayHeading(toLocalDayKey(date), now)}, ${clock}`;
 }
+
+/** Marca de un ítem temporal añadido por el clima (solo esa verificación). */
+export const WEATHER_ORIGIN_LABEL = 'Clima';
