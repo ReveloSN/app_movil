@@ -69,6 +69,15 @@ describe('useWeeklySummary', () => {
     expect(result.current.summary?.recomendacion).toContain('Cargador');
   });
 
+  it('si el servidor aún no tiene el modo (entrada inválida), dice que la IA no está disponible', async () => {
+    mockedRequest.mockRejectedValue(new AiClientError('invalid_input'));
+    const { result } = await renderHook(() => useWeeklySummary(RECORDS, NOW));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => result.current.generate());
+    await waitFor(() => expect(result.current.summary?.source).toBe('local'));
+    expect(result.current.notice).not.toContain('demasiado largo');
+  });
+
   it('sin conexión (o con la IA apagada) no llama a la IA: resumen automático', async () => {
     mockAccess.online = false;
     const { result } = await renderHook(() => useWeeklySummary(RECORDS, NOW));
