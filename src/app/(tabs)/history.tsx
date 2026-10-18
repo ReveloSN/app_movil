@@ -16,6 +16,7 @@ import { describeResult, RESULT_FILTERS } from '@/features/history/history.resul
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
 import { useHistory } from '@/features/history/useHistory';
+import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
@@ -30,6 +31,8 @@ export default function HistoryScreen() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const swipeLock = useTabSwipeLockHandlers();
+  // Fecha de "Tu semana" en cada render (las estadísticas son baratas; la clave de la semana cambia el lunes).
+  const weekNow = new Date();
   // 09-3: vive en la pestaña; no se guarda.
   const [filter, setFilter] = useState<HistoryFilter>(NO_FILTER);
   const [detail, setDetail] = useState<HistoryEntry | null>(null);
@@ -76,6 +79,8 @@ export default function HistoryScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.filters}>
+            {/* "Tu semana": resumen guardado por semana (se genera a pedido). */}
+            <WeekSummarySection records={records} now={weekNow} />
             {error ? <StatusMessage tone="error" message={error} /> : null}
             {/* Los filtros se desplazan en horizontal: mientras se tocan, no se cambia de pestaña deslizando. */}
             <View style={styles.filters} {...swipeLock}>

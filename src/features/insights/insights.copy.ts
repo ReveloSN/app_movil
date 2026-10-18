@@ -27,3 +27,17 @@ export const forgotAdded = (label: string) => `Añadimos «${label}» a tu rutin
 export const FORGOT_FULL = 'Lo anotamos. Tu rutina ya tiene 12 ítems: quita uno para añadirlo.';
 export const FORGOT_ERROR = 'No pudimos añadirlo. Inténtalo de nuevo.';
 export const forgotInHistory = (labels: readonly string[]) => `Se te quedó: ${labels.join(', ')}`;
+
+// "Tu semana" (Historial).
+export const WEEK_TITLE = 'Tu semana';
+export const WEEK_EMPTY = 'Esta semana aún no hay verificaciones.';
+export const WEEK_GENERATE = 'Generar resumen';
+export const WEEK_LOADING = 'Preparando tu resumen…';
+export const WEEK_SOURCE_AI = 'Resumen con IA';
+export const WEEK_SOURCE_LOCAL = 'Resumen automático';
+export const weekCounts = (completed: number, partial: number, skipped: number) =>
+  [
+    completed === 1 ? '1 completa' : `${completed} completas`,
+    partial === 1 ? '1 parcial' : `${partial} parciales`,
+    `${skipped} hoy no salgo`,
+  ].join(' · ');
