@@ -1,4 +1,4 @@
-import { greeting, nextRoutineWhen } from './home.copy';
+import { greeting, nextRoutineWhen, todayLabel } from './home.copy';
 
 describe('saludo de Inicio (03-1)', () => {
   it('con nombre y según la hora del día', () => {
@@ -20,5 +20,12 @@ describe('cuándo es la próxima rutina', () => {
     expect(nextRoutineWhen(new Date(2026, 9, 17, 18, 0), NOW)).toBe('Hoy, 6:00 p. m.');
     expect(nextRoutineWhen(new Date(2026, 9, 18, 7, 5), NOW)).toBe('Mañana, 7:05 a. m.');
     expect(nextRoutineWhen(new Date(2026, 9, 19, 12, 0), NOW)).toBe('Lunes, 12:00 p. m.');
+  });
+});
+
+describe('fecha de la banda de Inicio', () => {
+  it('día de la semana, número y mes en minúscula', () => {
+    expect(todayLabel(NOW)).toBe('Sábado, 17 de octubre');
+    expect(todayLabel(new Date(2026, 0, 1))).toBe('Jueves, 1 de enero');
   });
 });
