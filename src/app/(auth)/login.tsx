@@ -1,19 +1,21 @@
 import { router } from 'expo-router';
-import { useRef } from 'react';
-import type { TextInput } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { TextLink } from '@/components/atoms/TextLink';
-import { AuthFormTemplate } from '@/components/templates/AuthFormTemplate';
+import { PasswordField } from '@/components/molecules/PasswordField';
+import * as copy from '@/features/auth/auth.copy';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { WelcomeLayout } from '@/features/auth/components/WelcomeLayout';
 import { useCredentialsForm } from '@/features/auth/useCredentialsForm';
+import { useFocusFirstCredentialError } from '@/features/auth/useFocusFirstCredentialError';
 import { useGuestSignIn } from '@/features/auth/useGuestSignIn';
 
 const goHome = () => router.replace('/(tabs)');
 
+/** Bienvenida: escena según la hora y la tarjeta de acceso (correo, invitado o registro). */
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const form = useCredentialsForm({
@@ -23,17 +25,19 @@ export default function LoginScreen() {
   });
   const guest = useGuestSignIn(goHome);
   const busy = form.submitting || guest.submitting;
+  const { emailRef, passwordRef, focusFirstError } = useFocusFirstCredentialError();
 
-  // "Siguiente" en el correo lleva a la contraseña; "Ir" en la contraseña envía.
-  const passwordRef = useRef<TextInput>(null);
+  async function submit() {
+    focusFirstError(await form.submit());
+  }
 
   return (
-    <AuthFormTemplate
-      title="Iniciar sesión"
-      footer={<TextLink href="/(auth)/register" label="¿No tienes cuenta? Regístrate" replace />}
-    >
+    <WelcomeLayout title="Iniciar sesión">
       <TextField
-        label="Correo"
+        ref={emailRef}
+        icon="mail-outline"
+        label={copy.EMAIL_LABEL}
+        placeholder={copy.EMAIL_PLACEHOLDER}
         value={form.email}
         onChangeText={form.setEmail}
         error={form.fieldErrors.email}
@@ -45,20 +49,21 @@ export default function LoginScreen() {
         submitBehavior="submit"
         onSubmitEditing={() => passwordRef.current?.focus()}
       />
-      <TextField
+      <PasswordField
         ref={passwordRef}
-        label="Contraseña"
+        label={copy.PASSWORD_LABEL}
+        showLabel={copy.SHOW_PASSWORD}
+        hideLabel={copy.HIDE_PASSWORD}
         value={form.password}
         onChangeText={form.setPassword}
         error={form.fieldErrors.password}
-        secureTextEntry
         autoComplete="current-password"
         textContentType="password"
         returnKeyType="go"
-        onSubmitEditing={form.submit}
+        onSubmitEditing={() => void submit()}
       />
       {form.formError ? <StatusMessage tone="error" message={form.formError} /> : null}
-      <PrimaryButton label="Entrar" onPress={form.submit} loading={form.submitting} disabled={guest.submitting} />
+      <PrimaryButton label="Entrar" onPress={() => void submit()} loading={form.submitting} disabled={guest.submitting} />
       {guest.error ? <StatusMessage tone="error" message={guest.error} /> : null}
       <SecondaryButton
         icon="person-outline"
@@ -66,6 +71,7 @@ export default function LoginScreen() {
         onPress={guest.start}
         disabled={busy}
       />
-    </AuthFormTemplate>
+      <TextLink href="/(auth)/register" label="¿No tienes cuenta? Regístrate" replace />
+    </WelcomeLayout>
   );
 }

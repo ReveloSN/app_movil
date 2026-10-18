@@ -23,14 +23,15 @@ export function useCredentialsForm<R extends AuthResult>({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function submit() {
-    if (submitting) return;
+  /** Devuelve los errores de los campos (vacío si pasaron), para llevar el foco al primero. */
+  async function submit(): Promise<CredentialErrors> {
+    if (submitting) return {};
 
     const credentials = { email, password };
     const errors = validateCredentials(credentials, { enforcePasswordLength });
     setFieldErrors(errors);
     setFormError(null);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) return errors;
 
     setSubmitting(true);
     const result = await submitAction(credentials);
@@ -38,9 +39,10 @@ export function useCredentialsForm<R extends AuthResult>({
 
     if (result.error) {
       setFormError(result.error);
-      return;
+      return {};
     }
     onSuccess(result);
+    return {};
   }
 
   return { email, setEmail, password, setPassword, fieldErrors, formError, submitting, submit };

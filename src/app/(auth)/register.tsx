@@ -1,15 +1,17 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
-import type { TextInput } from 'react-native';
+import { useState } from 'react';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { TextLink } from '@/components/atoms/TextLink';
-import { AuthFormTemplate } from '@/components/templates/AuthFormTemplate';
+import { PasswordField } from '@/components/molecules/PasswordField';
+import * as copy from '@/features/auth/auth.copy';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/auth.validation';
+import { WelcomeLayout } from '@/features/auth/components/WelcomeLayout';
 import { useCredentialsForm } from '@/features/auth/useCredentialsForm';
+import { useFocusFirstCredentialError } from '@/features/auth/useFocusFirstCredentialError';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
@@ -22,17 +24,19 @@ export default function RegisterScreen() {
       else router.replace('/(tabs)');
     },
   });
+  const { emailRef, passwordRef, focusFirstError } = useFocusFirstCredentialError();
 
-  // "Siguiente" en el correo lleva a la contraseña; "Ir" en la contraseña envía.
-  const passwordRef = useRef<TextInput>(null);
+  async function submit() {
+    focusFirstError(await form.submit());
+  }
 
   return (
-    <AuthFormTemplate
-      title="Crear cuenta"
-      footer={<TextLink href="/(auth)/login" label="¿Ya tienes cuenta? Inicia sesión" replace />}
-    >
+    <WelcomeLayout title="Crear cuenta">
       <TextField
-        label="Correo"
+        ref={emailRef}
+        icon="mail-outline"
+        label={copy.EMAIL_LABEL}
+        placeholder={copy.EMAIL_PLACEHOLDER}
         value={form.email}
         onChangeText={form.setEmail}
         error={form.fieldErrors.email}
@@ -44,24 +48,26 @@ export default function RegisterScreen() {
         submitBehavior="submit"
         onSubmitEditing={() => passwordRef.current?.focus()}
       />
-      <TextField
+      <PasswordField
         ref={passwordRef}
-        label="Contraseña"
+        label={copy.PASSWORD_LABEL}
+        showLabel={copy.SHOW_PASSWORD}
+        hideLabel={copy.HIDE_PASSWORD}
         placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
         value={form.password}
         onChangeText={form.setPassword}
         error={form.fieldErrors.password}
-        secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
         returnKeyType="go"
-        onSubmitEditing={form.submit}
+        onSubmitEditing={() => void submit()}
       />
       {form.formError ? <StatusMessage tone="error" message={form.formError} /> : null}
       {confirmationSent ? (
         <StatusMessage tone="info" message="Te enviamos un correo de confirmación. Ábrelo y luego inicia sesión." />
       ) : null}
-      <PrimaryButton label="Crear cuenta" onPress={form.submit} loading={form.submitting} />
-    </AuthFormTemplate>
+      <PrimaryButton label="Crear cuenta" onPress={() => void submit()} loading={form.submitting} />
+      <TextLink href="/(auth)/login" label="¿Ya tienes cuenta? Inicia sesión" replace />
+    </WelcomeLayout>
   );
 }
