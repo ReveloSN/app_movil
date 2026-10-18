@@ -36,4 +36,6 @@ export interface VerificationSummary {
   /** Los omitidos que eran críticos (P08 los marca con bandera). */
   omittedCriticalLabels: string[];
   durationSeconds: number;
+  /** Id del registro guardado (para anotar un "olvido" de esta verificación). */
+  recordId?: string;
 }
