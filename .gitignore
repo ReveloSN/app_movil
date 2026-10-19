@@ -40,10 +40,20 @@ yarn-error.*
 /ios
 /android
 
-# env
+# env (solo .env.example va a git)
 .env
+.env.*
+!.env.example
 
 .claude/
 
 # IDE (Android Studio / IntelliJ)
 .idea/
+
+# release / firma (nunca al repo)
+release/
+*.keystore
+*.jks
+keystore.properties
+signing.properties
+android/**/build
