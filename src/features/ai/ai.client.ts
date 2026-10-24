@@ -14,7 +14,8 @@ interface AiClientOptions {
 }
 
 const FUNCTION_NAME = 'ai-routine';
-const DEFAULT_TIMEOUT_MS = 15_000;
+/** Cubre el peor caso del servidor: Gemini (20 s) + respaldo DeepSeek (20 s) + margen. */
+const DEFAULT_TIMEOUT_MS = 45_000;
 
 /** Código de error del servidor → lo que la app distingue. */
 const SERVER_CODES: Record<string, AiErrorKind> = {
