@@ -1,6 +1,8 @@
 import { ROUTINE_COLORS as APP_COLORS, ROUTINE_ICONS as APP_ICONS } from '@/features/routines/routine-appearance';
 
-import { ROUTINE_COLORS, ROUTINE_ICONS } from '../ai-routine/contract';
+import { AiError, ROUTINE_COLORS, ROUTINE_ICONS, type AiErrorCode } from '../ai-routine/contract';
+import { createDeepSeekProvider } from '../ai-routine/deepseek.provider';
+import { createFallbackProvider } from '../ai-routine/fallback.provider';
 import { createGeminiProvider } from '../ai-routine/gemini.provider';
 import { handleAiRequest, type HandlerDeps } from '../ai-routine/handler';
 import { parseRequest } from '../ai-routine/input';
@@ -247,6 +249,83 @@ describe('ai-routine · proveedor Gemini', () => {
       })) as unknown as typeof fetch;
     const provider = createGeminiProvider({ apiKey: 'k', model: 'm', fetch: slowFetch, timeoutMs: 20 });
     await expect(provider.generate({ system: 'S', user: 'U', schema: {} })).rejects.toMatchObject({ code: 'provider_timeout' });
+  });
+});
+
+describe('ai-routine · proveedor DeepSeek', () => {
+  const response = (status: number, body: unknown) =>
+    ({ ok: status >= 200 && status < 300, status, json: async () => body }) as Response;
+  const call = { system: 'S', user: 'U', schema: { type: 'object' } };
+
+  it('envía el esquema en el prompt, pide JSON sin razonamiento y devuelve el texto', async () => {
+    const fetchMock = jest.fn(async () => response(200, { choices: [{ message: { content: '{"status":"ok"}' } }] }));
+    const provider = createDeepSeekProvider({ apiKey: 'k', model: 'deepseek-test', fetch: fetchMock as unknown as typeof fetch });
+    await expect(provider.generate(call)).resolves.toBe('{"status":"ok"}');
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.deepseek.com/chat/completions');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer k');
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({
+      model: 'deepseek-test',
+      response_format: { type: 'json_object' },
+      thinking: { type: 'disabled' },
+    });
+    expect(body.messages[0].content).toContain('json');
+    expect(body.messages[0].content).toContain('"type":"object"');
+    expect(body.messages[1]).toEqual({ role: 'user', content: 'U' });
+  });
+
+  it('error HTTP → provider_error; contenido vacío → invalid_output', async () => {
+    const make = (res: Response) => createDeepSeekProvider({ apiKey: 'k', model: 'm', fetch: (async () => res) as unknown as typeof fetch });
+    await expect(make(response(402, {})).generate(call)).rejects.toMatchObject({ code: 'provider_error' });
+    await expect(make(response(200, { choices: [{ message: { content: '' }, finish_reason: 'length' }] })).generate(call)).rejects.toMatchObject({ code: 'invalid_output' });
+  });
+
+  it('si tarda más que el límite → provider_timeout', async () => {
+    const slowFetch = ((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+      })) as unknown as typeof fetch;
+    const provider = createDeepSeekProvider({ apiKey: 'k', model: 'm', fetch: slowFetch, timeoutMs: 20 });
+    await expect(provider.generate(call)).rejects.toMatchObject({ code: 'provider_timeout' });
+  });
+});
+
+describe('ai-routine · proveedor con respaldo', () => {
+  const call = { system: 'S', user: 'U', schema: {} };
+  const ok = (name: string, text = '{}'): AiProvider => ({ name, generate: jest.fn(async () => text) });
+  const failing = (name: string, code: AiErrorCode): AiProvider => ({
+    name,
+    generate: jest.fn(async () => {
+      throw new AiError(code, 'falló');
+    }),
+  });
+
+  it('si el principal responde, no llama al respaldo', async () => {
+    const primary = ok('a', '{"a":1}');
+    const backup = ok('b');
+    await expect(createFallbackProvider([primary, backup]).generate(call)).resolves.toBe('{"a":1}');
+    expect(backup.generate).not.toHaveBeenCalled();
+  });
+
+  it.each(['provider_timeout', 'provider_error', 'invalid_output'] as const)('si el principal falla con %s, responde el respaldo', async (code) => {
+    const backup = ok('b', '{"b":1}');
+    await expect(createFallbackProvider([failing('a', code), backup]).generate(call)).resolves.toBe('{"b":1}');
+  });
+
+  it('si fallan los dos, lanza el último error', async () => {
+    const provider = createFallbackProvider([failing('a', 'provider_timeout'), failing('b', 'provider_error')]);
+    await expect(provider.generate(call)).rejects.toMatchObject({ code: 'provider_error' });
+  });
+
+  it('un error que no es del proveedor no se reintenta', async () => {
+    const backup = ok('b');
+    await expect(createFallbackProvider([failing('a', 'quota_exceeded'), backup]).generate(call)).rejects.toMatchObject({ code: 'quota_exceeded' });
+    expect(backup.generate).not.toHaveBeenCalled();
+  });
+
+  it('nombra la cadena de proveedores', () => {
+    expect(createFallbackProvider([ok('gemini'), ok('deepseek')]).name).toBe('gemini+deepseek');
   });
 });
 
