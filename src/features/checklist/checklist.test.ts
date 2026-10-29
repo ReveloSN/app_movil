@@ -1,7 +1,7 @@
 import type { Item } from '@/shared/types/item.types';
 
 import { toChecklistItems } from './checklist.items';
-import { firstUncheckedCritical, summarize } from './checklist.outcome';
+import { firstUncheckedCritical, isEmptyDone, summarize } from './checklist.outcome';
 import { fromSummaryParams, toSummaryParams } from './summaryParams';
 
 const item = (id: string, label: string, critical = false, note: string | null = null): Item => ({
@@ -14,6 +14,20 @@ const item = (id: string, label: string, critical = false, note: string | null =
   note,
   sortOrder: 0,
   updatedAt: '2026-10-01T00:00:00.000Z',
+});
+
+describe('"Listo" sin ítems marcados (P07)', () => {
+  const items = toChecklistItems([item('a', 'Billetera'), item('b', 'Llaves')]);
+
+  it('pide confirmar solo con "Listo" y ningún ítem marcado', () => {
+    expect(isEmptyDone(items, 'done')).toBe(true);
+    expect(isEmptyDone(items, 'skip')).toBe(false);
+  });
+
+  it('no pide confirmar si hay algo marcado o si no hay ítems', () => {
+    expect(isEmptyDone(items.map((entry, index) => ({ ...entry, checked: index === 0 })), 'done')).toBe(false);
+    expect(isEmptyDone([], 'done')).toBe(false);
+  });
 });
 
 describe('verificación con ítems críticos (P07)', () => {

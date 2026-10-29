@@ -26,6 +26,8 @@ export const partialMessage = (checked: number, total: number, omitted: readonly
 export const criticalSkipMessage = (label: string) => `«${label}» es un ítem crítico. ¿Omitirlo de todas formas?`;
 export const CRITICAL_SKIP_CONFIRM = 'Omitir';
 export const CRITICAL_SKIP_CANCEL = 'Revisar';
+// "Listo" sin nada marcado. Sin código en el Documento de Contenido: propuesto, pendiente de validar.
+export const EMPTY_DONE_MESSAGE = 'Aún no marcaste ningún ítem. ¿Omitir la verificación de hoy?';
 /** 08-4: racha mínima, sin culpa (solo desde 2 días; nunca se dice que se perdió). Propuesto, pendiente de validar. */
 export const STREAK_SUFFIX = 'días seguidos';
 export const streakLabel = (days: number) => `${days} ${STREAK_SUFFIX}`;

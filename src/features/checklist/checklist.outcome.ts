@@ -38,6 +38,10 @@ export function summarize(
 export const toCheckedEntries = (items: readonly ChecklistItemState[]): CheckedItemEntry[] =>
   items.map(({ id, label, critical, checked, origin }) => ({ itemId: id, label, critical, checked, ...(origin ? { origin } : {}) }));
 
+/** "Listo" sin ningún ítem marcado: casi seguro un toque sin querer; se confirma antes de guardar nada. */
+export const isEmptyDone = (items: readonly ChecklistItemState[], intent: FinishIntent) =>
+  intent === 'done' && items.length > 0 && countChecked(items) === 0;
+
 /** Primer ítem crítico sin marcar (dispara DC-02 al tocar "Listo"). */
 export const firstUncheckedCritical = (items: readonly ChecklistItemState[]) =>
   items.find((item) => item.critical && !item.checked);

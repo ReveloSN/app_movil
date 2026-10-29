@@ -20,7 +20,7 @@ import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
-import { firstUncheckedCritical } from '@/features/checklist/checklist.outcome';
+import { firstUncheckedCritical, isEmptyDone } from '@/features/checklist/checklist.outcome';
 import type { FinishIntent } from '@/features/checklist/checklist.types';
 import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
@@ -40,7 +40,22 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const criticalEntering = (index: number) =>
   FadeInLeft.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
 
-type Dialog = { kind: 'critical'; label: string; intent: FinishIntent } | { kind: 'exit'; action: NavigationAction } | null;
+type Dialog =
+  | { kind: 'critical'; label: string; intent: FinishIntent }
+  | { kind: 'empty' }
+  | { kind: 'exit'; action: NavigationAction }
+  | null;
+
+// Los diálogos de salir y de "Listo" sin marcar comparten botones del brief; el crítico (DC-02) tiene los suyos.
+function dialogCopy(dialog: Dialog) {
+  if (dialog?.kind === 'critical') {
+    return { message: copy.criticalSkipMessage(dialog.label), confirm: copy.CRITICAL_SKIP_CONFIRM, cancel: copy.CRITICAL_SKIP_CANCEL };
+  }
+  if (dialog?.kind === 'empty') {
+    return { message: copy.EMPTY_DONE_MESSAGE, confirm: copy.CRITICAL_SKIP_CONFIRM, cancel: copy.CRITICAL_SKIP_CANCEL };
+  }
+  return { message: copy.EXIT_MESSAGE, confirm: copy.EXIT_CONFIRM, cancel: copy.EXIT_CANCEL };
+}
 
 export default function VerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -93,6 +108,10 @@ export default function VerifyScreen() {
 
   // DC-02 antes de dejar sin marcar un crítico, con "Listo" o con "Omitir por hoy".
   function finishAsking(intent: FinishIntent) {
+    if (isEmptyDone(items, intent)) {
+      setDialog({ kind: 'empty' });
+      return;
+    }
     const critical = firstUncheckedCritical(items);
     if (critical) setDialog({ kind: 'critical', label: critical.label, intent });
     else void complete(intent);
@@ -100,12 +119,16 @@ export default function VerifyScreen() {
 
   function confirmDialog() {
     if (dialog?.kind === 'critical') void complete(dialog.intent);
+    // Confirmó que no marcó nada: se guarda como omitida, no como parcial de 0.
+    if (dialog?.kind === 'empty') void complete('skip');
     if (dialog?.kind === 'exit') {
       leaving.current = true;
       dispatchToOwner(navigation, dialog.action);
     }
     setDialog(null);
   }
+
+  const shownDialog = dialogCopy(dialog);
 
   const body = loading ? (
     <SkeletonList variant="row" rows={4} accessibilityLabel="Cargando ítems" />
@@ -188,9 +211,9 @@ export default function VerifyScreen() {
       {body}
       <ConfirmDialog
         visible={dialog !== null}
-        message={dialog?.kind === 'critical' ? copy.criticalSkipMessage(dialog.label) : copy.EXIT_MESSAGE}
-        confirmLabel={dialog?.kind === 'critical' ? copy.CRITICAL_SKIP_CONFIRM : copy.EXIT_CONFIRM}
-        cancelLabel={dialog?.kind === 'critical' ? copy.CRITICAL_SKIP_CANCEL : copy.EXIT_CANCEL}
+        message={shownDialog.message}
+        confirmLabel={shownDialog.confirm}
+        cancelLabel={shownDialog.cancel}
         onConfirm={confirmDialog}
         onCancel={() => setDialog(null)}
       />
