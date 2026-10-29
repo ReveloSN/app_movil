@@ -26,6 +26,11 @@ export const partialMessage = (checked: number, total: number, omitted: readonly
 export const criticalSkipMessage = (label: string) => `«${label}» es un ítem crítico. ¿Omitirlo de todas formas?`;
 export const CRITICAL_SKIP_CONFIRM = 'Omitir';
 export const CRITICAL_SKIP_CANCEL = 'Revisar';
+/** 07-3: conteo visible junto a la barra y su versión para lector de pantalla. */
+export const progressCount = (checked: number, total: number) => `${checked} de ${total}`;
+export const progressSpoken = (checked: number, total: number) => `${progressCount(checked, total)} ítems listos`;
+export const CLOSE_VERIFY_LABEL = 'Cerrar verificación';
+
 // "Listo" sin nada marcado. Sin código en el Documento de Contenido: propuesto, pendiente de validar.
 export const EMPTY_DONE_MESSAGE = 'Aún no marcaste ningún ítem. ¿Omitir la verificación de hoy?';
 /** 08-4: racha mínima, sin culpa (solo desde 2 días; nunca se dice que se perdió). Propuesto, pendiente de validar. */

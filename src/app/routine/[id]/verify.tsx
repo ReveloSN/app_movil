@@ -1,15 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { usePreventRemove, type NavigationAction } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmphasisPulse } from '@/components/atoms/EmphasisPulse';
-import { IconButton } from '@/components/atoms/IconButton';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
-import { ProgressBar } from '@/components/atoms/ProgressBar';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
@@ -17,6 +14,7 @@ import { ChecklistItemRow } from '@/components/molecules/ChecklistItemRow';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
+import { VerifyHeader } from '@/components/molecules/VerifyHeader';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
@@ -61,7 +59,7 @@ export default function VerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const styles = useThemedStyles(createStyles);
-  const { colors, iconSizes } = useAppTheme();
+  const { colors } = useAppTheme();
   const routine = useRoutines().routines.find((candidate) => candidate.id === id);
   const routineName = routine?.name ?? '';
   const accent = routineAccent(colors, routine?.color);
@@ -191,23 +189,18 @@ export default function VerifyScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          {/* Ícono con el color de la rutina: la identifica de un vistazo (el nombre va al lado). */}
-          <View style={[styles.badge, { backgroundColor: accent.tint }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Ionicons name={resolveRoutineIcon(routine?.icon)} size={iconSizes.md} color={accent.color} />
-          </View>
-          <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
-            {routineName}
-          </Text>
-          <IconButton icon="close" accessibilityLabel="Cerrar verificación" onPress={() => router.back()} />
-        </View>
-        <ProgressBar
-          value={progress.checked}
-          max={progress.total}
-          accessibilityLabel={`${progress.checked} de ${progress.total} ítems listos`}
-        />
-      </View>
+      <VerifyHeader
+        name={routineName}
+        icon={resolveRoutineIcon(routine?.icon)}
+        accentColor={accent.color}
+        accentTint={accent.tint}
+        checked={progress.checked}
+        total={progress.total}
+        closeLabel={copy.CLOSE_VERIFY_LABEL}
+        countLabel={copy.progressCount(progress.checked, progress.total)}
+        progressLabel={copy.progressSpoken(progress.checked, progress.total)}
+        onClose={() => router.back()}
+      />
       {body}
       <ConfirmDialog
         visible={dialog !== null}
@@ -221,40 +214,16 @@ export default function VerifyScreen() {
   );
 }
 
-const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, spacing }: AppTheme) =>
   StyleSheet.create({
     screen: {
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      gap: spacing.md,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-    },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-    },
-    // Del alto de la línea del título: decorativa, no quita sitio a la lista.
-    badge: {
-      width: typography.h1.lineHeight,
-      height: typography.h1.lineHeight,
-      borderRadius: radii.full,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title: {
-      ...typography.h1,
-      color: colors.textPrimary,
-      flex: 1,
-    },
     // La lista se lleva todo el alto libre y hace scroll; el pie queda fijo. En 360×640 dp (barra de
-    // estado 24, navegación por gestos 24): encabezado 8+34+12+6+12 = 72, pie 12+52+8+48+12 = 132,
-    // lista 640−48−72−132 = 388 dp (60,6 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
-    // 364 dp (57 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
+    // estado 24, navegación por gestos 24): encabezado 8+34+8+16+8 = 74, pie 12+52+8+48+12 = 132,
+    // lista 640−48−74−132 = 386 dp (60,3 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
+    // 362 dp (56,6 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
     list: {
       flex: 1,
     },
