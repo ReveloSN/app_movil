@@ -44,7 +44,6 @@ export function RoutineCard({
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const lastCompleted = lastCompletedAt ? formatDateTime(lastCompletedAt) : null;
-  const statusLabel = active ? 'Activa' : 'Pausada';
   const lastCompletedText = lastCompleted ? `Última vez: ${lastCompleted}` : 'Aún no la has completado';
 
   return (
@@ -59,7 +58,8 @@ export function RoutineCard({
         accessible
         accessibilityRole={onPress ? 'button' : undefined}
         accessibilityHint={onPress ? pressHint : undefined}
-        accessibilityLabel={`${name}. ${statusLabel}. ${lastCompletedText}.`}
+        // Solo se dice el estado cuando no es el de siempre: "Pausada".
+        accessibilityLabel={active ? `${name}. ${lastCompletedText}.` : `${name}. Pausada. ${lastCompletedText}.`}
       >
         <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
           <Ionicons name={toIoniconName(icon, 'checkbox-outline')} size={iconSizes.lg} color={accentColor ?? colors.primary} />
@@ -70,7 +70,7 @@ export function RoutineCard({
           </Text>
           <Text style={styles.meta}>{lastCompletedText}</Text>
         </View>
-        <Chip tone={active ? 'active' : 'paused'} label={statusLabel} />
+        {active ? null : <Chip tone="paused" label="Pausada" />}
         {onPress ? <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} /> : null}
       </PressableScale>
       {actionLabel && onAction ? (
