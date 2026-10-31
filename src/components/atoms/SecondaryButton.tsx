@@ -11,17 +11,19 @@ interface SecondaryButtonProps {
   onPress(): void;
   icon?: ComponentProps<typeof Ionicons>['name'];
   disabled?: boolean;
+  /** Si el texto visible no basta para el lector de pantalla (ej. repetido en varias tarjetas). Debe empezar por el texto visible. */
+  accessibilityLabel?: string;
 }
 
 /** Botón con borde, para acciones secundarias (ej. "Añadir ítem"). */
-export function SecondaryButton({ label, onPress, icon, disabled = false }: SecondaryButtonProps) {
+export function SecondaryButton({ label, onPress, icon, disabled = false, accessibilityLabel }: SecondaryButtonProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}

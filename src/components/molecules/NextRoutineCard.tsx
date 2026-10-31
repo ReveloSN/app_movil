@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { SecondaryButton } from '@/components/atoms/SecondaryButton';
+import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -43,7 +43,8 @@ export function NextRoutineCard({ label, name, when, actionLabel, onAction, icon
           <Text style={styles.when}>{when}</Text>
         </View>
       </View>
-      <SecondaryButton icon="checkmark-done" label={actionLabel} onPress={onAction} />
+      {/* La primaria de Inicio (Documento 2, P03): lo que se hace cada día. El nombre va en la etiqueta hablada. */}
+      <PrimaryButton icon="checkmark-done" label={actionLabel} accessibilityLabel={`${actionLabel}, ${name}`} onPress={onAction} />
     </View>
   );
 }

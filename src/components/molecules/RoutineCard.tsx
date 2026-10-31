@@ -73,7 +73,9 @@ export function RoutineCard({
         <Chip tone={active ? 'active' : 'paused'} label={statusLabel} />
         {onPress ? <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} /> : null}
       </PressableScale>
-      {actionLabel && onAction ? <SecondaryButton icon="checkmark-done" label={actionLabel} onPress={onAction} /> : null}
+      {actionLabel && onAction ? (
+        <SecondaryButton icon="checkmark-done" label={actionLabel} accessibilityLabel={`${actionLabel}, ${name}`} onPress={onAction} />
+      ) : null}
     </View>
   );
 }

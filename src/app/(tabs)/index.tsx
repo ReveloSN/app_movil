@@ -33,6 +33,7 @@ const EMPTY_MESSAGE = 'Aún no tienes rutinas. Empieza con una plantilla o crea 
 
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
 const openTemplates = () => router.push('/routine/templates');
+const openNewRoutine = () => router.push('/routine/new');
 
 /** P03: banda con el cielo de la hora, próxima rutina, tarjetas, plantillas y pie con "Crear con IA" y "Crear rutina". */
 export default function RoutinesScreen() {
@@ -126,7 +127,12 @@ export default function RoutinesScreen() {
       {/* La primaria en la zona del pulgar; "Crear con IA" (si está activa) justo encima. */}
       <View style={styles.footer}>
         <CreateWithAiButton />
-        <PrimaryButton label="Crear rutina" onPress={() => router.push('/routine/new')} />
+        {/* Documento 2, P03: con "Próxima rutina" la primaria es su "Verificar ahora"; sin ella, esta. */}
+        {next ? (
+          <SecondaryButton icon="add" label="Crear rutina" onPress={openNewRoutine} />
+        ) : (
+          <PrimaryButton label="Crear rutina" onPress={openNewRoutine} />
+        )}
       </View>
     </View>
   );
