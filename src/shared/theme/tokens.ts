@@ -51,9 +51,10 @@ const lightColors = {
   /** Tarjetas destacadas (ej. "Próxima rutina"). */
   accentSurface: '#EEF7F1',
   textPrimary: '#15201B',
-  /** Antes #6E7B73 (3,65:1 sobre el fondo). */
-  textSecondary: '#58665E',
-  textMuted: '#4A5850',
+  /** Antes #6E7B73 (3,65:1 sobre el fondo). Más fuerte que textMuted: la tinta baja principal > secundaria > tenue. */
+  textSecondary: '#4A5850',
+  /** El más suave que aún llega a 4,5:1 sobre las superficies. Antes estaba por encima de textSecondary. */
+  textMuted: '#58665E',
   border: '#D5DCD3',
   neutralSurface: '#EBEFEA',
   criticalBg: '#F7E8CF',

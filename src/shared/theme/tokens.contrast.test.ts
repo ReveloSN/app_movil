@@ -21,6 +21,11 @@ describe.each(['light', 'dark'] as const)('contraste de la paleta (%s)', (mode) 
     },
   );
 
+  it('la tinta baja de fuerza en orden: principal > secundaria > tenue, en los dos temas', () => {
+    expect(ratio('textPrimary', 'background')).toBeGreaterThan(ratio('textSecondary', 'background'));
+    expect(ratio('textSecondary', 'background')).toBeGreaterThan(ratio('textMuted', 'background'));
+  });
+
   it('la marca de crítico se lee sobre su fondo', () => {
     expect(ratio('criticalText', 'criticalBg')).toBeGreaterThanOrEqual(TEXT_MIN);
   });
