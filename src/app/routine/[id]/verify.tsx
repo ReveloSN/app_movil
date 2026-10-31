@@ -18,7 +18,7 @@ import { VerifyHeader } from '@/components/molecules/VerifyHeader';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
-import { firstUncheckedCritical, isEmptyDone } from '@/features/checklist/checklist.outcome';
+import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex } from '@/features/checklist/checklist.outcome';
 import type { FinishIntent } from '@/features/checklist/checklist.types';
 import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
@@ -127,6 +127,9 @@ export default function VerifyScreen() {
   }
 
   const shownDialog = dialogCopy(dialog);
+  // La sugerencia del clima va tras el último crítico (los críticos suben, Documento 2); sin críticos, arriba.
+  const hintIndex = lastCriticalIndex(items);
+  const weatherHint = <WeatherHint onAdd={addTemporaryItem} />;
 
   const body = loading ? (
     <SkeletonList variant="row" rows={4} accessibilityLabel="Cargando ítems" />
@@ -138,25 +141,35 @@ export default function VerifyScreen() {
     <>
       <FlatList
         style={styles.list}
-        // Sugerencia del clima (si llega a tiempo): discreta, encima de la lista y sin bloquear nada.
-        ListHeaderComponent={<WeatherHint onAdd={addTemporaryItem} />}
+        // Sugerencia del clima (si llega a tiempo): discreta y sin bloquear nada.
+        ListHeaderComponent={hintIndex < 0 ? weatherHint : null}
         contentContainerStyle={styles.listContent}
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
+        renderItem={({ item, index }) => {
           // Los críticos (arriba) entran con un desplazamiento discreto para que se noten primero.
-          <Animated.View entering={item.critical ? criticalEntering(index) : undefined}>
-            <ChecklistItemRow
-              label={item.label}
-              icon={item.icon}
-              critical={item.critical}
-              criticalLabel={copy.CRITICAL_LABEL}
-              note={item.note}
-              checked={item.checked}
-              onToggle={() => toggle(item.id, item.checked)}
-            />
-          </Animated.View>
-        )}
+          const row = (
+            <Animated.View entering={item.critical ? criticalEntering(index) : undefined}>
+              <ChecklistItemRow
+                label={item.label}
+                icon={item.icon}
+                critical={item.critical}
+                criticalLabel={copy.CRITICAL_LABEL}
+                note={item.note}
+                checked={item.checked}
+                onToggle={() => toggle(item.id, item.checked)}
+              />
+            </Animated.View>
+          );
+          return index === hintIndex ? (
+            <View style={styles.rowWithHint}>
+              {row}
+              {weatherHint}
+            </View>
+          ) : (
+            row
+          );
+        }}
       />
       <ScreenFooter>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
@@ -231,6 +244,9 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
       gap: spacing.sm,
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.lg,
+    },
+    rowWithHint: {
+      gap: spacing.sm,
     },
     secondaryActions: {
       flexDirection: 'row',

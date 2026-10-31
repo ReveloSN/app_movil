@@ -1,7 +1,7 @@
 import type { Item } from '@/shared/types/item.types';
 
 import { toChecklistItems } from './checklist.items';
-import { firstUncheckedCritical, isEmptyDone, summarize } from './checklist.outcome';
+import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex, summarize } from './checklist.outcome';
 import { fromSummaryParams, toSummaryParams } from './summaryParams';
 
 const item = (id: string, label: string, critical = false, note: string | null = null): Item => ({
@@ -27,6 +27,16 @@ describe('"Listo" sin ítems marcados (P07)', () => {
   it('no pide confirmar si hay algo marcado o si no hay ítems', () => {
     expect(isEmptyDone(items.map((entry, index) => ({ ...entry, checked: index === 0 })), 'done')).toBe(false);
     expect(isEmptyDone([], 'done')).toBe(false);
+  });
+});
+
+describe('dónde va lo que sigue a los críticos (P07)', () => {
+  it('es el último crítico, o -1 si no hay ninguno', () => {
+    const items = toChecklistItems([item('a', 'Billetera'), item('b', 'Estufa apagada', true), item('c', 'Llaves', true)]);
+    expect(items.map((entry) => entry.label)).toEqual(['Estufa apagada', 'Llaves', 'Billetera']);
+    expect(lastCriticalIndex(items)).toBe(1);
+    expect(lastCriticalIndex(toChecklistItems([item('a', 'Billetera')]))).toBe(-1);
+    expect(lastCriticalIndex([])).toBe(-1);
   });
 });
 

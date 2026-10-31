@@ -38,6 +38,14 @@ export function summarize(
 export const toCheckedEntries = (items: readonly ChecklistItemState[]): CheckedItemEntry[] =>
   items.map(({ id, label, critical, checked, origin }) => ({ itemId: id, label, critical, checked, ...(origin ? { origin } : {}) }));
 
+/** Posición del último ítem crítico, o -1 si no hay: lo que sigue (ej. la sugerencia del clima) va después de los críticos. */
+export function lastCriticalIndex(items: readonly ChecklistItemState[]): number {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (items[index].critical) return index;
+  }
+  return -1;
+}
+
 /** "Listo" sin ningún ítem marcado: casi seguro un toque sin querer; se confirma antes de guardar nada. */
 export const isEmptyDone = (items: readonly ChecklistItemState[], intent: FinishIntent) =>
   intent === 'done' && items.length > 0 && countChecked(items) === 0;
