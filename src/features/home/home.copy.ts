@@ -1,5 +1,6 @@
 // Microcopy de Inicio (P03) sin código en el Documento de Contenido: propuesto, pendiente de validar.
 
+import type { NextRoutine } from '@/features/routines/next-routine';
 import { formatClock } from '@/shared/utils/formatClock';
 
 /** 03-1: "Buenos días, Ana" o, sin nombre, "Buenos días". La franja sale de la hora local. */
@@ -31,4 +32,10 @@ export function nextRoutineWhen(at: Date, now: Date): string {
   const days = Math.round((startOfDay(at) - startOfDay(now)) / DAY_MS);
   const day = days === 0 ? 'Hoy' : days === 1 ? 'Mañana' : WEEKDAYS[at.getDay()];
   return `${day}, ${clock}`;
+}
+
+/** Línea de cuándo de Próxima rutina: la hora si es por horario; "Al salir del Wi-Fi" / "Al llegar al Wi-Fi" si no tiene hora. */
+export function nextRoutineDescription(next: NextRoutine, now: Date): string {
+  if (next.kind === 'schedule') return nextRoutineWhen(next.at, now);
+  return next.kind === 'wifi_exit' ? 'Al salir del Wi-Fi' : 'Al llegar al Wi-Fi';
 }

@@ -1,4 +1,4 @@
-import { greeting, nextRoutineWhen, todayLabel } from './home.copy';
+import { greeting, nextRoutineDescription, nextRoutineWhen, todayLabel } from './home.copy';
 
 describe('saludo de Inicio (03-1)', () => {
   it('con nombre y según la hora del día', () => {
@@ -20,6 +20,15 @@ describe('cuándo es la próxima rutina', () => {
     expect(nextRoutineWhen(new Date(2026, 9, 17, 18, 0), NOW)).toBe('Hoy, 6:00 p. m.');
     expect(nextRoutineWhen(new Date(2026, 9, 18, 7, 5), NOW)).toBe('Mañana, 7:05 a. m.');
     expect(nextRoutineWhen(new Date(2026, 9, 19, 12, 0), NOW)).toBe('Lunes, 12:00 p. m.');
+  });
+});
+
+describe('línea de cuándo de Próxima rutina', () => {
+  it('por horario, la hora; por Wi-Fi, la transición sin hora', () => {
+    const base = { routineId: 'r1', routineName: 'Salir' };
+    expect(nextRoutineDescription({ ...base, kind: 'schedule', at: new Date(2026, 9, 17, 18, 0) }, NOW)).toBe('Hoy, 6:00 p. m.');
+    expect(nextRoutineDescription({ ...base, kind: 'wifi_exit' }, NOW)).toBe('Al salir del Wi-Fi');
+    expect(nextRoutineDescription({ ...base, kind: 'wifi_enter' }, NOW)).toBe('Al llegar al Wi-Fi');
   });
 });
 

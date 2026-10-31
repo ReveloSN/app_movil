@@ -14,7 +14,7 @@ import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
-import { greeting, NEXT_ROUTINE_LABEL, nextRoutineWhen, todayLabel } from '@/features/home/home.copy';
+import { greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
@@ -70,12 +70,12 @@ export default function RoutinesScreen() {
       />
       {flash ? <StatusMessage tone="info" message={flash} /> : null}
       {error ? <StatusMessage tone="error" message={error} /> : null}
-      {/* 03-2: solo si hay alguna rutina programada por horario. */}
+      {/* 03-2: solo si hay alguna rutina con aviso por horario o por Wi-Fi. */}
       {next ? (
         <NextRoutineCard
           label={NEXT_ROUTINE_LABEL}
           name={next.routineName}
-          when={nextRoutineWhen(next.at, now)}
+          when={nextRoutineDescription(next, now)}
           actionLabel={VERIFY_NOW_LABEL}
           onAction={() => openVerification(next.routineId)}
           icon={resolveRoutineIcon(nextRoutine?.icon)}

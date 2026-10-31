@@ -1,13 +1,16 @@
+import { isWithinWindow } from '@/features/triggers/strategies/wifi.strategy';
+import type { WifiTriggerKind } from '@/features/triggers/trigger.types';
 import type { Routine } from '@/shared/types/routine.types';
 import type { Trigger } from '@/shared/types/trigger.types';
 import { parseSqlTime } from '@/shared/utils/formatClock';
 
-export interface NextRoutine {
+interface NextRoutineBase {
   routineId: string;
   routineName: string;
-  /** Momento local de la próxima vez. */
-  at: Date;
 }
+
+/** Por horario (con su momento local) o por Wi-Fi (sin hora: avisa al salir o llegar). */
+export type NextRoutine = (NextRoutineBase & { kind: 'schedule'; at: Date }) | (NextRoutineBase & { kind: WifiTriggerKind });
 
 const DAYS_AHEAD = 7;
 
@@ -24,18 +27,39 @@ function nextScheduleTime(trigger: Trigger, now: Date): Date | null {
   return null;
 }
 
+const isWifiKind = (type: string): type is WifiTriggerKind => type === 'wifi_exit' || type === 'wifi_enter';
+
+/** Franja del aviso por Wi-Fi, o null si no tiene (avisa a cualquier hora). */
+function wifiWindow(trigger: Trigger) {
+  const start = parseSqlTime(trigger.windowStart);
+  const end = parseSqlTime(trigger.windowEnd);
+  return start && end ? { start, end } : null;
+}
+
 /**
- * P03-2: la rutina activa con el aviso por horario activo más cercano en el futuro. Los avisos de
- * Wi-Fi no tienen hora y no cuentan. null si no hay ninguna programada.
+ * P03-2: la rutina activa que toca antes, con avisos activos. Orden de prioridad:
+ * 1. un aviso por Wi-Fi con franja que cubre este momento (avisaría ya mismo);
+ * 2. el aviso por horario más cercano en el futuro;
+ * 3. un aviso por Wi-Fi sin franja (sin hora que comparar, solo si no hay horario).
+ * Un aviso por Wi-Fi con franja que no cubre este momento no cuenta. null si no hay ninguno.
  */
 export function findNextRoutine(routines: readonly Routine[], triggers: readonly Trigger[], now: Date): NextRoutine | null {
   const activeRoutines = new Map(routines.filter((routine) => routine.active).map((routine) => [routine.id, routine]));
-  let next: NextRoutine | null = null;
+  let scheduled: NextRoutine | null = null;
+  let wifiInWindow: NextRoutine | null = null;
+  let wifiAnytime: NextRoutine | null = null;
   for (const trigger of triggers) {
     const routine = activeRoutines.get(trigger.routineId);
-    if (!routine || !trigger.active || trigger.type !== 'schedule') continue;
-    const at = nextScheduleTime(trigger, now);
-    if (at && (!next || at < next.at)) next = { routineId: routine.id, routineName: routine.name, at };
+    if (!routine || !trigger.active) continue;
+    const base = { routineId: routine.id, routineName: routine.name };
+    if (trigger.type === 'schedule') {
+      const at = nextScheduleTime(trigger, now);
+      if (at && (!scheduled || scheduled.kind !== 'schedule' || at < scheduled.at)) scheduled = { ...base, kind: 'schedule', at };
+    } else if (isWifiKind(trigger.type)) {
+      const window = wifiWindow(trigger);
+      if (!window) wifiAnytime ??= { ...base, kind: trigger.type };
+      else if (isWithinWindow(window, now)) wifiInWindow ??= { ...base, kind: trigger.type };
+    }
   }
-  return next;
+  return wifiInWindow ?? scheduled ?? wifiAnytime;
 }
