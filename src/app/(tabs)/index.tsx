@@ -14,7 +14,7 @@ import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
-import { greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel } from '@/features/home/home.copy';
+import { editRoutineLabel, greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
@@ -113,8 +113,11 @@ export default function RoutinesScreen() {
               lastCompletedAt={item.lastCompletedAt}
               actionLabel={VERIFY_NOW_LABEL}
               onAction={() => openVerification(item.id)}
-              onPress={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
-              pressHint="Edita la rutina"
+              // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
+              onPress={() => openVerification(item.id)}
+              pressHint={VERIFY_PRESS_HINT}
+              onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
+              editLabel={editRoutineLabel(item.name)}
             />
           </Animated.View>
         )}

@@ -21,4 +21,38 @@ describe('RoutineCard', () => {
     expect(openHome).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Verificar ahora, Salir de casa' })).toBeTruthy();
   });
+
+  it('tocar el cuerpo verifica y editar es un botón aparte con el nombre de la rutina', async () => {
+    const verify = jest.fn();
+    const edit = jest.fn();
+    await render(
+      <TestProviders>
+        <RoutineCard
+          name="Salir de casa"
+          icon={null}
+          active
+          lastCompletedAt={null}
+          onPress={verify}
+          pressHint="Abre la verificación"
+          onEdit={edit}
+          editLabel="Editar Salir de casa"
+        />
+      </TestProviders>,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Salir de casa. Aún no la has completado.' }));
+    expect(verify).toHaveBeenCalledTimes(1);
+    expect(edit).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar Salir de casa' }));
+    expect(edit).toHaveBeenCalledTimes(1);
+    expect(verify).toHaveBeenCalledTimes(1);
+  });
+
+  it('muestra "Pausada" solo cuando está pausada', async () => {
+    await render(
+      <TestProviders>
+        <RoutineCard name="Dormir" icon={null} active={false} lastCompletedAt={null} />
+      </TestProviders>,
+    );
+    expect(screen.getByText('Pausada')).toBeTruthy();
+  });
 });

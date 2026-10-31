@@ -14,6 +14,10 @@ export function saluteForHour(hour: number): string {
   return hour >= 5 && hour < 12 ? 'Buenos días' : hour >= 12 && hour < 19 ? 'Buenas tardes' : 'Buenas noches';
 }
 
+// Tarjeta de rutina (03-3): sin código en el Documento de Contenido, propuesto, pendiente de validar.
+export const VERIFY_PRESS_HINT = 'Abre la verificación';
+export const editRoutineLabel = (name: string) => `Editar ${name}`;
+
 /** 03-2 (nombre del bloque en el Documento de Contenido). */
 export const NEXT_ROUTINE_LABEL = 'Próxima rutina';
 
