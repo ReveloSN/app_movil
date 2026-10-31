@@ -53,7 +53,9 @@ const createStyles = ({ radii, spacing, typography }: AppTheme) =>
   StyleSheet.create({
     band: {
       gap: spacing.xs,
-      padding: spacing.xl,
+      // Más baja que las tarjetas de abajo: el cielo acompaña, no compite con lo urgente.
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
       borderRadius: radii.xxl,
       overflow: 'hidden',
     },
