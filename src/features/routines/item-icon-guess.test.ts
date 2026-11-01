@@ -1,6 +1,6 @@
 import { PRESET_TEMPLATES } from '@/features/routine-templates/routine-templates.data';
 
-import { iconForItemLabel } from './item-icon-guess';
+import { displayIconForItem, iconForItemLabel } from './item-icon-guess';
 import { ITEM_ICONS } from './item-icons';
 
 describe('iconForItemLabel', () => {
@@ -40,5 +40,21 @@ describe('iconForItemLabel', () => {
     for (const template of PRESET_TEMPLATES) {
       for (const item of template.items) expect(item.icon).toBe(iconForItemLabel(item.label));
     }
+  });
+
+  describe('displayIconForItem', () => {
+    it('deduce el ícono cuando solo está el cubo por defecto', () => {
+      expect(displayIconForItem('cube-outline', 'Llaves')).toBe('key-outline');
+      expect(displayIconForItem(null, 'Estufa apagada')).toBe('flame-outline');
+    });
+
+    it('respeta un ícono distinto del cubo, aunque la etiqueta sugiera otro', () => {
+      expect(displayIconForItem('water-outline', 'Llaves')).toBe('water-outline');
+    });
+
+    it('conserva el cubo si la etiqueta no dice nada', () => {
+      expect(displayIconForItem('cube-outline', 'Zxqv')).toBe('cube-outline');
+      expect(displayIconForItem(null, 'Zxqv')).toBeNull();
+    });
   });
 });

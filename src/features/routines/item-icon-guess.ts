@@ -1,3 +1,4 @@
+import { DEFAULT_ITEM_ICON } from './item-icons';
 import { normalizeLabel } from './item-suggestions';
 
 /**
@@ -30,4 +31,13 @@ const RULES: readonly (readonly [RegExp, string])[] = [
 export function iconForItemLabel(label: string): string | undefined {
   const normalized = normalizeLabel(label);
   return RULES.find(([pattern]) => pattern.test(normalized))?.[1];
+}
+
+/**
+ * Ícono que se muestra para un ítem guardado. El cubo genérico es lo que se guarda cuando no se eligió
+ * ícono (nunca es nulo), así que cuenta como "sin elegir" y se deduce de la etiqueta.
+ */
+export function displayIconForItem(icon: string | null | undefined, label: string): string | null {
+  if (icon && icon !== DEFAULT_ITEM_ICON) return icon;
+  return iconForItemLabel(label) ?? icon ?? null;
 }
