@@ -35,47 +35,46 @@ export const sizes = {
 // No viene del mockup: escala de íconos para no dejar tamaños sueltos en los componentes.
 export const iconSizes = { sm: 16, md: 20, lg: 24, xl: 48 } as const;
 
-// Paleta provisional (2026-10-17): parte del mockup con una pasada de color ligera y contrastes
-// corregidos (texto ≥ 4,5:1 sobre fondo, superficie, tarjeta y tintes). Una paleta completa la
-// reemplazará: las pantallas solo usan estos nombres, nunca valores sueltos.
+// Paleta (2026-11-01): el verde queda como color de acción y de selección; el lienzo pasa de gris
+// verdoso a crema cálido, como la luz de las ilustraciones del amanecer. Texto ≥ 4,5:1 sobre fondo,
+// superficie, tarjeta y tintes (prueba automática). Las pantallas solo usan estos nombres.
 const lightColors = {
-  /** Verde grisáceo muy suave (antes #E7EAE5). */
-  background: '#E5EBE5',
-  surface: '#F2F6F1',
+  /** Crema cálido (antes verde grisáceo #E5EBE5). */
+  background: '#F5F0E8',
+  surface: '#FBF8F2',
   card: '#FFFFFF',
   /** Algo más oscuro que el #0B7A57 del mockup: como texto no llegaba a 4,5:1 sobre el fondo. */
   primary: '#096B4C',
   primaryPressed: '#075A40',
   primaryTint: '#DDF0E6',
   onPrimary: '#FFFFFF',
-  /** Tarjetas destacadas (ej. "Próxima rutina"). */
-  accentSurface: '#EEF7F1',
-  textPrimary: '#15201B',
-  /** Antes #6E7B73 (3,65:1 sobre el fondo). Más fuerte que textMuted: la tinta baja principal > secundaria > tenue. */
-  textSecondary: '#4A5850',
-  /** El más suave que aún llega a 4,5:1 sobre las superficies. Antes estaba por encima de textSecondary. */
-  textMuted: '#58665E',
-  border: '#D5DCD3',
-  neutralSurface: '#EBEFEA',
-  criticalBg: '#F7E8CF',
-  /** Antes #A8660B (3,8:1 sobre criticalBg). */
-  criticalText: '#8A5409',
+  /** Tarjetas destacadas (ej. "Próxima rutina"): durazno suave, el tono del cielo de la bienvenida. */
+  accentSurface: '#FFF1DF',
+  textPrimary: '#1A211D',
+  /** Más fuerte que textMuted: la tinta baja principal > secundaria > tenue. */
+  textSecondary: '#4E544C',
+  /** El más suave que aún llega a 4,5:1 sobre las superficies. */
+  textMuted: '#5E625A',
+  border: '#E2D9C9',
+  neutralSurface: '#EEE7DA',
+  criticalBg: '#FBE5C2',
+  criticalText: '#7F4B06',
   danger: '#B3372E',
   // Color de cada rutina (04-2) y su tinte para fondos de ícono y franjas.
   categoryGreen: '#096B4C',
   categoryGreenTint: '#DDF0E6',
-  categoryBlue: '#2B629A',
-  categoryBlueTint: '#DFE9F4',
+  categoryBlue: '#1F5FA8',
+  categoryBlueTint: '#DCE8F6',
   categoryAmber: '#A8660B',
-  categoryAmberTint: '#F7E8CF',
+  categoryAmberTint: '#FBE5C2',
   categoryPurple: '#7A4B8F',
   categoryPurpleTint: '#EEE4F3',
-  categoryGray: '#4A5850',
-  categoryGrayTint: '#E6EAE5',
+  categoryGray: '#4E544C',
+  categoryGrayTint: '#EAE4D8',
   /** No viene del mockup: fondo oscurecido detrás de los diálogos. */
-  scrim: 'rgba(21,32,27,0.5)',
+  scrim: 'rgba(26,33,29,0.5)',
   // No vienen del mockup: aviso breve (snackbar) en contraste con la pantalla.
-  inverseSurface: '#15201B',
+  inverseSurface: '#1E2420',
   onInverseSurface: '#FFFFFF',
   inversePrimary: '#7FD9B4',
 } as const;
