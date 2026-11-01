@@ -10,6 +10,9 @@ interface TemplateCardProps {
   name: string;
   description: string;
   icon: IoniconName;
+  /** Color de la plantilla y su tinte (ya resueltos al tema); sin ellos, el principal. */
+  accentColor?: string;
+  accentTint?: string;
   /** Texto ya formateado (ej. "6 ítems"). */
   itemCountLabel: string;
   /** Texto informativo del aviso sugerido; sin él no se muestra. */
@@ -23,6 +26,8 @@ export function TemplateCard({
   name,
   description,
   icon,
+  accentColor,
+  accentTint,
   itemCountLabel,
   triggerLabel,
   actionLabel,
@@ -36,8 +41,8 @@ export function TemplateCard({
     <View style={styles.card}>
       <View style={styles.summary} accessible accessibilityLabel={`${summary}.`}>
         <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name={icon} size={iconSizes.lg} color={colors.primary} />
+          <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
+            <Ionicons name={icon} size={iconSizes.lg} color={accentColor ?? colors.primary} />
           </View>
           <View style={styles.body}>
             <Text style={styles.name} numberOfLines={1}>

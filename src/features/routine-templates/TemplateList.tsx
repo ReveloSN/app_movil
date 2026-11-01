@@ -2,8 +2,9 @@ import type { ReactElement } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
 import { TemplateCard } from '@/components/molecules/TemplateCard';
+import { routineAccent } from '@/features/routines/routine-appearance';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
-import type { AppTheme } from '@/shared/theme/useAppTheme';
+import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { itemCountLabel, suggestedTriggerLabel, USE_TEMPLATE_LABEL } from './routine-templates.copy';
@@ -20,6 +21,7 @@ interface TemplateListProps {
 /** Plantillas precargadas (P10), cada una con "Usar plantilla". */
 export function TemplateList({ onUse, header }: TemplateListProps) {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useAppTheme();
   const endPadding = useScrollEndPadding();
 
   return (
@@ -33,6 +35,8 @@ export function TemplateList({ onUse, header }: TemplateListProps) {
           name={item.name}
           description={item.description}
           icon={item.icon}
+          accentColor={routineAccent(colors, item.color).color}
+          accentTint={routineAccent(colors, item.color).tint}
           itemCountLabel={itemCountLabel(item.items.length)}
           triggerLabel={suggestedTriggerLabel(item.suggestedTrigger)}
           actionLabel={USE_TEMPLATE_LABEL}

@@ -63,6 +63,7 @@ export function useOnboardingFlow() {
     const result = await createRoutine({
       name: template.name,
       icon: template.icon,
+      color: template.color,
       items: [...template.items],
       triggers: [...drafts],
     });

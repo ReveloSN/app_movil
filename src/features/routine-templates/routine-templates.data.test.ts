@@ -1,5 +1,5 @@
 import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, ROUTINE_NAME_MAX_LENGTH } from '@/features/routines/routine.validation';
-import { ROUTINE_ICONS } from '@/features/routines/routine-appearance';
+import { ROUTINE_COLORS, ROUTINE_ICONS } from '@/features/routines/routine-appearance';
 
 import { PRESET_TEMPLATES } from './routine-templates.data';
 
@@ -28,5 +28,10 @@ describe('plantillas precargadas', () => {
       expect(entry.label).toMatch(/^[\p{L}\p{N} ,.()'-]+$/u);
     });
     expect(ROUTINE_ICONS.map((option) => option.icon)).toContain(template.icon);
+    expect(ROUTINE_COLORS.map((option) => option.key)).toContain(template.color);
+  });
+
+  it('reparten al menos tres colores distintos, para que Inicio no sea de un solo tono', () => {
+    expect(new Set(PRESET_TEMPLATES.map((template) => template.color)).size).toBeGreaterThanOrEqual(3);
   });
 });

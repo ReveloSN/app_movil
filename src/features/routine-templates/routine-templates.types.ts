@@ -1,3 +1,4 @@
+import type { RoutineColorKey } from '@/features/routines/routine-appearance';
 import type { ItemDraft } from '@/features/routines/routines.types';
 import type { TriggerDraft } from '@/features/triggers/trigger.types';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -12,6 +13,8 @@ export interface PresetTemplate {
   /** Máx. 70 caracteres. */
   description: string;
   icon: IoniconName;
+  /** Color de la rutina (04-2): da variedad a Inicio desde la primera rutina. */
+  color: RoutineColorKey;
   items: readonly ItemDraft[];
   /** Texto del aviso sugerido en la tarjeta (P10). */
   suggestedTrigger: string;

@@ -18,6 +18,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Saliendo de casa',
     description: 'Lo esencial antes de cerrar la puerta.',
     icon: 'home-outline',
+    color: 'green',
     items: [
       item('Llaves', 'carry', true),
       item('Billetera', 'carry'),
@@ -35,6 +36,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Cerrando el estudio',
     description: 'Deja todo guardado y listo para mañana.',
     icon: 'school-outline',
+    color: 'blue',
     items: [
       item('Guardar archivos en la nube', 'do', true),
       item('Anotar pendiente de mañana', 'do'),
@@ -49,6 +51,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Saliendo del trabajo',
     description: 'Que nada se quede en la oficina.',
     icon: 'briefcase-outline',
+    color: 'gray',
     items: [
       item('Portátil y cargador', 'carry'),
       item('Carné de acceso', 'carry', true),
@@ -63,6 +66,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Antes de dormir',
     description: 'Casa segura y todo listo para descansar.',
     icon: 'moon-outline',
+    color: 'purple',
     items: [
       item('Puerta con seguro', 'check', true),
       item('Gas cerrado', 'check', true),
@@ -77,6 +81,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Antes de viajar',
     description: 'Lo indispensable antes de salir de viaje.',
     icon: 'airplane-outline',
+    color: 'amber',
     items: [
       item('Documento de identidad', 'carry', true),
       item('Tiquete', 'carry'),
@@ -93,6 +98,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Saliendo a clase',
     description: 'Lo de la universidad, listo antes de salir.',
     icon: 'school-outline',
+    color: 'blue',
     items: [
       item('Carné estudiantil', 'carry', true),
       item('Portátil cargado', 'carry'),
@@ -108,6 +114,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Salida en familia',
     description: 'Que nadie se quede sin lo suyo al salir juntos.',
     icon: 'car-outline',
+    color: 'amber',
     items: [
       item('Llaves del carro', 'carry', true),
       item('Documentos', 'carry', true),
@@ -123,6 +130,7 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     name: 'Al gimnasio',
     description: 'Lo necesario para entrenar sin volver a casa.',
     icon: 'barbell-outline',
+    color: 'purple',
     items: [
       item('Ropa deportiva', 'carry'),
       item('Tenis', 'carry'),

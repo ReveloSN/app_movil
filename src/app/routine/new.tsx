@@ -28,7 +28,7 @@ export default function NewRoutineScreen() {
   const initialDraft = aiSeed
     ? aiSeed.draft
     : template
-      ? { name: template.name, icon: template.icon, items: [...template.items] }
+      ? { name: template.name, icon: template.icon, color: template.color, items: [...template.items] }
       : undefined;
 
   return (
