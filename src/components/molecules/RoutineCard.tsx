@@ -60,6 +60,8 @@ export function RoutineCard({
         <PressableScale
           // Tarjeta grande: se encoge apenas (0,98) para no parecer que salta.
           pressedScale={0.98}
+          // El flex va al contenedor animado (hijo de la fila); el Pressable interior solo alinea su contenido.
+          containerStyle={styles.summaryContainer}
           style={styles.summary}
           onPress={onPress}
           disabled={!onPress}
@@ -104,8 +106,10 @@ const createStyles = ({ colors, radii, sizes, spacing, typography }: AppTheme) =
       alignItems: 'center',
       gap: spacing.sm,
     },
-    summary: {
+    summaryContainer: {
       flex: 1,
+    },
+    summary: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
