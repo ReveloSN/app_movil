@@ -18,6 +18,7 @@ import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
 import { useHistory } from '@/features/history/useHistory';
 import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
+import { routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
@@ -109,6 +110,8 @@ export default function HistoryScreen() {
           <HistoryRecordRow
             routineName={item.routineName}
             routineIcon={item.routineIcon}
+            accentColor={routineAccent(colors, item.routineColor).color}
+            accentTint={routineAccent(colors, item.routineColor).tint}
             date={item.date}
             result={describeResult(item.result)}
             pendingLabel={item.pending ? PENDING_SYNC_LABEL : undefined}

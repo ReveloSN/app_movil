@@ -29,6 +29,7 @@ export function groupRecordsByDay(
       ...record,
       routineName: routine?.name ?? UNKNOWN_ROUTINE_NAME,
       routineIcon: routine?.icon ?? null,
+      routineColor: routine?.color ?? null,
     };
 
     const date = toLocalDayKey(new Date(time));

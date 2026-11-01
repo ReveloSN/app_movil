@@ -12,6 +12,9 @@ interface HistoryRecordRowProps {
   routineName: string;
   /** Nombre de ícono de Ionicons; si no es válido se usa uno genérico. */
   routineIcon: string | null;
+  /** Color de la rutina y su tinte (ya resueltos al tema); sin ellos, el principal. */
+  accentColor?: string;
+  accentTint?: string;
   /** ISO 8601. */
   date: string;
   result: { tone: ChipTone; icon: IoniconName; label: string };
@@ -23,7 +26,17 @@ interface HistoryRecordRowProps {
 }
 
 /** Fila del historial (P09): rutina, hora y resultado. El resultado va con ícono + texto, no solo color. */
-export function HistoryRecordRow({ routineName, routineIcon, date, result, pendingLabel, onPress, pressHint }: HistoryRecordRowProps) {
+export function HistoryRecordRow({
+  routineName,
+  routineIcon,
+  accentColor,
+  accentTint,
+  date,
+  result,
+  pendingLabel,
+  onPress,
+  pressHint,
+}: HistoryRecordRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const time = formatTime(date);
@@ -38,8 +51,8 @@ export function HistoryRecordRow({ routineName, routineIcon, date, result, pendi
       accessibilityHint={onPress ? pressHint : undefined}
       accessibilityLabel={[routineName, time, result.label, pendingLabel].filter(Boolean).join('. ')}
     >
-      <View style={styles.iconCircle}>
-        <Ionicons name={toIoniconName(routineIcon, 'checkbox-outline')} size={iconSizes.md} color={colors.primary} />
+      <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
+        <Ionicons name={toIoniconName(routineIcon, 'checkbox-outline')} size={iconSizes.md} color={accentColor ?? colors.primary} />
       </View>
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>
