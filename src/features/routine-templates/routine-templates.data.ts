@@ -1,10 +1,11 @@
+import { iconForItemLabel } from '@/features/routines/item-icon-guess';
 import type { ItemDraft, ItemKind } from '@/features/routines/routines.types';
 import type { TriggerDraft } from '@/features/triggers/trigger.types';
 import type { Weekday } from '@/shared/types/clock.types';
 
 import type { PresetTemplate } from './routine-templates.types';
 
-const item = (label: string, kind: ItemKind, critical = false): ItemDraft => ({ label, kind, critical });
+const item = (label: string, kind: ItemKind, critical = false): ItemDraft => ({ label, kind, critical, icon: iconForItemLabel(label) });
 
 const leaveWifi = (networkName: string): TriggerDraft => ({ type: 'wifi_exit', ssid: '', networkName, window: null });
 const WEEKDAYS: readonly Weekday[] = [1, 2, 3, 4, 5];

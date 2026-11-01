@@ -26,7 +26,7 @@ export const ITEM_SUGGESTIONS: readonly ItemDraft[] = [
 const MAX_SHOWN = 4;
 
 /** Sin mayúsculas, tildes ni espacios sobrantes: "Llaves " y "llaves" son el mismo ítem. */
-const normalize = (label: string) =>
+export const normalizeLabel = (label: string) =>
   label
     .trim()
     .toLocaleLowerCase('es')
@@ -39,6 +39,6 @@ export function pickSuggestions(
   catalog: readonly ItemDraft[] = ITEM_SUGGESTIONS,
   max: number = MAX_SHOWN,
 ): ItemDraft[] {
-  const present = new Set(currentLabels.map(normalize));
-  return catalog.filter((item) => !present.has(normalize(item.label))).slice(0, max);
+  const present = new Set(currentLabels.map(normalizeLabel));
+  return catalog.filter((item) => !present.has(normalizeLabel(item.label))).slice(0, max);
 }

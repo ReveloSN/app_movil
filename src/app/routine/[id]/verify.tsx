@@ -26,6 +26,7 @@ import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lif
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
 import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
+import { iconForItemLabel } from '@/features/routines/item-icon-guess';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { WeatherHint } from '@/features/weather/WeatherHint';
@@ -152,7 +153,8 @@ export default function VerifyScreen() {
             <Animated.View entering={item.critical ? criticalEntering(index) : undefined}>
               <ChecklistItemRow
                 label={item.label}
-                icon={item.icon}
+                // Rutinas guardadas antes de que hubiera íconos: se deduce de la etiqueta.
+                icon={item.icon ?? iconForItemLabel(item.label) ?? null}
                 critical={item.critical}
                 criticalLabel={copy.CRITICAL_LABEL}
                 note={item.note}
