@@ -11,6 +11,7 @@ import { AiConsentSheet } from '@/features/ai/AiConsentSheet';
 import * as aiCopy from '@/features/ai/ai.copy';
 import { useAiAccess } from '@/features/ai/useAiAccess';
 import { useAiSuggestions } from '@/features/ai/useAiSuggestions';
+import { hapticToggleOn } from '@/shared/haptics/haptics';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -51,7 +52,10 @@ export function ItemSuggestions({ name, labels, canAdd, onPick }: ItemSuggestion
       {shown.length > 0 ? (
         <SuggestionChips
           labels={shown.map((item) => item.label)}
-          onPick={(index) => onPick(shown[index])}
+          onPick={(index) => {
+            onPick(shown[index]);
+            hapticToggleOn();
+          }}
           accessibilityLabelFor={copy.addSuggestionLabel}
           staggerIn={Boolean(fromAi)}
         />
