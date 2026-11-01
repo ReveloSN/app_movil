@@ -32,12 +32,13 @@ export function WelcomeLayout({ title, children }: WelcomeLayoutProps) {
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={{ paddingBottom: bottomInset + styles.card.padding }}
+        // La tarjeta llena el alto que sobra: debajo de ella no queda una franja del color de fondo.
+        contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <SkyHouseScene topInset={top} />
-        <View style={[styles.card, { marginTop: -Math.round(width * CARD_OVERLAP) }]}>
+        <View style={[styles.card, { marginTop: -Math.round(width * CARD_OVERLAP), paddingBottom: bottomInset + styles.card.padding }]}>
           <Text style={styles.title} accessibilityRole="header">
             {title}
           </Text>
@@ -54,7 +55,11 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
       flex: 1,
       backgroundColor: colors.background,
     },
+    content: {
+      flexGrow: 1,
+    },
     card: {
+      flexGrow: 1,
       gap: spacing.lg,
       padding: spacing.xl,
       borderTopLeftRadius: radii.xxl + spacing.sm,
