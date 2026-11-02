@@ -43,10 +43,10 @@ const lightColors = {
   background: '#F5F0E8',
   surface: '#FBF8F2',
   card: '#FFFFFF',
-  /** Algo más oscuro que el #0B7A57 del mockup: como texto no llegaba a 4,5:1 sobre el fondo. */
-  primary: '#096B4C',
-  primaryPressed: '#075A40',
-  primaryTint: '#DDF0E6',
+  /** Teal: el verde chocaba con "hecho/correcto" y con el color de rutina verde. 5,6:1 sobre el fondo. */
+  primary: '#0A6A73',
+  primaryPressed: '#085961',
+  primaryTint: '#D9EEF0',
   onPrimary: '#FFFFFF',
   /** Tarjetas destacadas (ej. "Próxima rutina"): durazno suave, el tono del cielo de la bienvenida. */
   accentSurface: '#FFF1DF',
@@ -76,7 +76,7 @@ const lightColors = {
   // No vienen del mockup: aviso breve (snackbar) en contraste con la pantalla.
   inverseSurface: '#1E2420',
   onInverseSurface: '#FFFFFF',
-  inversePrimary: '#7FD9B4',
+  inversePrimary: '#7FD6DC',
 } as const;
 
 // Valores marcados "estimado" no estaban visibles en las pantallas extraídas del mockup;
@@ -85,9 +85,9 @@ const darkColors = {
   background: '#0E1512',
   surface: '#131C18',
   card: '#1B2A23',
-  primary: '#7FD9B4',
-  primaryPressed: '#6BC7A2', // estimado
-  primaryTint: 'rgba(127,217,180,0.16)', // estimado
+  primary: '#7FD6DC',
+  primaryPressed: '#6AC3C9', // estimado
+  primaryTint: 'rgba(127,214,220,0.16)', // estimado
   onPrimary: '#0E1512',
   accentSurface: '#16261F', // no viene del mockup
   textPrimary: '#FFFFFF',
@@ -113,7 +113,7 @@ const darkColors = {
   scrim: 'rgba(0,0,0,0.6)', // no viene del mockup
   inverseSurface: '#E7EAE5', // no viene del mockup
   onInverseSurface: '#15201B',
-  inversePrimary: '#096546',
+  inversePrimary: '#0A6A73',
 } as const;
 
 export const palettes = { light: lightColors, dark: darkColors };
