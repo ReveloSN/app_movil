@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSerialQueue } from '@/shared/lib/serialQueue';
 import type { KeyValueStorage } from '@/shared/types/key-value-storage.types';
 
+import { LOCAL_DOCUMENT_VERSION, migrateDocument } from './local-document.migration';
 import type { LocalDocument } from './local-document.types';
 
 export interface LocalChange<T> {
@@ -35,18 +36,14 @@ export interface LocalStore {
 }
 
 export const emptyDocument = (): LocalDocument => ({
-  version: 1,
+  version: LOCAL_DOCUMENT_VERSION,
   tables: { routines: [], items: [], triggers: [], homeNetworks: [], settings: [] },
   outbox: [],
   lastPulledAt: null,
+  forgotEvents: [],
 });
 
 const storageKey = (userId: string) => `local-db:${userId}`;
-
-const isLocalDocument = (value: unknown): value is LocalDocument => {
-  const doc = value as Partial<LocalDocument> | null;
-  return doc?.version === 1 && typeof doc.tables === 'object' && doc.tables !== null && Array.isArray(doc.outbox);
-};
 
 export function createLocalStore(userId: string, storage: KeyValueStorage = AsyncStorage): LocalStore {
   const run = createSerialQueue();
@@ -54,15 +51,19 @@ export function createLocalStore(userId: string, storage: KeyValueStorage = Asyn
   const key = storageKey(userId);
 
   // Siempre desde el almacenamiento (sin copia en memoria): la tarea en segundo plano también escribe.
+  // Un documento de una versión anterior se migra aquí, antes de validarlo: si no, se trataría como
+  // vacío y la próxima escritura borraría los datos. Uno de una versión futura lanza
+  // UnsupportedDocumentVersionError: ni se lee ni se reescribe.
   async function load(): Promise<LocalDocument> {
     const raw = await storage.getItem(key);
     if (!raw) return emptyDocument();
+    let parsed: unknown;
     try {
-      const parsed: unknown = JSON.parse(raw);
-      return isLocalDocument(parsed) ? parsed : emptyDocument();
+      parsed = JSON.parse(raw);
     } catch {
       return emptyDocument(); // Contenido corrupto: no se puede recuperar.
     }
+    return migrateDocument(parsed) ?? emptyDocument();
   }
 
   return {

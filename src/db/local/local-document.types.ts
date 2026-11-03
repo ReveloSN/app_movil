@@ -1,3 +1,4 @@
+import type { ForgotEvent } from '@/shared/types/forgot-event.types';
 import type { HomeNetwork } from '@/shared/types/home-network.types';
 import type { Item } from '@/shared/types/item.types';
 import type { Routine } from '@/shared/types/routine.types';
@@ -62,7 +63,8 @@ export type OutboxOp = OutboxChange & OutboxMeta;
 export type OutboxOpOf<K extends OutboxChange['kind']> = Extract<OutboxChange, { kind: K }> & OutboxMeta;
 
 export interface LocalDocument {
-  version: 1;
+  /** 2 desde los olvidos y el tipo de rutina. Los anteriores se migran al leer (local-document.migration.ts). */
+  version: 2;
   tables: LocalTables;
   /** Cambios pendientes de subir, en el orden en que deben enviarse. */
   outbox: OutboxOp[];
@@ -73,4 +75,9 @@ export interface LocalDocument {
    * por la cola. Los documentos anteriores no lo tienen (se llena en la siguiente bajada).
    */
   records?: VerificationRecord[];
+  /**
+   * Olvidos ("Olvidé algo"): lo bajado del servidor más lo anotado aquí (lo pendiente de subir se sabe
+   * por la cola). Como el historial, solo se agregan.
+   */
+  forgotEvents?: ForgotEvent[];
 }
