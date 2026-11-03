@@ -23,7 +23,7 @@ jest.mock('@/features/local-data/LocalRepositoriesProvider', () => ({
 jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useFocusEffect: jest.fn() }));
 jest.mock('@/features/routines/useNextRoutine', () => ({ useNextRoutine: () => ({ next: null, now: new Date() }) }));
 jest.mock('@/features/sync/PendingSyncIndicator', () => ({ PendingSyncIndicator: () => null }));
-jest.mock('@/features/ai/CreateWithAiButton', () => ({ CreateWithAiButton: () => null }));
+jest.mock('@/features/routines/AddRoutineMenu', () => ({ AddRoutineMenu: () => null }));
 
 const captured: { current: RoutinesContextValue | null } = { current: null };
 function CaptureRoutines() {
