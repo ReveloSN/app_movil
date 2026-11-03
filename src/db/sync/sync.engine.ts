@@ -1,6 +1,9 @@
-import type { LocalTables } from '../local/local-document.types';
+import type { LocalDocument, LocalTables } from '../local/local-document.types';
 import type { LocalStore } from '../local/local.store';
 import { isNetworkError } from '../repositories/repository.types';
+import type { ForgotEvent } from '@/shared/types/forgot-event.types';
+
+import { mergeForgotEvents, sameForgotEvents } from './sync.forgot';
 import { mergePulled } from './sync.merge';
 import { mergeRecords, sameRecords } from './sync.records';
 import { pushOutbox, type PushReport, type RemoteDeps } from './sync.push';
@@ -18,6 +21,12 @@ export interface SyncEngine {
   sync(): Promise<SyncReport>;
 }
 
+/** Igual que con el historial: si no cambió, se conserva el mismo arreglo para no avisar a nadie. */
+function mergeForgot(current: ForgotEvent[] | undefined, remote: ForgotEvent[], outbox: LocalDocument['outbox']) {
+  const merged = mergeForgotEvents(current ?? [], remote, outbox);
+  return current && sameForgotEvents(current, merged) ? current : merged;
+}
+
 async function fetchRemoteTables(remote: RemoteDeps): Promise<LocalTables> {
   const [routines, items, triggers, homeNetworks, settings] = await Promise.all([
     remote.routines.getAll(),
@@ -28,6 +37,16 @@ async function fetchRemoteTables(remote: RemoteDeps): Promise<LocalTables> {
   ]);
   return { routines, items, triggers, homeNetworks, settings };
 }
+
+/**
+ * Olvidos del servidor. null si el servidor los rechaza por otra cosa que la red (ej. todavía no tiene
+ * la tabla forgot_events): entonces no se tocan los locales y el resto de la bajada sigue.
+ */
+const fetchRemoteForgotEvents = (remote: RemoteDeps): Promise<ForgotEvent[] | null> =>
+  remote.forgotEvents.getAll().catch((cause: unknown) => {
+    if (isNetworkError(cause)) throw cause;
+    return null;
+  });
 
 /** Sincronización de un usuario (§2.3): una a la vez; lo que se pide mientras corre se hace una vez más. */
 export function createSyncEngine(
@@ -44,8 +63,13 @@ export function createSyncEngine(
 
     let snapshot: LocalTables;
     let remoteRecords: Awaited<ReturnType<RemoteDeps['records']['getAll']>>;
+    let remoteForgot: ForgotEvent[] | null;
     try {
-      [snapshot, remoteRecords] = await Promise.all([fetchRemoteTables(remote), remote.records.getAll()]);
+      [snapshot, remoteRecords, remoteForgot] = await Promise.all([
+        fetchRemoteTables(remote),
+        remote.records.getAll(),
+        fetchRemoteForgotEvents(remote),
+      ]);
     } catch (cause) {
       if (isNetworkError(cause)) return { push, pulled: false, changed: false };
       throw cause;
@@ -57,7 +81,11 @@ export function createSyncEngine(
       const merged = mergeRecords(local, remoteRecords, doc.outbox);
       // Mismo historial: se conserva el mismo arreglo para no avisar a nadie.
       const records = doc.records && sameRecords(local, merged) ? doc.records : merged;
-      return { doc: { ...doc, tables, records, lastPulledAt: now().toISOString() }, result: tables !== doc.tables };
+      const forgotEvents = remoteForgot ? mergeForgot(doc.forgotEvents, remoteForgot, doc.outbox) : doc.forgotEvents;
+      return {
+        doc: { ...doc, tables, records, forgotEvents, lastPulledAt: now().toISOString() },
+        result: tables !== doc.tables,
+      };
     }, 'sync');
     return { push, pulled: true, changed };
   }
