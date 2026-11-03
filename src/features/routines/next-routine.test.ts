@@ -7,6 +7,7 @@ const routine = (id: string, name: string, active = true): Routine => ({
   id,
   userId: 'u1',
   name,
+  kind: 'departure',
   icon: null,
   color: null,
   active,

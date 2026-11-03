@@ -87,6 +87,25 @@ describe('pushOutbox', () => {
     expect((await store.read()).outbox).toEqual([]);
   });
 
+  it('el tipo de rutina sigue "gana el más reciente": el cambio más viejo pierde y el nuevo se aplica', async () => {
+    const { store, repos, server, push } = setup();
+    const routine = await repos.routines.create({ name: 'Casa' });
+    await push();
+    expect(server.tables.routines[0].kind).toBeUndefined(); // sin kind en el insert: lo pone la base ('departure')
+
+    server.tables.routines[0].updatedAt = '2099-01-01T00:00:00.000Z';
+    await repos.routines.update(routine.id, { kind: 'arrival' });
+    const stale = await push();
+    expect(stale.stale).toEqual([expect.objectContaining({ kind: 'update', changes: { kind: 'arrival' } })]);
+    expect(server.tables.routines[0].kind).toBeUndefined();
+
+    server.tables.routines[0].updatedAt = '2000-01-01T00:00:00.000Z';
+    await repos.routines.update(routine.id, { kind: 'arrival' });
+    await push();
+    expect(server.tables.routines[0].kind).toBe('arrival');
+    expect((await store.read()).outbox).toEqual([]);
+  });
+
   it('una red que ya existe en el servidor con el mismo SSID: adopta su id y lo usa en los avisos', async () => {
     const server = fakeRemote({ homeNetworks: [{ id: 'remote-n', ssid: 'MiWifi', displayName: 'Casa' }] });
     const { store, repos, push } = setup(server);

@@ -7,6 +7,7 @@ const routine = (overrides: Partial<Routine>): Routine => ({
   id: 'r1',
   userId: 'u1',
   name: 'Cerrando el estudio',
+  kind: 'departure',
   icon: 'school-outline',
   color: 'blue',
   active: true,

@@ -6,6 +6,7 @@ const routine = (id: string, name: string): Routine => ({
   id,
   userId: 'u1',
   name,
+  kind: 'departure',
   icon: 'checkbox-outline',
   color: 'green',
   active: true,

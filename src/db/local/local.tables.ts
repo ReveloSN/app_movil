@@ -1,13 +1,13 @@
 import type { CreateHomeNetworkInput, HomeNetwork } from '@/shared/types/home-network.types';
 import type { CreateItemInput, Item } from '@/shared/types/item.types';
-import type { CreateRoutineInput, Routine } from '@/shared/types/routine.types';
+import { DEFAULT_ROUTINE_KIND, type CreateRoutineInput, type Routine } from '@/shared/types/routine.types';
 import type { CreateSettingsInput, Settings } from '@/shared/types/settings.types';
 import type { CreateTriggerInput, Trigger } from '@/shared/types/trigger.types';
 
 import type { LocalTableConfig } from './local.repository';
 
 // Cada tabla local: dónde vive en el documento, sus valores por defecto (los mismos de la migración
-// supabase/migrations/20261014000000_initial_schema.sql) y el orden del repositorio de Supabase.
+// supabase/migrations/20261014000000_initial_schema.sql y las siguientes) y el orden del repositorio de Supabase.
 
 export const routinesTable: LocalTableConfig<Routine, CreateRoutineInput> = {
   table: 'routines',
@@ -18,6 +18,7 @@ export const routinesTable: LocalTableConfig<Routine, CreateRoutineInput> = {
     id,
     userId,
     name: input.name,
+    kind: input.kind ?? DEFAULT_ROUTINE_KIND,
     icon: input.icon ?? null,
     color: input.color ?? null,
     active: input.active ?? true,

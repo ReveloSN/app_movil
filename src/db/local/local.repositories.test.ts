@@ -16,7 +16,14 @@ describe('repositorios local-first', () => {
 
     const routine = await repos.routines.create({ name: 'Salir de casa', icon: 'home' });
 
-    expect(routine).toMatchObject({ id: 'id-1', userId: 'user-1', name: 'Salir de casa', active: true, lastCompletedAt: null });
+    expect(routine).toMatchObject({
+      id: 'id-1',
+      userId: 'user-1',
+      name: 'Salir de casa',
+      kind: 'departure',
+      active: true,
+      lastCompletedAt: null,
+    });
     expect(await repos.routines.getAll()).toEqual([routine]);
     expect((await store.read()).outbox).toEqual([
       expect.objectContaining({

@@ -114,6 +114,19 @@ describe('createSupabaseRepository (vía routine.repository)', () => {
     await expect(result).rejects.toMatchObject({ kind: 'network', operation: 'updateIfOlder' });
   });
 
+  it('mapea el tipo de rutina en las dos direcciones (sin columna todavía, es de salida)', async () => {
+    const { client, calls } = fakeClient({ data: { ...ROUTINE_ROW, kind: 'arrival' }, error: null, status: 201 });
+    const routines = createRoutineRepository(client);
+
+    await expect(routines.create({ id: 'routine-1', name: 'Llegar', kind: 'arrival' })).resolves.toMatchObject({ kind: 'arrival' });
+    expect(calls).toContainEqual(['insert', expect.objectContaining({ kind: 'arrival' })]);
+
+    const legacy = fakeClient({ data: [ROUTINE_ROW], error: null, status: 200 });
+    await expect(createRoutineRepository(legacy.client).getAll()).resolves.toEqual([
+      expect.objectContaining({ kind: 'departure' }),
+    ]);
+  });
+
   it('en ajustes, updateIfOlder identifica la fila por user_id', async () => {
     const { client, calls } = fakeClient({ data: [{}], error: null, status: 200 });
 

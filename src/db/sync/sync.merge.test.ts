@@ -11,6 +11,7 @@ const routine = (id: string, overrides: Partial<Routine> = {}): Routine => ({
   id,
   userId: 'user-1',
   name: `Rutina ${id}`,
+  kind: 'departure',
   icon: null,
   color: null,
   active: true,
@@ -60,6 +61,17 @@ describe('mergePulled', () => {
       lastCompletedAt: '2026-10-14T09:00:00.000Z',
       createdAt: '2026-09-01T00:00:00.000Z',
     });
+  });
+
+  it('el tipo de rutina lo escribe el cliente: con un cambio pendiente se queda el local; sin él, el del servidor', () => {
+    const pending = mergePulled(
+      doc({ routines: [routine('r1', { kind: 'arrival' })] }, [op({ kind: 'update', table: 'routines', id: 'r1', changes: { kind: 'arrival' } })]),
+      tables({ routines: [routine('r1', { kind: 'departure' })] }),
+    );
+    expect(pending.routines[0].kind).toBe('arrival');
+
+    const settled = mergePulled(doc({ routines: [routine('r1', { kind: 'departure' })] }), tables({ routines: [routine('r1', { kind: 'arrival' })] }));
+    expect(settled.routines[0].kind).toBe('arrival');
   });
 
   it('una fila creada sin red que aún no se subió se conserva', () => {

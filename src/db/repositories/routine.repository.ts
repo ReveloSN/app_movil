@@ -1,6 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { CreateRoutineInput, Routine, UpdateRoutineInput } from '@/shared/types/routine.types';
+import {
+  DEFAULT_ROUTINE_KIND,
+  type CreateRoutineInput,
+  type Routine,
+  type RoutineKind,
+  type UpdateRoutineInput,
+} from '@/shared/types/routine.types';
 
 import type { LastWriteWins, Repository } from './repository.types';
 import { createSupabaseRepository } from './supabase.repository';
@@ -9,6 +15,8 @@ interface RoutineRow {
   id: string;
   user_id: string;
   name: string;
+  /** Falta si la base todavía no tiene la migración 20261103000000. */
+  kind?: RoutineKind | null;
   icon: string | null;
   color: string | null;
   active: boolean;
@@ -25,6 +33,7 @@ const toEntity = (row: RoutineRow): Routine => ({
   id: row.id,
   userId: row.user_id,
   name: row.name,
+  kind: row.kind ?? DEFAULT_ROUTINE_KIND,
   icon: row.icon,
   color: row.color,
   active: row.active,
@@ -36,6 +45,7 @@ const toEntity = (row: RoutineRow): Routine => ({
 // Las claves con valor undefined no se envían, así que sirve para insert y update.
 const toUpdateRow = (input: UpdateRoutineInput) => ({
   name: input.name,
+  kind: input.kind,
   icon: input.icon,
   color: input.color,
   active: input.active,
