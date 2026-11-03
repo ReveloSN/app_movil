@@ -20,6 +20,8 @@ import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
 import { ChecklistDeck } from '@/features/checklist/ChecklistDeck';
+import type { ViewMode } from '@/features/checklist/checklist.viewmode';
+import { useViewModePreference } from '@/features/checklist/useViewModePreference';
 import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex } from '@/features/checklist/checklist.outcome';
 import type { FinishIntent } from '@/features/checklist/checklist.types';
 import { toSummaryParams } from '@/features/checklist/summaryParams';
@@ -41,7 +43,6 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const criticalEntering = (index: number) =>
   FadeInLeft.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
 
-type ViewMode = 'list' | 'deck';
 const VIEW_MODES: readonly SegmentOption<ViewMode>[] = [
   { value: 'list', label: copy.VIEW_LIST_LABEL },
   { value: 'deck', label: copy.VIEW_DECK_LABEL },
@@ -73,7 +74,10 @@ export default function VerifyScreen() {
   const routineName = routine?.name ?? '';
   const accent = routineAccent(colors, routine?.color);
   const { items, loading, error, retry, toggleItem, setItemChecked, addTemporaryItem, progress, startedAt } = useChecklist(id);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  // Lo elegido aquí manda; si no, la preferencia de Ajustes (abre en la lista mientras se lee).
+  const [chosenMode, setChosenMode] = useState<ViewMode | null>(null);
+  const { preferred } = useViewModePreference();
+  const viewMode = chosenMode ?? preferred ?? 'list';
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
   const busy = finishing || postponement.postponing;
@@ -154,7 +158,7 @@ export default function VerifyScreen() {
           accessibilityLabel={copy.VIEW_MODE_LABEL}
           options={VIEW_MODES}
           value={viewMode}
-          onChange={setViewMode}
+          onChange={setChosenMode}
         />
       </View>
       {viewMode === 'deck' ? (

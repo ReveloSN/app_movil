@@ -25,6 +25,11 @@ export const NETWORK_SAVE_ERROR = 'No se pudo guardar el cambio de la red. Inté
 // 11-2
 export const PERMISSIONS_SECTION_TITLE = 'Permisos';
 
+// Verificación una por una. Sin código en el Documento de Contenido: propuesto, pendiente de validar.
+export const VERIFICATION_SECTION_TITLE = 'Verificación';
+export const DECK_MODE_LABEL = 'Verificar una por una';
+export const DECK_MODE_HINT = 'Cada ítem aparece en una tarjeta: desliza a la derecha si lo llevas y a la izquierda si no.';
+
 // 11-3, 11-4, 11-5
 export const NOTIFICATIONS_SECTION_TITLE = 'Avisos';
 export const DO_NOT_DISTURB_LABEL = 'No molestar';

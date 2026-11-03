@@ -6,6 +6,7 @@ import { AccountSection } from '@/features/settings/AccountSection';
 import { AiSettingsSection } from '@/features/settings/AiSettingsSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
+import { VerificationPrefsSection } from '@/features/settings/VerificationPrefsSection';
 import { PermissionsSection } from '@/features/settings/PermissionsSection';
 import { ProfileSection } from '@/features/settings/ProfileSection';
 import { HELP_LABEL } from '@/features/settings/settings.copy';
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
       <HomeNetworksSection />
       <PermissionsSection />
       <NotificationPrefsSection />
+      <VerificationPrefsSection />
       <AiSettingsSection />
       <WeatherSettingsSection />
       <ProfileSection />
