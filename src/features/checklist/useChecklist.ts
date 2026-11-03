@@ -73,10 +73,15 @@ export function useChecklist(
     setItems((current) => current.map((item) => (item.id === itemId ? { ...item, checked } : item)));
   }, []);
 
+  /** Marca los ítems cuyo id está en `ids` (el borrador del día); no desmarca ninguno. */
+  const applyChecked = useCallback((ids: readonly string[]) => {
+    setItems((current) => current.map((item) => (ids.includes(item.id) ? { ...item, checked: true } : item)));
+  }, []);
+
   const progress = useMemo<ChecklistProgress>(
     () => ({ checked: items.filter((item) => item.checked).length, total: items.length }),
     [items],
   );
 
-  return { items, loading, error, retry, toggleItem, setItemChecked, addTemporaryItem, progress, startedAt };
+  return { items, loading, error, retry, toggleItem, setItemChecked, applyChecked, addTemporaryItem, progress, startedAt };
 }

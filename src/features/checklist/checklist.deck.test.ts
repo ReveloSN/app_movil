@@ -11,6 +11,12 @@ describe('modo "una por una" (P07)', () => {
     expect(pendingItems(items, ['a', 'c']).map((entry) => entry.id)).toEqual(['b']);
   });
 
+  it('no vuelve a preguntar lo que ya está marcado (en la lista o en el widget)', () => {
+    const marked = [{ ...item('a'), checked: true }, item('b'), item('c')];
+    expect(currentItem(marked, [])?.id).toBe('b');
+    expect(pendingItems(marked, ['b']).map((entry) => entry.id)).toEqual(['c']);
+  });
+
   it('no queda tarjeta cuando se respondió todo', () => {
     expect(currentItem(items, ['a', 'b', 'c'])).toBeNull();
     expect(currentItem([], [])).toBeNull();

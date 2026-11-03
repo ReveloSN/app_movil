@@ -26,6 +26,7 @@ import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex } from '@/featur
 import type { FinishIntent } from '@/features/checklist/checklist.types';
 import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
+import { useChecklistDraft } from '@/features/checklist/useChecklistDraft';
 import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
 import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
@@ -73,11 +74,12 @@ export default function VerifyScreen() {
   const routine = useRoutines().routines.find((candidate) => candidate.id === id);
   const routineName = routine?.name ?? '';
   const accent = routineAccent(colors, routine?.color);
-  const { items, loading, error, retry, toggleItem, setItemChecked, addTemporaryItem, progress, startedAt } = useChecklist(id);
+  const { items, loading, error, retry, toggleItem, setItemChecked, applyChecked, addTemporaryItem, progress, startedAt } = useChecklist(id);
   // Lo elegido aquí manda; si no, la preferencia de Ajustes (abre en la lista mientras se lee).
   const [chosenMode, setChosenMode] = useState<ViewMode | null>(null);
   const { preferred } = useViewModePreference();
   const viewMode = chosenMode ?? preferred ?? 'list';
+  const { discard: discardDraft } = useChecklistDraft(id, loading, items, applyChecked);
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
   const busy = finishing || postponement.postponing;
@@ -94,6 +96,7 @@ export default function VerifyScreen() {
   async function complete(intent: FinishIntent) {
     const summary = await finish(intent);
     if (!summary) return; // El error se muestra sobre los botones.
+    await discardDraft(); // Ya quedó guardada: el widget deja de mostrar lo marcado.
     if (summary.outcome === 'completed') hapticConfirm();
     // Las notificaciones ya sonadas de esta rutina quedan respondidas (no cuentan como "sin respuesta").
     closeRoutineOccurrences(id, Date.now()).catch((cause: unknown) => {

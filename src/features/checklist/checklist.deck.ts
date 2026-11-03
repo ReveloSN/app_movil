@@ -8,9 +8,9 @@ export type SwipeDirection = 'left' | 'right';
 
 export const carriedBy = (direction: SwipeDirection) => direction === 'right';
 
-/** Ítems que todavía no se respondieron, en el orden de la lista (los críticos primero). */
+/** Ítems sin responder y sin marcar (lo ya marcado en la lista o en el widget no se vuelve a preguntar), en el orden de la lista. */
 export const pendingItems = (items: readonly ChecklistItemState[], decided: DeckDecisions) =>
-  items.filter((item) => !decided.includes(item.id));
+  items.filter((item) => !item.checked && !decided.includes(item.id));
 
 /** La tarjeta que se muestra ahora; null cuando ya se respondió todo. */
 export const currentItem = (items: readonly ChecklistItemState[], decided: DeckDecisions) =>
