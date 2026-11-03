@@ -68,10 +68,15 @@ export function useChecklist(
     setItems((current) => current.map((item) => (item.id === itemId ? { ...item, checked: !item.checked } : item)));
   }, []);
 
+  /** Fija el estado de un ítem (el modo "una por una" responde sí o no, no alterna). */
+  const setItemChecked = useCallback((itemId: string, checked: boolean) => {
+    setItems((current) => current.map((item) => (item.id === itemId ? { ...item, checked } : item)));
+  }, []);
+
   const progress = useMemo<ChecklistProgress>(
     () => ({ checked: items.filter((item) => item.checked).length, total: items.length }),
     [items],
   );
 
-  return { items, loading, error, retry, toggleItem, addTemporaryItem, progress, startedAt };
+  return { items, loading, error, retry, toggleItem, setItemChecked, addTemporaryItem, progress, startedAt };
 }
