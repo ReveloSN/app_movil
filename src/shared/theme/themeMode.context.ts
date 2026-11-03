@@ -1,11 +1,16 @@
 import { createContext, useContext } from 'react';
 
+/** Esquema ya resuelto: lo que realmente se pinta. */
 export type ThemeMode = 'light' | 'dark';
 
+/** Lo que elige la persona en Ajustes; `system` sigue al teléfono. */
+export type ThemePreference = ThemeMode | 'system';
+
 export interface ThemeModeContextValue {
+  /** Esquema resuelto (si la preferencia es `system`, el del teléfono). */
   mode: ThemeMode;
-  setMode(mode: ThemeMode): void;
-  toggle(): void;
+  preference: ThemePreference;
+  setPreference(preference: ThemePreference): void;
 }
 
 // El contexto vive en shared/ para que useAppTheme no dependa de features/;

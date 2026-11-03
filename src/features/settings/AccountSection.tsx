@@ -4,12 +4,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
-import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { getLocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSync } from '@/features/sync/SyncProvider';
-import { useThemeMode } from '@/shared/theme/themeMode.context';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -22,11 +20,10 @@ import {
   signOutWarning,
 } from './settings.copy';
 
-/** Cuenta (al final de P11): quién tiene la sesión, modo oscuro y cerrar sesión. */
+/** Cuenta (al final de P11): quién tiene la sesión y cerrar sesión. */
 export function AccountSection() {
   const { user, signOut } = useAuth();
   const { pendingCount, failedChanges } = useSync();
-  const { mode, toggle } = useThemeMode();
   const styles = useThemedStyles(createStyles);
   const [warning, setWarning] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -64,7 +61,6 @@ export function AccountSection() {
       <View style={styles.card}>
         <Text style={styles.label}>{SIGNED_IN_AS_LABEL}</Text>
         <Text style={styles.value}>{accountLabel(user)}</Text>
-        <SwitchRow icon="contrast-outline" label="Modo oscuro" value={mode === 'dark'} onValueChange={() => toggle()} />
       </View>
       {error ? <StatusMessage tone="error" message={error} /> : null}
       {/* Con borde, no lleno: la primaria es para la tarea de la pantalla, y en P11 cerrar sesión es una acción de cuenta al final. */}
