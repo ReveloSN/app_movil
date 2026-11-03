@@ -4,9 +4,6 @@ import type { Item } from '@/shared/types/item.types';
 import type { Routine } from '@/shared/types/routine.types';
 import type { Trigger } from '@/shared/types/trigger.types';
 
-/** Ítems que caben en el widget; el resto se resume como "y N más". */
-export const MAX_WIDGET_ITEMS = 4;
-
 export interface WidgetItem {
   id: string;
   label: string;
@@ -18,9 +15,8 @@ export interface WidgetItem {
 export interface WidgetState {
   routineId: string;
   routineName: string;
+  /** Todos los ítems: el widget hace scroll si no caben. Primero los pendientes, al final los ya marcados. */
   items: WidgetItem[];
-  /** Ítems que no caben en el widget. */
-  hiddenCount: number;
   checked: number;
   total: number;
 }
@@ -45,14 +41,12 @@ export function buildWidgetState({ routines, items, triggers, checkedIds, now }:
     checked: checkedIds.includes(item.id),
   }));
   if (all.length === 0) return null;
-  // Los ya marcados dejan sitio a los que faltan: el widget sirve para ver lo pendiente.
+  // Lo ya marcado baja al final: arriba queda lo que falta.
   const pending = all.filter((item) => !item.checked);
-  const shown = [...pending, ...all.filter((item) => item.checked)].slice(0, MAX_WIDGET_ITEMS);
   return {
     routineId: next.routineId,
     routineName: next.routineName,
-    items: shown,
-    hiddenCount: all.length - shown.length,
+    items: [...pending, ...all.filter((item) => item.checked)],
     checked: all.length - pending.length,
     total: all.length,
   };

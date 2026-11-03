@@ -2,7 +2,7 @@ import type { Item } from '@/shared/types/item.types';
 import type { Routine } from '@/shared/types/routine.types';
 import type { Trigger } from '@/shared/types/trigger.types';
 
-import { buildWidgetState, MAX_WIDGET_ITEMS } from './widget.state';
+import { buildWidgetState } from './widget.state';
 
 const routine = (id: string, name: string): Routine => ({
   id,
@@ -57,7 +57,7 @@ describe('buildWidgetState', () => {
       items: [item('a', 'r2', 'Llaves', false, 0), item('b', 'r2', 'Billetera', false, 1), item('x', 'r1', 'Otro')],
       checkedIds: ['a'],
     });
-    expect(state).toMatchObject({ routineId: 'r2', routineName: 'Cerrar el estudio', checked: 1, total: 2, hiddenCount: 0 });
+    expect(state).toMatchObject({ routineId: 'r2', routineName: 'Cerrar el estudio', checked: 1, total: 2 });
     expect(state?.items.map((entry) => [entry.label, entry.checked])).toEqual([
       ['Billetera', false],
       ['Llaves', true],
@@ -73,11 +73,10 @@ describe('buildWidgetState', () => {
     expect(state?.items.map((entry) => entry.label)).toEqual(['Llaves', 'Billetera', 'Estufa apagada']);
   });
 
-  it(`muestra como mucho ${MAX_WIDGET_ITEMS} ítems y cuenta los que faltan por mostrar`, () => {
+  it('incluye todos los ítems (el widget hace scroll si no caben)', () => {
     const items = Array.from({ length: 7 }, (_, index) => item(`i${index}`, 'r2', `Ítem ${index}`, false, index));
     const state = buildWidgetState({ ...base, items, checkedIds: [] });
-    expect(state?.items).toHaveLength(MAX_WIDGET_ITEMS);
-    expect(state?.hiddenCount).toBe(3);
+    expect(state?.items).toHaveLength(7);
     expect(state?.total).toBe(7);
   });
 

@@ -5,7 +5,6 @@ export const EMPTY_HINT = 'Crea un aviso en una rutina y aparecerá aquí.';
 export const EMPTY_SPOKEN = `${EMPTY_TITLE}. Toca para abrir la app.`;
 
 export const progress = (checked: number, total: number) => `${checked} de ${total}`;
-export const moreItems = (count: number) => (count === 1 ? 'y 1 más' : `y ${count} más`);
 
 /** Etiqueta visible del ítem; los críticos llevan la palabra, no solo un color. */
 export const itemLabel = (label: string, critical: boolean) => (critical ? `${label} (crítico)` : label);

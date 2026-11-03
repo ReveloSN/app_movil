@@ -1,4 +1,4 @@
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import { FlexWidget, ListWidget, TextWidget } from 'react-native-android-widget';
 
 import { palettes } from '@/shared/theme/tokens';
 
@@ -85,17 +85,12 @@ export function NextRoutineWidget({ state }: { state: WidgetState | null }) {
         />
         <TextWidget text={copy.progress(state.checked, state.total)} style={{ fontSize: 13, color: colors.textSecondary }} />
       </FlexWidget>
-      {state.items.map((item) => (
-        <ItemRow key={item.id} routineId={state.routineId} item={item} />
-      ))}
-      {state.hiddenCount > 0 ? (
-        <TextWidget
-          text={copy.moreItems(state.hiddenCount)}
-          clickAction="OPEN_URI"
-          clickActionData={{ uri: verifyUri(state.routineId) }}
-          style={{ fontSize: 13, color: colors.primary, fontWeight: 'bold' }}
-        />
-      ) : null}
+      {/* Con scroll: si los ítems no caben, se baja deslizando. */}
+      <ListWidget style={{ width: 'match_parent', height: 'match_parent' }}>
+        {state.items.map((item) => (
+          <ItemRow key={item.id} routineId={state.routineId} item={item} />
+        ))}
+      </ListWidget>
     </FlexWidget>
   );
 }
