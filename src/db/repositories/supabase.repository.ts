@@ -51,6 +51,10 @@ function classify(error: PostgrestError, status: number): RepositoryErrorKind {
   return 'other';
 }
 
+/** Error de PostgREST → RepositoryError, para los repositorios que arman sus propias consultas. */
+export const toRepositoryError = (table: string, operation: RepositoryOperation, error: PostgrestError, status: number) =>
+  new RepositoryError(table, operation, classify(error, status), error.code, error.message);
+
 /** Implementación de Repository sobre una tabla de Supabase. Las filas visibles las filtra RLS. */
 export function createSupabaseRepository<TRow, TEntity, TCreate, TUpdate>({
   client,
@@ -62,7 +66,7 @@ export function createSupabaseRepository<TRow, TEntity, TCreate, TUpdate>({
   toUpdateRow,
 }: SupabaseRepositoryConfig<TRow, TEntity, TCreate, TUpdate>): SupabaseRepository<TEntity, TCreate, TUpdate> {
   const fail = (operation: RepositoryOperation, error: PostgrestError, status: number): never => {
-    throw new RepositoryError(table, operation, classify(error, status), error.code, error.message);
+    throw toRepositoryError(table, operation, error, status);
   };
 
   const ordered = <Q extends { order(column: string, options: { ascending: boolean }): Q }>(query: Q): Q =>

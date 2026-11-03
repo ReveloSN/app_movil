@@ -40,7 +40,9 @@ export type OutboxChange =
   | { kind: 'delete'; table: LocalTableName; id: string }
   /** Borra la rutina con sus ítems, avisos e historial (en el servidor, con deleteRoutineCascade). */
   | { kind: 'deleteRoutine'; id: string }
-  | { kind: 'insertRecord'; record: PendingRecord };
+  | { kind: 'insertRecord'; record: PendingRecord }
+  /** Olvido anotado aquí. Como una verificación: solo se inserta, con id del cliente. */
+  | { kind: 'insertForgot'; event: ForgotEvent };
 
 export interface OutboxMeta {
   opId: string;

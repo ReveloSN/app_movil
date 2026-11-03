@@ -4,6 +4,12 @@ import type { RoutineRepository } from '../repositories/routine.repository';
 import type { SettingsRepository } from '../repositories/settings.repository';
 import type { TriggerRepository } from '../repositories/trigger.repository';
 import type { VerificationRecordRepository } from '../repositories/verification-record.repository';
+import { RepositoryError } from '../repositories/repository.types';
+import {
+  FORGOT_LABEL_MAX_LENGTH,
+  type CreateForgotEventInput,
+  type ForgotEvent,
+} from '@/shared/types/forgot-event.types';
 import type { CreateItemInput, Item, UpdateItemInput } from '@/shared/types/item.types';
 import type { CreateTriggerInput, Trigger, UpdateTriggerInput } from '@/shared/types/trigger.types';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
@@ -11,8 +17,18 @@ import type { VerificationRecord } from '@/shared/types/verification-record.type
 import type { PendingRecord, RowRef } from './local-document.types';
 import { createLocalRepository, defaultLocalDeps, newOp, type LocalDeps } from './local.repository';
 import type { LocalStore } from './local.store';
+import { addForgotEvents } from './forgot.events';
 import { homeNetworksTable, itemsTable, routinesTable, settingsTable, triggersTable } from './local.tables';
 import { enqueue, enqueueRoutineDeletion } from './outbox.compaction';
+
+/** Olvidos ("Olvidé algo") en el teléfono. Solo se agregan; cada uno se encola para subir. */
+export interface ForgotEventsRepository {
+  /** Del más reciente al más antiguo. */
+  getAll(): Promise<ForgotEvent[]>;
+  getByRoutine(routineId: string): Promise<ForgotEvent[]>;
+  /** Idempotente por id: agregar dos veces el mismo olvido no lo duplica. */
+  add(input: CreateForgotEventInput): Promise<ForgotEvent>;
+}
 
 /** Lo que usa la app de cada tabla. Las verificaciones se crean y se leen del historial local. */
 export interface LocalRepositories {
@@ -22,6 +38,7 @@ export interface LocalRepositories {
   homeNetworks: HomeNetworkRepository;
   settings: SettingsRepository;
   records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine' | 'getAll'>;
+  forgotEvents: ForgotEventsRepository;
 }
 
 /** Borra la rutina con sus ítems y avisos en el teléfono; en el servidor lo hará deleteRoutineCascade. */
@@ -42,8 +59,9 @@ function deleteRoutineLocally(store: LocalStore, routineId: string, deps: LocalD
       triggers: triggers.filter((trigger) => !ofRoutine(trigger)),
     };
     const records = doc.records?.filter((record) => record.routineId !== routineId);
+    const forgotEvents = doc.forgotEvents?.filter((event) => event.routineId !== routineId);
     const outbox = enqueueRoutineDeletion(doc.outbox, newOp({ kind: 'deleteRoutine', id: routineId }, now, deps), children);
-    return { doc: { ...doc, tables, outbox, records }, result: undefined };
+    return { doc: { ...doc, tables, outbox, records, forgotEvents }, result: undefined };
   });
 }
 
@@ -101,6 +119,38 @@ function createRecordsOutbox(store: LocalStore, deps: LocalDeps): LocalRepositor
   };
 }
 
+/** Los olvidos viven en el documento (como el historial) y cada uno deja su insertForgot en el mismo guardado. */
+function createForgotEvents(store: LocalStore, deps: LocalDeps): ForgotEventsRepository {
+  const all = async () => (await store.read()).forgotEvents ?? [];
+  return {
+    getAll: all,
+    getByRoutine: async (routineId) => (await all()).filter((event) => event.routineId === routineId),
+
+    async add(input) {
+      const label = input.label.trim();
+      if (label.length === 0 || label.length > FORGOT_LABEL_MAX_LENGTH) {
+        // Lo mismo que rechazaría el check de forgot_events.label: mejor no encolarlo.
+        throw new RepositoryError('forgotEvents', 'create', 'other', '23514', `El olvido debe tener entre 1 y ${FORGOT_LABEL_MAX_LENGTH} caracteres.`);
+      }
+      // La fecha se fija aquí: si la pusiera el servidor, sería la de la sincronización.
+      const event: ForgotEvent = {
+        id: input.id ?? deps.newId(),
+        routineId: input.routineId,
+        recordId: input.recordId ?? null,
+        label,
+        date: input.date ?? deps.now(),
+      };
+      const op = newOp({ kind: 'insertForgot', event }, event.date, deps);
+      return store.update((doc) => {
+        const outbox = enqueue(doc.outbox, op);
+        const forgotEvents = addForgotEvents(doc.forgotEvents ?? [], [event]);
+        const saved = forgotEvents.find((existing) => existing.id === event.id) ?? event;
+        return { doc: { ...doc, outbox, forgotEvents }, result: saved };
+      });
+    },
+  };
+}
+
 /** Repositorios de un usuario sobre su copia local. Los servicios los usan igual que a los de Supabase. */
 export function createLocalRepositories(store: LocalStore, deps: LocalDeps = defaultLocalDeps): LocalRepositories {
   const routines = createLocalRepository(store, routinesTable, deps);
@@ -122,5 +172,6 @@ export function createLocalRepositories(store: LocalStore, deps: LocalDeps = def
     homeNetworks: createLocalRepository(store, homeNetworksTable, deps),
     settings: createLocalRepository(store, settingsTable, deps),
     records: createRecordsOutbox(store, deps),
+    forgotEvents: createForgotEvents(store, deps),
   };
 }

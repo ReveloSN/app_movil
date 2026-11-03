@@ -67,6 +67,7 @@ export const CHANGE_TITLES = {
 export const DELETE_ROUTINE_TITLE = 'Eliminar una rutina';
 export const recordTitle = (routine: string | null) =>
   named(routine, (value) => `Guardar la verificación de «${value}»`, 'Guardar una verificación');
+export const forgotTitle = (label: string) => `Guardar el olvido «${label}»`;
 
 // Por qué no se aceptó (según el código de Postgres).
 export const FAILURE_REASONS: Record<string, string> = {
@@ -82,6 +83,7 @@ export const DEPENDENT_LABELS = {
   items: (count: number) => `${count} ${plural(count, 'ítem', 'ítems')}`,
   triggers: (count: number) => `${count} ${plural(count, 'aviso', 'avisos')}`,
   records: (count: number) => `${count} ${plural(count, 'verificación', 'verificaciones')}`,
+  forgotEvents: (count: number) => `${count} ${plural(count, 'olvido', 'olvidos')}`,
   routines: (count: number) => `${count} ${plural(count, 'rutina', 'rutinas')}`,
   homeNetworks: (count: number) => `${count} ${plural(count, 'red', 'redes')}`,
   settings: (count: number) => `${count} ${plural(count, 'ajuste', 'ajustes')}`,

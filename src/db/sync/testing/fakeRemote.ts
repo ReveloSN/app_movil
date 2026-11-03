@@ -2,7 +2,7 @@ import { RepositoryError } from '../../repositories/repository.types';
 import type { RemoteDeps } from '../sync.push';
 
 type Row = Record<string, unknown> & { id: string };
-type Table = 'routines' | 'items' | 'triggers' | 'homeNetworks' | 'settings' | 'records';
+type Table = 'routines' | 'items' | 'triggers' | 'homeNetworks' | 'settings' | 'records' | 'forgotEvents';
 
 export const conflictError = (table = 'routines') => new RepositoryError(table, 'create', 'conflict', '23505', 'duplicate key');
 export const networkError = (table = 'routines') =>
@@ -13,7 +13,7 @@ export const rejectedError = (code: string, table = 'routines') =>
 /**
  * Servidor falso en memoria para probar la sincronización: guarda filas por tabla, anota cada
  * llamada ("tabla.método:id") y permite que la próxima llamada que coincida falle con un error dado.
- * Como la base real, no admite dos redes con el mismo SSID.
+ * Como la base real, no admite dos redes con el mismo SSID, e insertar un olvido que ya existe no hace nada.
  */
 export function fakeRemote(initial: Partial<Record<Table, Row[]>> = {}) {
   const tables: Record<Table, Row[]> = {
@@ -23,6 +23,7 @@ export function fakeRemote(initial: Partial<Record<Table, Row[]>> = {}) {
     homeNetworks: [],
     settings: [],
     records: [],
+    forgotEvents: [],
     ...initial,
   };
   const calls: string[] = [];
@@ -78,6 +79,22 @@ export function fakeRemote(initial: Partial<Record<Table, Row[]>> = {}) {
     };
   }
 
+  /** Como el upsert con ignoreDuplicates del repositorio real. */
+  function forgotEvents() {
+    const base = repo('forgotEvents');
+    return {
+      ...base,
+      async create(input: Record<string, unknown>) {
+        try {
+          await base.create(input);
+        } catch (cause) {
+          if (cause instanceof RepositoryError && cause.kind === 'conflict') return;
+          throw cause;
+        }
+      },
+    };
+  }
+
   const remote = {
     routines: repo('routines'),
     items: { ...repo('items'), getByRoutine: async () => [] },
@@ -85,6 +102,7 @@ export function fakeRemote(initial: Partial<Record<Table, Row[]>> = {}) {
     homeNetworks: repo('homeNetworks'),
     settings: repo('settings'),
     records: repo('records'),
+    forgotEvents: forgotEvents(),
   } as unknown as RemoteDeps;
 
   return {

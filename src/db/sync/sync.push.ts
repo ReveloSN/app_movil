@@ -3,6 +3,7 @@ import { deleteRoutineCascade } from '@/features/routines/routine-delete.service
 import type { LocalTableName, OutboxFailure, OutboxOp, OutboxOpOf } from '../local/local-document.types';
 import type { LocalStore } from '../local/local.store';
 import { classifyOutbox } from '../local/outbox.dependencies';
+import type { RemoteForgotEventRepository } from '../repositories/forgot-event.repository';
 import type { RemoteHomeNetworkRepository } from '../repositories/home-network.repository';
 import type { RemoteItemRepository } from '../repositories/item.repository';
 import { isNetworkError, RepositoryError, type UpdateOutcome } from '../repositories/repository.types';
@@ -20,6 +21,7 @@ export interface RemoteDeps {
   homeNetworks: RemoteHomeNetworkRepository;
   settings: RemoteSettingsRepository;
   records: Pick<VerificationRecordRepository, 'create' | 'deleteByRoutine' | 'getAll'>;
+  forgotEvents: RemoteForgotEventRepository;
 }
 
 export interface PushReport {
@@ -80,6 +82,24 @@ async function sendInsert(op: OutboxOpOf<'insert'>, remote: RemoteDeps): Promise
   }
 }
 
+const FOREIGN_KEY_VIOLATION = '23503';
+
+/**
+ * Insertar un olvido es idempotente (un duplicado no falla). Si la verificación a la que apunta no
+ * existe en el servidor (ej. se descartó su subida), el olvido se guarda igual, sin ese enlace.
+ */
+async function sendForgot(op: OutboxOpOf<'insertForgot'>, remote: RemoteDeps): Promise<Outcome> {
+  try {
+    await remote.forgotEvents.create(op.event);
+  } catch (cause) {
+    if (isConflict(cause)) return DONE;
+    const missingRecord = cause instanceof RepositoryError && cause.code === FOREIGN_KEY_VIOLATION && op.event.recordId !== null;
+    if (!missingRecord) throw cause;
+    await remote.forgotEvents.create({ ...op.event, recordId: null });
+  }
+  return DONE;
+}
+
 async function send(op: OutboxOp, remote: RemoteDeps): Promise<Outcome> {
   switch (op.kind) {
     case 'insert':
@@ -99,6 +119,8 @@ async function send(op: OutboxOp, remote: RemoteDeps): Promise<Outcome> {
         if (!isConflict(cause)) throw cause;
       }
       return DONE;
+    case 'insertForgot':
+      return sendForgot(op, remote);
   }
 }
 

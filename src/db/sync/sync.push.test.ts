@@ -5,6 +5,7 @@ import { createLocalStore } from '../local/local.store';
 import { fixedDeps, memoryStorage } from '../local/testing/memoryStorage';
 import { pushOutbox } from './sync.push';
 import { conflictError, fakeRemote, networkError, rejectedError } from './testing/fakeRemote';
+import { forgot } from '../local/testing/outbox.fixtures';
 
 function setup(server = fakeRemote()) {
   const store = createLocalStore('user-1', memoryStorage());
@@ -160,5 +161,78 @@ describe('pushOutbox', () => {
 
     expect(server.tables.routines[0].name).toBe('Casa nueva');
     expect((await store.read()).outbox).toEqual([]);
+  });
+
+  describe('olvidos', () => {
+    it('sube el olvido después de su rutina y lo saca de la cola', async () => {
+      const { store, repos, server, push } = setup();
+      const routine = await repos.routines.create({ name: 'Casa' });
+      await repos.forgotEvents.add({ id: 'f1', routineId: routine.id, label: 'Llaves', date: '2026-10-14T10:00:00.000Z' });
+
+      await push();
+
+      expect(tablesCalled(server.calls)).toEqual(['routines.create', 'forgotEvents.create']);
+      expect(server.tables.forgotEvents).toEqual([
+        expect.objectContaining({ id: 'f1', routineId: routine.id, recordId: null, label: 'Llaves', date: '2026-10-14T10:00:00.000Z' }),
+      ]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('si el servidor ya lo tenía (un intento anterior llegó), cuenta como hecho y no lo duplica', async () => {
+      const server = fakeRemote({ forgotEvents: [{ ...forgot('f1', 'r1') }] });
+      const { store, repos, push } = setup(server);
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+
+      const report = await push();
+
+      expect(report).toMatchObject({ sent: 1, failed: [], stale: [] });
+      expect(server.tables.forgotEvents).toHaveLength(1);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('un 23505 del servidor también cuenta como hecho', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      server.failNext('forgotEvents.create', conflictError('forgot_events'));
+
+      await push();
+
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('queda bloqueado si falla el insert de su rutina (no se envía)', async () => {
+      const { store, repos, server, push } = setup();
+      const routine = await repos.routines.create({ name: 'Casa' });
+      await repos.forgotEvents.add({ id: 'f1', routineId: routine.id, label: 'Llaves' });
+      server.failNext('routines.create', rejectedError('23514'));
+
+      await push();
+
+      expect(server.calls).toEqual([`routines.create:${routine.id}`]);
+      expect((await store.read()).outbox.map((pending) => pending.kind)).toEqual(['insert', 'insertForgot']);
+    });
+
+    it('si su verificación no existe en el servidor, se guarda igual sin ese enlace', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', recordId: 'rec-gone', label: 'Llaves' });
+      server.failNext('forgotEvents.create', rejectedError('23503', 'forgot_events'));
+
+      await push();
+
+      expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1', recordId: null })]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('sin red queda en la cola, sin marcarse como fallido', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      server.failNext('forgotEvents.create', networkError('forgot_events'));
+
+      const report = await push();
+
+      expect(report.offline).toBe(true);
+      expect((await store.read()).outbox).toEqual([expect.objectContaining({ kind: 'insertForgot', attempts: 1 })]);
+      expect((await store.read()).outbox[0].failed).toBeUndefined();
+    });
   });
 });

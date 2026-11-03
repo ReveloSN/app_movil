@@ -1,5 +1,5 @@
 import { enqueue, enqueueRoutineDeletion } from './outbox.compaction';
-import { failure, op, record } from './testing/outbox.fixtures';
+import { failure, forgot, op, record } from './testing/outbox.fixtures';
 
 describe('enqueue (compactación)', () => {
   it('un insert seguido de un update queda en un solo insert con los valores finales', () => {
@@ -83,6 +83,14 @@ describe('enqueue (compactación)', () => {
   });
 });
 
+describe('enqueue de olvidos', () => {
+  it('no duplica un olvido ya encolado (mismo id)', () => {
+    const first = op({ kind: 'insertForgot', event: forgot('f1', 'r1') });
+
+    expect(enqueue([first], op({ kind: 'insertForgot', event: forgot('f1', 'r1') }))).toEqual([first]);
+  });
+});
+
 describe('enqueueRoutineDeletion', () => {
   const children = [
     { table: 'items' as const, id: 'i1' },
@@ -100,6 +108,15 @@ describe('enqueueRoutineDeletion', () => {
     const outbox = enqueueRoutineDeletion([update, item, trigger, verification, unrelated], deletion, children);
 
     expect(outbox).toEqual([unrelated, deletion]);
+  });
+
+  it('quita los olvidos pendientes de la rutina (salvo el que se está enviando), no los de otras', () => {
+    const own = op({ kind: 'insertForgot', event: forgot('f1', 'r1') });
+    const sending = op({ kind: 'insertForgot', event: forgot('f2', 'r1') }, { sendingSince: '2026-10-14T10:00:00.000Z' });
+    const other = op({ kind: 'insertForgot', event: forgot('f3', 'r2') });
+    const deletion = op({ kind: 'deleteRoutine', id: 'r1' });
+
+    expect(enqueueRoutineDeletion([own, sending, other], deletion, children)).toEqual([sending, other, deletion]);
   });
 
   it('rutina que nunca llegó al servidor: se borra todo lo suyo y no se encola nada', () => {

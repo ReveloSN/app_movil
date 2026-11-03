@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { createForgotEventRepository } from './forgot-event.repository';
 import { createRoutineRepository } from './routine.repository';
 import { RepositoryError } from './repository.types';
 import { createSettingsRepository } from './settings.repository';
@@ -133,5 +134,34 @@ describe('createSupabaseRepository (vía routine.repository)', () => {
     await createSettingsRepository(client).updateIfOlder('user-1', { sound: false }, '2026-10-14T11:00:00.000Z');
 
     expect(calls).toContainEqual(['eq', 'user_id', 'user-1']);
+  });
+});
+
+describe('createForgotEventRepository', () => {
+  const event = { id: 'f1', routineId: 'r1', recordId: null, label: 'Llaves', date: '2026-10-14T10:00:00.000Z' };
+
+  it('inserta con upsert que ignora duplicados (reintentar no falla ni duplica)', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null, status: 201 });
+
+    await createForgotEventRepository(client).create(event);
+
+    expect(calls).toEqual([
+      ['from', 'forgot_events'],
+      ['upsert', { id: 'f1', routine_id: 'r1', record_id: null, label: 'Llaves', date: event.date }, { onConflict: 'id', ignoreDuplicates: true }],
+    ]);
+  });
+
+  it('baja los olvidos del más reciente al más antiguo, en forma de dominio', async () => {
+    const row = { id: 'f1', routine_id: 'r1', record_id: 'rec-1', label: 'Llaves', date: event.date };
+    const { client, calls } = fakeClient({ data: [row], error: null, status: 200 });
+
+    await expect(createForgotEventRepository(client).getAll()).resolves.toEqual([{ ...event, recordId: 'rec-1' }]);
+    expect(calls).toContainEqual(['order', 'date', { ascending: false }]);
+  });
+
+  it('sin red falla con un error de red (reintentable)', async () => {
+    const { client } = fakeClient({ data: null, error: { code: '', message: 'Network request failed' }, status: 0 });
+
+    await expect(createForgotEventRepository(client).create(event)).rejects.toMatchObject({ kind: 'network' });
   });
 });

@@ -66,14 +66,24 @@ export function enqueue(outbox: readonly OutboxOp[], op: OutboxOp): OutboxOp[] {
       return outbox.some((pending) => pending.kind === 'insertRecord' && pending.record.id === op.record.id)
         ? [...outbox]
         : [...outbox, op];
+    case 'insertForgot':
+      // Igual que una verificación: el id lo genera el cliente.
+      return outbox.some((pending) => pending.kind === 'insertForgot' && pending.event.id === op.event.id)
+        ? [...outbox]
+        : [...outbox, op];
     default:
       return [...outbox, op];
   }
 }
 
+/** Verificación u olvido (aún sin subir) de la rutina: el borrado en cascada del servidor se los lleva. */
+export const isPendingOfRoutine = (op: OutboxOp, routineId: string) =>
+  (op.kind === 'insertRecord' && op.record.routineId === routineId) ||
+  (op.kind === 'insertForgot' && op.event.routineId === routineId);
+
 /**
- * Borrar una rutina reemplaza todo lo pendiente de ella, de sus hijos (`children`: sus ítems y avisos)
- * y de sus verificaciones: en el servidor, el borrado en cascada se lleva todo. Si la rutina nunca
+ * Borrar una rutina reemplaza todo lo pendiente de ella, de sus hijos (`children`: sus ítems y avisos),
+ * de sus verificaciones y de sus olvidos: en el servidor, el borrado en cascada se lleva todo. Si la rutina nunca
  * llegó al servidor, no queda nada que enviar.
  */
 export function enqueueRoutineDeletion(
@@ -87,8 +97,7 @@ export function enqueueRoutineDeletion(
   const rest = outbox.filter(
     (pending) =>
       inFlight(pending) ||
-      (!rows.some((row) => touches(pending, row)) &&
-        !(pending.kind === 'insertRecord' && pending.record.routineId === op.id)),
+      (!rows.some((row) => touches(pending, row)) && !isPendingOfRoutine(pending, op.id)),
   );
   return neverSent ? rest : [...rest, op];
 }

@@ -21,6 +21,8 @@ export interface StoreChange {
   outboxChanged: boolean;
   /** Cambió el historial local (una verificación nueva o lo bajado del servidor). */
   recordsChanged: boolean;
+  /** Cambiaron los olvidos locales (uno anotado aquí o lo bajado del servidor). */
+  forgotEventsChanged: boolean;
 }
 
 /** Datos locales de un usuario: un solo documento, que se lee y se reescribe entero (atómico). */
@@ -80,6 +82,7 @@ export function createLocalStore(userId: string, storage: KeyValueStorage = Asyn
             tablesChanged: doc.tables !== current.tables,
             outboxChanged: doc.outbox !== current.outbox,
             recordsChanged: doc.records !== current.records,
+            forgotEventsChanged: doc.forgotEvents !== current.forgotEvents,
           };
           listeners.forEach((listener) => listener(notice));
         }

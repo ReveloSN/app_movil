@@ -148,4 +148,80 @@ describe('repositorios local-first', () => {
     ]);
     expect(tables.triggers[0]).toMatchObject({ routineId: tables.routines[0].id, networkId: tables.homeNetworks[0].id });
   });
+
+  describe('olvidos', () => {
+    it('anotar un olvido lo guarda en el teléfono y lo encola para subir en el mismo guardado', async () => {
+      const { store, repos } = setup();
+      const listener = jest.fn();
+      store.subscribe(listener);
+
+      const event = await repos.forgotEvents.add({ routineId: 'r1', recordId: 'rec-1', label: '  Llaves  ' });
+
+      expect(event).toEqual({ id: 'id-1', routineId: 'r1', recordId: 'rec-1', label: 'Llaves', date: expect.any(String) });
+      const doc = await store.read();
+      expect(doc.forgotEvents).toEqual([event]);
+      expect(doc.outbox).toEqual([expect.objectContaining({ kind: 'insertForgot', event, at: event.date })]);
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ outboxChanged: true, forgotEventsChanged: true }));
+    });
+
+    it('agregar dos veces el mismo id no lo duplica (ni en el teléfono ni en la cola)', async () => {
+      const { store, repos } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+
+      const doc = await store.read();
+      expect(doc.forgotEvents).toHaveLength(1);
+      expect(doc.outbox).toHaveLength(1);
+    });
+
+    it('getAll va del más reciente al más antiguo y getByRoutine filtra por rutina', async () => {
+      const { repos } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves', date: '2026-10-14T08:00:00.000Z' });
+      await repos.forgotEvents.add({ id: 'f2', routineId: 'r2', label: 'Gafas', date: '2026-10-15T08:00:00.000Z' });
+      await repos.forgotEvents.add({ id: 'f3', routineId: 'r1', label: 'Cartera', date: '2026-10-16T08:00:00.000Z' });
+
+      expect((await repos.forgotEvents.getAll()).map((event) => event.id)).toEqual(['f3', 'f2', 'f1']);
+      expect((await repos.forgotEvents.getByRoutine('r1')).map((event) => event.id)).toEqual(['f3', 'f1']);
+    });
+
+    it('una etiqueta vacía o de más de 60 caracteres no se guarda ni se encola', async () => {
+      const { store, repos } = setup();
+
+      await expect(repos.forgotEvents.add({ routineId: 'r1', label: '   ' })).rejects.toBeInstanceOf(RepositoryError);
+      await expect(repos.forgotEvents.add({ routineId: 'r1', label: 'x'.repeat(61) })).rejects.toMatchObject({ code: '23514' });
+      expect(await store.read()).toMatchObject({ forgotEvents: [], outbox: [] });
+    });
+
+    it('guarda como mucho 500 olvidos: salen los más viejos', async () => {
+      const { repos } = setup();
+      for (let index = 0; index < 501; index += 1) {
+        await repos.forgotEvents.add({
+          id: `f${index}`,
+          routineId: 'r1',
+          label: 'Llaves',
+          date: new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString(),
+        });
+      }
+
+      const events = await repos.forgotEvents.getAll();
+      expect(events).toHaveLength(500);
+      expect(events.some((event) => event.id === 'f0')).toBe(false);
+    });
+
+    it('borrar la rutina quita sus olvidos del teléfono y de la cola, no los de otras', async () => {
+      const { store, repos } = setup();
+      const routine = await repos.routines.create({ name: 'Casa' });
+      await store.update((doc) => ({ doc: { ...doc, outbox: [] }, result: null })); // ya subida
+      await repos.forgotEvents.add({ id: 'f1', routineId: routine.id, label: 'Llaves' });
+      await repos.forgotEvents.add({ id: 'f2', routineId: 'other', label: 'Gafas' });
+
+      await repos.routines.delete(routine.id);
+
+      const doc = await store.read();
+      expect(doc.forgotEvents?.map((event) => event.id)).toEqual(['f2']);
+      expect(doc.outbox.map((pending) => pending.kind)).toEqual(['insertForgot', 'deleteRoutine']);
+      expect(doc.outbox[0]).toMatchObject({ event: { id: 'f2' } });
+    });
+  });
 });
