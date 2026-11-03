@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { AccountSection } from '@/features/settings/AccountSection';
 import { AiSettingsSection } from '@/features/settings/AiSettingsSection';
+import { AppearanceSection } from '@/features/settings/AppearanceSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { VerificationPrefsSection } from '@/features/settings/VerificationPrefsSection';
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
       <VerificationPrefsSection />
       <AiSettingsSection />
       <WeatherSettingsSection />
+      <AppearanceSection />
       <ProfileSection />
       <SyncStatusSection />
 

@@ -58,3 +58,11 @@ const unsyncedSignOutMessage = (count: number) =>
 /** Qué confirmar antes de cerrar sesión; null si no hace falta preguntar. */
 export const signOutWarning = (user: AuthUser | null, unsyncedCount: number): string | null =>
   user?.isAnonymous ? GUEST_SIGN_OUT_MESSAGE : unsyncedCount > 0 ? unsyncedSignOutMessage(unsyncedCount) : null;
+
+// Apariencia (tema claro, oscuro o del sistema).
+export const APPEARANCE_SECTION_TITLE = 'Apariencia';
+export const APPEARANCE_GROUP_LABEL = 'Tema de la aplicación';
+export const THEME_LIGHT_LABEL = 'Claro';
+export const THEME_DARK_LABEL = 'Oscuro';
+export const THEME_SYSTEM_LABEL = 'Sistema';
+export const THEME_SYSTEM_HINT = 'Con «Sistema», la app usa el tema claro u oscuro de tu teléfono.';
