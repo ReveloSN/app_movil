@@ -54,6 +54,13 @@
         }
       ],
       "expo-notifications",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Para dictar por voz la rutina que necesitas. El audio no se guarda.",
+          "speechRecognitionPermission": "Para convertir tu voz en texto al dictar una rutina."
+        }
+      ],
       "./plugins/with-release-signing",
       [
         "react-native-android-widget",
