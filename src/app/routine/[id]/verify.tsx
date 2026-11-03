@@ -13,11 +13,13 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { ChecklistItemRow } from '@/components/molecules/ChecklistItemRow';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
+import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { VerifyHeader } from '@/components/molecules/VerifyHeader';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import * as copy from '@/features/checklist/checklist.copy';
+import { ChecklistDeck } from '@/features/checklist/ChecklistDeck';
 import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex } from '@/features/checklist/checklist.outcome';
 import type { FinishIntent } from '@/features/checklist/checklist.types';
 import { toSummaryParams } from '@/features/checklist/summaryParams';
@@ -38,6 +40,12 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 // Entrada de los ítems críticos: corta y desde la izquierda; nunca retrasa poder marcarlos.
 const criticalEntering = (index: number) =>
   FadeInLeft.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
+
+type ViewMode = 'list' | 'deck';
+const VIEW_MODES: readonly SegmentOption<ViewMode>[] = [
+  { value: 'list', label: copy.VIEW_LIST_LABEL },
+  { value: 'deck', label: copy.VIEW_DECK_LABEL },
+];
 
 type Dialog =
   | { kind: 'critical'; label: string; intent: FinishIntent }
@@ -64,7 +72,8 @@ export default function VerifyScreen() {
   const routine = useRoutines().routines.find((candidate) => candidate.id === id);
   const routineName = routine?.name ?? '';
   const accent = routineAccent(colors, routine?.color);
-  const { items, loading, error, retry, toggleItem, addTemporaryItem, progress, startedAt } = useChecklist(id);
+  const { items, loading, error, retry, toggleItem, setItemChecked, addTemporaryItem, progress, startedAt } = useChecklist(id);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
   const busy = finishing || postponement.postponing;
@@ -140,6 +149,17 @@ export default function VerifyScreen() {
     <EmptyState icon="list-outline" message="Esta rutina no tiene ítems." />
   ) : (
     <>
+      <View style={styles.modeToggle}>
+        <SegmentedControl<ViewMode>
+          accessibilityLabel={copy.VIEW_MODE_LABEL}
+          options={VIEW_MODES}
+          value={viewMode}
+          onChange={setViewMode}
+        />
+      </View>
+      {viewMode === 'deck' ? (
+        <ChecklistDeck items={items} setItemChecked={setItemChecked} />
+      ) : (
       <FlatList
         style={styles.list}
         // Sugerencia del clima (si llega a tiempo): discreta y sin bloquear nada.
@@ -173,6 +193,7 @@ export default function VerifyScreen() {
           );
         }}
       />
+      )}
       <ScreenFooter>
         {finishError ? <StatusMessage tone="error" message={finishError} /> : null}
         {postponement.error ? <StatusMessage tone="error" message={postponement.error} /> : null}
@@ -239,6 +260,10 @@ const createStyles = ({ colors, spacing }: AppTheme) =>
     // estado 24, navegación por gestos 24): encabezado 8+34+8+16+8 = 74, pie 12+52+8+48+12 = 132,
     // lista 640−48−74−132 = 386 dp (60,3 %, 6 filas de 56 + 8). Con la barra de 3 botones (48) quedan
     // 362 dp (56,6 %): no se fuerza un mínimo porque empujaría "Listo" fuera de la vista.
+    modeToggle: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.md,
+    },
     list: {
       flex: 1,
     },

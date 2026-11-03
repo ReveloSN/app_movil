@@ -40,6 +40,17 @@ export const streakLabel = (days: number) => `${days} ${STREAK_SUFFIX}`;
 /** Marca de ítem crítico (07-4) para lector de pantalla y en el resumen. */
 export const CRITICAL_LABEL = 'crítico';
 
+// Modo "una por una" de P07. Sin código en el Documento de Contenido: propuesto, pendiente de validar.
+export const VIEW_MODE_LABEL = 'Forma de verificar';
+export const VIEW_LIST_LABEL = 'Lista';
+export const VIEW_DECK_LABEL = 'Una por una';
+export const CARRY_LABEL = 'Lo llevo';
+export const NOT_CARRY_LABEL = 'No lo llevo';
+export const UNDO_LABEL = 'Deshacer';
+export const SWIPE_HINT = 'Desliza a la derecha si lo llevas y a la izquierda si no.';
+export const DECK_DONE_TITLE = 'Revisaste todo';
+export const DECK_DONE_MESSAGE = 'Toca «Listo» para guardar la verificación.';
+
 // Salir de P07 con ítems marcados. Botones del brief; el mensaje NO viene del Documento de Contenido.
 export const EXIT_MESSAGE = 'Ya marcaste algunos ítems. ¿Salir sin terminar la verificación?';
 export const EXIT_CONFIRM = 'Salir';
