@@ -54,7 +54,25 @@
         }
       ],
       "expo-notifications",
-      "./plugins/with-release-signing"
+      "./plugins/with-release-signing",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "NextRoutine",
+              "label": "Próxima rutina",
+              "description": "Tu próxima rutina con sus ítems: toca uno para marcarlo.",
+              "minWidth": "250dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 3,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ],
     "scheme": "verificadorsalida",
     "experiments": {
