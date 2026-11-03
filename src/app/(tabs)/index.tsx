@@ -3,8 +3,6 @@ import { useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { PrimaryButton } from '@/components/atoms/PrimaryButton';
-import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyRing } from '@/components/molecules/EmptyRing';
 import { ErrorState } from '@/components/molecules/ErrorState';
@@ -12,11 +10,10 @@ import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SkyBand } from '@/components/molecules/SkyBand';
-import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { editRoutineLabel, greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
-import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
+import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
@@ -32,10 +29,8 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const EMPTY_MESSAGE = 'Aún no tienes rutinas. Empieza con una plantilla o crea la tuya.'; // EV-01
 
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
-const openTemplates = () => router.push('/routine/templates');
-const openNewRoutine = () => router.push('/routine/new');
 
-/** P03: banda con el cielo de la hora, próxima rutina, tarjetas, plantillas y pie con "Crear con IA" y "Crear rutina". */
+/** P03: banda con el cielo de la hora, próxima rutina, tarjetas y el botón "+" con las formas de crear una rutina. */
 export default function RoutinesScreen() {
   const { routines, loading, error, refresh } = useRoutines();
   const { next, now } = useNextRoutine();
@@ -121,27 +116,17 @@ export default function RoutinesScreen() {
             />
           </Animated.View>
         )}
-        // Flujo B: Inicio → Plantillas → Crear rutina precargada.
-        ListFooterComponent={<SecondaryButton icon="albums-outline" label={BROWSE_TEMPLATES_LABEL} onPress={openTemplates} />}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
       />
-      {/* La primaria en la zona del pulgar; "Crear con IA" (si está activa) justo encima. */}
-      <View style={styles.footer}>
-        <CreateWithAiButton />
-        {/* Documento 2, P03: con "Próxima rutina" la primaria es su "Verificar ahora"; sin ella, esta. */}
-        {next ? (
-          <SecondaryButton icon="add" label="Crear rutina" onPress={openNewRoutine} />
-        ) : (
-          <PrimaryButton label="Crear rutina" onPress={openNewRoutine} />
-        )}
-      </View>
+      {/* En la zona del pulgar: crear una, crear con IA (si está activa) o elegir una plantilla (flujo B). */}
+      <AddRoutineMenu containerStyle={styles.fab} />
     </View>
   );
 }
 
-const createStyles = ({ colors, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, sizes, spacing, typography }: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -166,13 +151,12 @@ const createStyles = ({ colors, spacing, typography }: AppTheme) =>
     list: {
       gap: spacing.md,
       padding: spacing.xl,
+      // La última tarjeta puede subir por encima del botón "+".
+      paddingBottom: sizes.fabSize + spacing.xl * 2,
     },
-    footer: {
-      gap: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.surface,
+    fab: {
+      position: 'absolute',
+      right: spacing.xl,
+      bottom: spacing.xl,
     },
   });

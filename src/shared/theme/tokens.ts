@@ -28,6 +28,8 @@ export const sizes = {
   largeIconCircle: 112,
   /** Fila de la verificación (P07): área táctil de 56pt. */
   checklistRowHeight: 56,
+  /** Botón flotante de acción (el "+" de Inicio). */
+  fabSize: 56,
   /** Alto de la barra de pestañas de React Navigation (sin el inset inferior). */
   tabBarHeight: 49,
 } as const;
