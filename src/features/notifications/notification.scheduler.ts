@@ -1,6 +1,14 @@
 import * as Notifications from 'expo-notifications';
 
-import { ARRIVAL_CATEGORY_ID, arrivalChannelFor, CATEGORY_ID, channelFor, minutesToMs, UNANSWERED_REMINDERS } from './notification.config';
+import {
+  ARRIVAL_CATEGORY_ID,
+  arrivalChannelFor,
+  CATEGORY_ID,
+  channelFor,
+  ensureNotificationSetup,
+  minutesToMs,
+  UNANSWERED_REMINDERS,
+} from './notification.config';
 import { ARRIVAL_TITLE, arrivalBody, notificationTitle, reminderBody } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import type { Occurrence, OccurrenceNotificationData } from './occurrence.types';
@@ -102,6 +110,8 @@ export async function scheduleArrival(
   now: number,
   prefs: SchedulePrefs,
 ): Promise<Occurrence> {
+  // Esta ruta corre sin interfaz (geocerca, Wi-Fi): el canal de llegada tiene que existir antes de notificar.
+  await ensureNotificationSetup();
   const data: OccurrenceNotificationData = { occurrenceKey: occurrence.key, routineId: occurrence.routineId };
   const id = await Notifications.scheduleNotificationAsync({
     identifier: `${occurrence.key}#0`,

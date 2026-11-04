@@ -11,6 +11,9 @@ import { writeNotificationRecord } from './record.writer';
 
 jest.mock('expo-notifications', () => ({
   DEFAULT_ACTION_IDENTIFIER: 'expo.modules.notifications.actions.DEFAULT',
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => undefined),
+  AndroidImportance: { HIGH: 4 },
   scheduleNotificationAsync: jest.fn(async ({ identifier }: { identifier: string }) => identifier),
   cancelScheduledNotificationAsync: jest.fn(async () => undefined),
   dismissNotificationAsync: jest.fn(async () => undefined),

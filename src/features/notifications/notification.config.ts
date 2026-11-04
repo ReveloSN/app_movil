@@ -35,8 +35,11 @@ export const arrivalChannelFor = (sound: boolean) => (sound ? ARRIVAL_CHANNEL_ID
 
 let setup: Promise<void> | null = null;
 
-/** Presentación en primer plano y canales (Android). Idempotente. */
-function ensureNotificationSetup(): Promise<void> {
+/**
+ * Presentación en primer plano y canales (Android). Idempotente. También lo necesita quien notifica sin
+ * interfaz (geocerca o Wi-Fi con la app cerrada): el canal debe existir antes de programar.
+ */
+export function ensureNotificationSetup(): Promise<void> {
   setup ??= (async () => {
     Notifications.setNotificationHandler({
       handleNotification: async () => {
@@ -79,7 +82,7 @@ function ensureNotificationSetup(): Promise<void> {
  * la app. Se vuelve a registrar al cambiar "Posponer" en Ajustes para que el botón diga los minutos.
  */
 export async function registerNotificationActions(snoozeMinutes: number) {
-  // Llegada a casa: solo «Hecho», que no abre la app. Tocar el cuerpo abre la verificación.
+  // Llegada a casa: solo «Hecho», que no abre la app. Tocar el cuerpo solo la descarta (no es una salida).
   await Notifications.setNotificationCategoryAsync(ARRIVAL_CATEGORY_ID, [
     { identifier: ACTION_DONE, buttonTitle: ACTION_LABELS.done, options: { opensAppToForeground: false } },
   ]);
