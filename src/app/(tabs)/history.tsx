@@ -1,13 +1,15 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
+import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
+import { DepartureStatsSection } from '@/features/history/DepartureStatsSection';
 import * as copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
@@ -15,6 +17,8 @@ import { groupRecordsByDay } from '@/features/history/history.grouping';
 import { describeResult, RESULT_FILTERS } from '@/features/history/history.result';
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
+import * as statsCopy from '@/features/history/stats.copy';
+import { useDepartureStats } from '@/features/history/useDepartureStats';
 import { useHistory } from '@/features/history/useHistory';
 import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
@@ -26,8 +30,18 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 const ALL = '';
 
+type HistoryView = 'history' | 'stats';
+const VIEW_OPTIONS: readonly SegmentOption<HistoryView>[] = [
+  { value: 'history', label: statsCopy.VIEW_HISTORY_LABEL },
+  { value: 'stats', label: statsCopy.VIEW_STATS_LABEL },
+];
+
 export default function HistoryScreen() {
-  const { records, loading, error, refresh } = useHistory();
+  const history = useHistory();
+  const { records, loading, error, refresh } = history;
+  const stats = useDepartureStats(history);
+  // Historial | Estadísticas: no se guarda; al volver a la pestaña se ve el listado.
+  const [view, setView] = useState<HistoryView>('history');
   const { routines } = useRoutines();
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -71,6 +85,26 @@ export default function HistoryScreen() {
   if (error && records.length === 0) return <ErrorState message={error} onRetry={refresh} />;
   if (records.length === 0) return <EmptyState icon="time-outline" message={copy.EMPTY_MESSAGE} />;
 
+  const viewSwitch = (
+    <SegmentedControl<HistoryView> accessibilityLabel={statsCopy.VIEW_GROUP_LABEL} options={VIEW_OPTIONS} value={view} onChange={setView} />
+  );
+
+  if (view === 'stats') {
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={[styles.list, styles.statsContent]}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} colors={[colors.primary]} />
+          }
+        >
+          {viewSwitch}
+          <DepartureStatsSection status={stats.status} summary={stats.summary} />
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SectionList
@@ -80,6 +114,7 @@ export default function HistoryScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.filters}>
+            {viewSwitch}
             {/* "Tu semana": resumen guardado por semana (se genera a pedido). */}
             <WeekSummarySection records={records} now={weekNow} />
             {error ? <StatusMessage tone="error" message={error} /> : null}
@@ -159,6 +194,10 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     list: {
       padding: spacing.xl,
       paddingTop: spacing.sm,
+    },
+    statsContent: {
+      gap: spacing.md,
+      paddingTop: spacing.md,
     },
     filters: {
       gap: spacing.md,

@@ -6,6 +6,7 @@ import { fixedDeps, memoryStorage } from '@/db/local/testing/memoryStorage';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { useDepartureStats } from './useDepartureStats';
+import { useHistory } from './useHistory';
 
 const mockLocal: { repositories?: LocalRepositories; store?: LocalStore } = {};
 const mockRoutines: { list: Routine[]; loading: boolean } = { list: [], loading: false };
@@ -49,7 +50,7 @@ beforeEach(() => {
 
 describe('useDepartureStats', () => {
   it('sin registros queda vacío una vez leído el historial', async () => {
-    const { result } = await renderHook(() => useDepartureStats());
+    const { result } = await renderHook(() => useDepartureStats(useHistory()));
     await waitFor(() => expect(result.current.status).toBe('empty'));
     expect(result.current.summary.totalRecords).toBe(0);
   });
@@ -58,7 +59,7 @@ describe('useDepartureStats', () => {
     await addRecord('out', 'completed');
     await addRecord('out', 'partial');
     await addRecord('in', 'completed');
-    const { result } = await renderHook(() => useDepartureStats());
+    const { result } = await renderHook(() => useDepartureStats(useHistory()));
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(result.current.summary).toMatchObject({ totalDepartures: 1, totalRecords: 2, currentStreak: 1 });
     expect(result.current.summary.last7Days).toMatchObject({ completed: 1, partial: 1, rate: 0.5 });
@@ -66,7 +67,7 @@ describe('useDepartureStats', () => {
 
   it('solo rutinas de llegada: queda vacío', async () => {
     await addRecord('in', 'completed');
-    const { result } = await renderHook(() => useDepartureStats());
+    const { result } = await renderHook(() => useDepartureStats(useHistory()));
     await waitFor(() => expect(result.current.status).toBe('empty'));
   });
 
@@ -74,14 +75,14 @@ describe('useDepartureStats', () => {
     mockRoutines.list = [];
     mockRoutines.loading = true;
     await addRecord('out', 'completed');
-    const { result } = await renderHook(() => useDepartureStats());
+    const { result } = await renderHook(() => useDepartureStats(useHistory()));
     await act(async () => undefined);
     expect(result.current.status).toBe('loading');
   });
 
   it('no recalcula en cada render y se actualiza al cambiar los datos', async () => {
     await addRecord('out', 'completed');
-    const { result, rerender } = await renderHook(() => useDepartureStats());
+    const { result, rerender } = await renderHook(() => useDepartureStats(useHistory()));
     await waitFor(() => expect(result.current.status).toBe('ready'));
     const first = result.current.summary;
 

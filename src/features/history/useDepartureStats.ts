@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRoutines } from '@/features/routines/useRoutines';
 
 import { departureRoutineIdsOf, departureSummary, type DepartureSummary } from './stats';
-import { useHistory } from './useHistory';
+import type { HistoryData } from './useHistory';
 
 export type DepartureStatsStatus = 'loading' | 'empty' | 'ready';
 
@@ -33,12 +33,13 @@ function useMinuteClock(): Date {
 }
 
 /**
- * Estadísticas de salidas para el Historial: los registros (con los pendientes de subir) y las rutinas
- * se combinan en `departureSummary`. El set de ids y el resumen se memoizan: solo se recalculan al
+ * Estadísticas de salidas para el Historial: los registros (con los pendientes de subir, de `useHistory`;
+ * la pantalla pasa los suyos para no leer la copia local dos veces) y las rutinas se combinan en
+ * `departureSummary`. El set de ids y el resumen se memoizan: solo se recalculan al
  * cambiar los datos o el minuto.
  */
-export function useDepartureStats(): DepartureStats {
-  const { records, loading: historyLoading, error, refresh } = useHistory();
+export function useDepartureStats(history: HistoryData): DepartureStats {
+  const { records, loading: historyLoading, error, refresh } = history;
   const { routines, loading: routinesLoading } = useRoutines();
   const now = useMinuteClock();
 
