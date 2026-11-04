@@ -11,10 +11,14 @@ const clampTo = (text: string, max: number) => (text.length <= max ? text : `${t
 
 export const CHANNEL_NAME = 'Rutinas';
 export const SILENT_CHANNEL_NAME = 'Rutinas (sin sonido)';
+export const ARRIVAL_CHANNEL_NAME = 'Llegada a casa';
+export const ARRIVAL_SILENT_CHANNEL_NAME = 'Llegada a casa (sin sonido)';
 
 export const ACTION_LABELS = {
   verify: 'Verificar',
   skip: 'Omitir',
+  /** Recordatorio de llegada atendido. */
+  done: 'Hecho',
 } as const;
 
 /** "Posponer 5 min": los minutos salen de Ajustes (11-4). */

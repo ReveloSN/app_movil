@@ -4,19 +4,20 @@ import * as Notifications from 'expo-notifications';
 import { loadArmedTriggers } from '@/features/triggers/armedTriggers.store';
 import { createSerialQueue } from '@/shared/lib/serialQueue';
 
-import { ACTION_SKIP, ACTION_SNOOZE, ACTION_VERIFY } from './notification.config';
+import { ACTION_DONE, ACTION_SKIP, ACTION_SNOOZE, ACTION_VERIFY } from './notification.config';
 import { loadNotificationPrefs } from './notification.prefs';
 import { closeOccurrence, postponeOccurrence } from './occurrence.lifecycle';
 import type { OccurrenceNotificationData } from './occurrence.types';
 import { writeNotificationRecord } from './record.writer';
 
-export type ResponseKind = 'verify' | 'snooze' | 'skip';
+export type ResponseKind = 'verify' | 'snooze' | 'skip' | 'done';
 
 /** Tocar el cuerpo de la notificación equivale a "Verificar". */
 export function responseKind(actionIdentifier: string): ResponseKind | null {
   if (actionIdentifier === ACTION_VERIFY || actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) return 'verify';
   if (actionIdentifier === ACTION_SNOOZE) return 'snooze';
   if (actionIdentifier === ACTION_SKIP) return 'skip';
+  if (actionIdentifier === ACTION_DONE) return 'done';
   return null;
 }
 
@@ -53,6 +54,8 @@ function markHandled(responseId: string): Promise<boolean> {
  * - verify: la vez queda respondida (se cancelan sus recordatorios). Abrir P07 lo hace quien tenga navegación.
  * - snooze: reprograma según "Posponer" de Ajustes (2/5/10 min), sin registro.
  * - skip: registro "skipped".
+ * - done: la llegada a casa queda atendida (se cierra y se quita de la bandeja). NO crea ningún registro: no es una
+ *   salida ni cuenta para la racha.
  * Devuelve el tipo de respuesta y la rutina, o null si la notificación no es de una rutina.
  */
 export async function applyNotificationResponse(
@@ -65,6 +68,12 @@ export async function applyNotificationResponse(
 
   if (kind === 'verify') {
     await closeOccurrence(data.occurrenceKey); // Idempotente: no necesita deduplicarse.
+    return { kind, routineId: data.routineId };
+  }
+
+  if (kind === 'done') {
+    await closeOccurrence(data.occurrenceKey); // Idempotente. Sin registro a propósito.
+    await Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(() => undefined);
     return { kind, routineId: data.routineId };
   }
 

@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 
-import { CATEGORY_ID, channelFor, minutesToMs, UNANSWERED_REMINDERS } from './notification.config';
+import { ARRIVAL_CATEGORY_ID, arrivalChannelFor, CATEGORY_ID, channelFor, minutesToMs, UNANSWERED_REMINDERS } from './notification.config';
 import { ARRIVAL_TITLE, arrivalBody, notificationTitle, reminderBody } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import type { Occurrence, OccurrenceNotificationData } from './occurrence.types';
@@ -110,9 +110,10 @@ export async function scheduleArrival(
       subtitle: occurrence.routineName,
       body: arrivalBody(labels),
       data,
+      categoryIdentifier: ARRIVAL_CATEGORY_ID,
       sound: prefs.sound, // iOS; en Android lo decide el canal.
     },
-    trigger: { channelId: channelFor(prefs.sound) },
+    trigger: { channelId: arrivalChannelFor(prefs.sound) },
   });
   return { ...occurrence, kind: 'arrival', notificationIds: [id], deadline: now + ARRIVAL_RETENTION_MS };
 }
