@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -5,6 +6,7 @@ import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { oldForgotKey } from '@/db/local/forgot.migration';
 import { getLocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { clearHomeGeofence } from '@/features/geofence/homeGeofence.store';
@@ -44,6 +46,10 @@ export function AccountSection() {
         .catch((cause: unknown) => {
           if (__DEV__) console.warn('[account.clearGuestData]', cause);
         });
+      // Los olvidos de la versión anterior vivían fuera de la copia local: tampoco se quedan.
+      await AsyncStorage.removeItem(oldForgotKey(guestId)).catch((cause: unknown) => {
+        if (__DEV__) console.warn('[account.clearGuestForgot]', cause);
+      });
       // La casa de la geocerca también es de esa copia local: no se queda en el teléfono.
       await clearHomeGeofence(guestId).catch((cause: unknown) => {
         if (__DEV__) console.warn('[account.clearGuestHome]', cause);
