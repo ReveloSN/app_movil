@@ -106,6 +106,21 @@ describe('createSyncEngine', () => {
     expect((await store.read()).forgotEvents?.map((event) => event.id)).toEqual(['local-1']);
   });
 
+  it('con un servidor sin la tabla de olvidos, los anotados aquí siguen pendientes y en el teléfono', async () => {
+    const { engine, store, server, repos } = setup();
+    await repos.forgotEvents.add({ id: 'local-1', routineId: 'r1', label: 'Gafas' });
+    server.failNext('forgotEvents.create', rejectedError('PGRST205', 'forgot_events'));
+    server.failNext('forgotEvents.getAll', rejectedError('PGRST205', 'forgot_events'));
+
+    const report = await engine.sync();
+
+    expect(report.pulled).toBe(true);
+    const doc = await store.read();
+    expect(doc.forgotEvents?.map((event) => event.id)).toEqual(['local-1']);
+    expect(doc.outbox).toEqual([expect.objectContaining({ kind: 'insertForgot' })]);
+    expect(doc.outbox[0].failed).toBeUndefined();
+  });
+
   it('si los olvidos no cambian, no avisa cambios en ellos', async () => {
     const server = fakeRemote({ forgotEvents: [{ ...forgot('srv-1', 'r1') }] });
     const { engine, store } = setup(server);

@@ -12,6 +12,7 @@ import type { RemoteSettingsRepository } from '../repositories/settings.reposito
 import type { RemoteTriggerRepository } from '../repositories/trigger.repository';
 import type { VerificationRecordRepository } from '../repositories/verification-record.repository';
 import { adoptRemoteNetwork } from './sync.remap';
+import { schemaGapOf, schemaGapOfError } from './sync.schema';
 
 /** Lo que necesita la sincronización del servidor (los repositorios de Supabase). */
 export interface RemoteDeps {
@@ -30,6 +31,11 @@ export interface PushReport {
   stale: OutboxOp[];
   /** Rechazados en esta pasada: quedan en la cola, marcados y visibles. */
   failed: OutboxOp[];
+  /**
+   * El servidor todavía no tiene la migración que necesitan (ej. la tabla de olvidos): quedan en la
+   * cola sin marcarse como fallidos y se reintentan en la próxima sincronización.
+   */
+  deferred: OutboxOp[];
   /** Se cortó por falta de red: lo que falta se intenta en la próxima. */
   offline: boolean;
 }
@@ -39,6 +45,7 @@ type Outcome =
   | { type: 'stale' }
   | { type: 'remap'; to: string }
   | { type: 'failed'; failure: OutboxFailure }
+  | { type: 'deferred' }
   | { type: 'offline' };
 
 const DONE: Outcome = { type: 'done' };
@@ -126,17 +133,29 @@ async function send(op: OutboxOp, remote: RemoteDeps): Promise<Outcome> {
 
 function toOutcome(cause: unknown): Outcome {
   if (isNetworkError(cause)) return { type: 'offline' };
+  if (schemaGapOfError(cause)) return { type: 'deferred' };
   const code = cause instanceof RepositoryError ? (cause.code ?? null) : null;
   return { type: 'failed', failure: { code, message: cause instanceof Error ? cause.message : String(cause) } };
 }
 
 const withoutSending = ({ sendingSince: _sendingSince, ...op }: OutboxOp) => op as OutboxOp;
 
-const releaseStaleSending = (store: LocalStore, now: Date) =>
+const withoutFailure = ({ failed: _failed, ...op }: OutboxOp) => op as OutboxOp;
+
+/**
+ * Antes de cada pasada: libera los envíos que quedaron a medias y quita la marca de fallo a lo que se
+ * rechazó solo porque el servidor no tenía la migración (versiones anteriores lo marcaban fallido).
+ */
+const prepareOutbox = (store: LocalStore, now: Date) =>
   store.update((doc) => {
     const stale = (op: OutboxOp) => op.sendingSince !== undefined && now.getTime() - Date.parse(op.sendingSince) > STALE_SENDING_MS;
-    if (!doc.outbox.some(stale)) return { doc, result: undefined };
-    return { doc: { ...doc, outbox: doc.outbox.map((op) => (stale(op) ? withoutSending(op) : op)) }, result: undefined };
+    const schemaFailure = (op: OutboxOp) => op.failed !== undefined && schemaGapOf(op.failed) !== null;
+    if (!doc.outbox.some((op) => stale(op) || schemaFailure(op))) return { doc, result: undefined };
+    const outbox = doc.outbox.map((op) => {
+      const released = stale(op) ? withoutSending(op) : op;
+      return schemaFailure(released) ? withoutFailure(released) : released;
+    });
+    return { doc: { ...doc, outbox }, result: undefined };
   }, 'sync');
 
 /** Toma la primera operación lista y la marca como "enviándose" (así nada la mezcla ni la quita). */
@@ -162,14 +181,15 @@ const applyOutcome = (store: LocalStore, sent: OutboxOp, outcome: Outcome) =>
         return { doc: adoptRemoteNetwork({ ...doc, outbox: others }, (sent as OutboxOpOf<'insert'>).id, outcome.to), result: undefined };
       case 'failed':
         return { doc: { ...doc, outbox: replaceSent({ ...withoutSending(sent), failed: outcome.failure }) }, result: undefined };
+      case 'deferred':
       case 'offline':
         return { doc: { ...doc, outbox: replaceSent(withoutSending(sent)) }, result: undefined };
     }
   }, 'sync');
 
 async function pushAll(store: LocalStore, remote: RemoteDeps, now: () => Date): Promise<PushReport> {
-  await releaseStaleSending(store, now());
-  const report: PushReport = { sent: 0, stale: [], failed: [], offline: false };
+  await prepareOutbox(store, now());
+  const report: PushReport = { sent: 0, stale: [], failed: [], deferred: [], offline: false };
   const attempted = new Set<string>();
 
   for (;;) {
@@ -181,6 +201,13 @@ async function pushAll(store: LocalStore, remote: RemoteDeps, now: () => Date): 
     await applyOutcome(store, op, outcome);
 
     if (outcome.type === 'offline') return { ...report, offline: true };
+    if (outcome.type === 'deferred') {
+      report.deferred.push(withoutSending(op));
+      // Lo que sigue podría apuntar a la fila que no se creó: se corta la pasada, como sin red.
+      // De un olvido o un update no depende nada: se sigue con lo demás (si no, todo esperaría a la migración).
+      if (op.kind === 'insert') return report;
+      continue;
+    }
     if (outcome.type === 'failed') {
       report.failed.push({ ...withoutSending(op), failed: outcome.failure });
       continue;
@@ -194,7 +221,8 @@ const running = new Map<LocalStore, Promise<PushReport>>();
 
 /**
  * Sube la outbox en orden (§2.3): para en el primer error de red, marca como fallido lo que el servidor
- * rechaza (sus dependientes quedan bloqueados) y sigue con lo independiente. Un push a la vez por
+ * rechaza (sus dependientes quedan bloqueados) y sigue con lo independiente. Lo que el servidor aún no
+ * puede recibir por falta de la migración se deja en la cola, sin marcar, para la próxima. Un push a la vez por
  * usuario: si ya hay uno corriendo (ej. la app y la tarea en segundo plano), se espera ese.
  */
 export function pushOutbox(store: LocalStore, remote: RemoteDeps, now: () => Date = () => new Date()): Promise<PushReport> {

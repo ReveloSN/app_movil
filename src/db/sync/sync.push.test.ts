@@ -26,7 +26,7 @@ describe('pushOutbox', () => {
 
     expect(tablesCalled(server.calls)).toEqual(['routines.create', 'items.create']);
     expect((await store.read()).outbox).toEqual([]);
-    expect(report).toMatchObject({ sent: 2, offline: false, stale: [], failed: [] });
+    expect(report).toMatchObject({ sent: 2, offline: false, stale: [], failed: [], deferred: [] });
   });
 
   it('un 23505 en un insert cuenta como hecho: un intento anterior ya llegó', async () => {
@@ -221,6 +221,60 @@ describe('pushOutbox', () => {
 
       expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1', recordId: null })]);
       expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('sin la tabla en el servidor (falta la migración) queda pendiente, no fallido, y no frena lo demás', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      const routine = await repos.routines.create({ name: 'Casa' });
+      server.failNext('forgotEvents.create', rejectedError('PGRST205', 'forgot_events'));
+
+      const report = await push();
+
+      expect(report).toMatchObject({ offline: false, failed: [], deferred: [expect.objectContaining({ kind: 'insertForgot' })] });
+      expect(server.tables.routines.map((row) => row.id)).toEqual([routine.id]);
+      const { outbox } = await store.read();
+      expect(outbox).toEqual([expect.objectContaining({ kind: 'insertForgot', attempts: 1 })]);
+      expect(outbox[0].failed).toBeUndefined();
+      expect(outbox[0].sendingSince).toBeUndefined();
+
+      // Ya con la tabla: se sube en la siguiente sincronización.
+      await push();
+      expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1' })]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('también con el error de Postgres (42P01)', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      server.failNext('forgotEvents.create', rejectedError('42P01', 'forgot_events'));
+
+      await push();
+
+      expect((await store.read()).outbox).toEqual([expect.not.objectContaining({ failed: expect.anything() })]);
+    });
+
+    it('lo que una versión anterior marcó fallido por falta de la tabla se vuelve a intentar solo', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      const failed = { code: 'PGRST205', message: "[forgot_events.create] Could not find the table 'public.forgot_events'" };
+      await store.update((doc) => ({ doc: { ...doc, outbox: doc.outbox.map((op) => ({ ...op, failed })) }, result: null }));
+
+      await push();
+
+      expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1' })]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('otra tabla o columna que falta sigue siendo un fallo visible', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.routines.create({ name: 'Casa' });
+      server.failNext('routines.create', rejectedError('PGRST204', 'routines'));
+
+      const report = await push();
+
+      expect(report.failed).toHaveLength(1);
+      expect((await store.read()).outbox[0].failed).toMatchObject({ code: 'PGRST204' });
     });
 
     it('sin red queda en la cola, sin marcarse como fallido', async () => {
