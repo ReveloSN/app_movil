@@ -50,6 +50,9 @@ function aiInputOf({ pattern, inRoutine, critical }: Candidate, routine: string)
   };
 }
 
+/** Cómo quedaría el ítem al agregarlo: la etiqueta se recorta al máximo de un ítem. Es la que se compara. */
+const itemLabelOf = (label: string) => label.slice(0, ITEM_LABEL_MAX_LENGTH).trim();
+
 /**
  * Qué se puede proponer en esta rutina, en orden: primero lo anotado con "Olvidé algo" (la persona lo dijo),
  * luego lo omitido al verificar. Un olvido de un ítem que ya está y ya es crítico no tiene nada que proponer.
@@ -57,7 +60,7 @@ function aiInputOf({ pattern, inRoutine, critical }: Candidate, routine: string)
 function candidatesFor(patterns: { forgot: InsightPattern[]; omissions: InsightPattern[] }, items: readonly Item[]): Candidate[] {
   const byKey = new Map(items.map((item) => [itemKey(item.label), item]));
   const forgot = patterns.forgot.flatMap((pattern): Candidate[] => {
-    const item = byKey.get(itemKey(pattern.label));
+    const item = byKey.get(itemKey(itemLabelOf(pattern.label)));
     if (!item) return [{ pattern, action: 'add_item', inRoutine: false, critical: false }];
     return item.critical ? [] : [{ pattern, action: 'mark_critical', inRoutine: true, critical: false }];
   });
@@ -148,7 +151,7 @@ export function useRoutineInsight(routineId: string) {
     setError(null);
     try {
       const items = await local.items.getByRoutine(pattern.routineId);
-      const target = items.find((item) => itemKey(item.label) === itemKey(pattern.label));
+      const target = items.find((item) => itemKey(item.label) === itemKey(itemLabelOf(pattern.label)));
       if (action === 'mark_critical' || target) {
         if (target && !target.critical) await local.items.update(target.id, { critical: true });
         hapticToggleOn();
@@ -161,7 +164,7 @@ export function useRoutineInsight(routineId: string) {
         setError(copy.INSIGHT_FULL);
         return;
       }
-      const label = pattern.label.slice(0, ITEM_LABEL_MAX_LENGTH).trim();
+      const label = itemLabelOf(pattern.label);
       await local.items.create({ routineId: pattern.routineId, label, type: 'carry', critical: false, sortOrder: items.length });
       hapticToggleOn();
       toast.show(copy.forgotAdded(label));

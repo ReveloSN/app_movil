@@ -200,6 +200,23 @@ describe('useRoutineInsight con olvidos ("Olvidé algo")', () => {
     expect(result.current.message).toBeNull();
   });
 
+  it('un olvido de 33 a 60 caracteres, una vez agregado, no vuelve a ofrecerse como «Agregar» ni se duplica', async () => {
+    const long = 'Cargador portátil del teléfono y los cables'; // 43 caracteres: se recorta a 32 al agregarlo
+    const { repos, routineId } = await seedForgot(long);
+    const first = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(first.result.current.acceptLabel).toBe('Agregar a la rutina'));
+    await act(async () => first.result.current.accept());
+    const added = (await repos.items.getByRoutine(routineId)).map((item) => item.label);
+    expect(added).toEqual(['Cargador', long.slice(0, 32).trim()]);
+
+    // Al volver a abrir, el ítem ya está: se propone marcarlo, nunca agregarlo otra vez.
+    const second = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(second.result.current.message).not.toBeNull());
+    expect(second.result.current.acceptLabel).toBe('Marcar crítico');
+    await act(async () => second.result.current.accept());
+    expect(await repos.items.getByRoutine(routineId)).toHaveLength(2);
+  });
+
   it('con la rutina llena avisa y no agrega', async () => {
     const { repos, routineId } = await seedForgot('Paraguas');
     for (let i = 1; i < 12; i += 1) await repos.items.create({ routineId, label: `Ítem ${i}`, sortOrder: i });
