@@ -6,7 +6,13 @@ import { formatClock } from '@/shared/utils/formatClock';
 import { formatDayHeading, toLocalDayKey } from './history.dates';
 
 /** EV-02 */
+export const EMPTY_TITLE = 'Todavía no hay verificaciones';
 export const EMPTY_MESSAGE = 'Aquí verás cada verificación que hagas.';
+export const EMPTY_ACTION = 'Ir a Inicio';
+export const EMPTY_ACTION_HINT = 'Vuelve a Inicio para verificar una rutina';
+
+/** Lo que oye el lector de pantalla mientras carga el primer listado. */
+export const LOADING_LABEL = 'Cargando historial';
 
 // 09-3
 export const FILTER_ROUTINE_LABEL = 'Rutina';

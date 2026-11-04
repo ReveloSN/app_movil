@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 
@@ -8,12 +8,12 @@ import { ErrorState } from '@/components/molecules/ErrorState';
 import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
 import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
-import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { DepartureStatsSection } from '@/features/history/DepartureStatsSection';
 import * as copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
 import { groupRecordsByDay } from '@/features/history/history.grouping';
+import { HistorySkeleton } from '@/features/history/HistorySkeleton';
 import { describeResult, RESULT_FILTERS } from '@/features/history/history.result';
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
@@ -29,6 +29,9 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 const ALL = '';
+
+// EV-02 → Inicio: desde el vacío se vuelve a la pestaña para registrar una verificación.
+const goHome = () => router.navigate('/(tabs)');
 
 type HistoryView = 'history' | 'stats';
 const VIEW_OPTIONS: readonly SegmentOption<HistoryView>[] = [
@@ -81,9 +84,18 @@ export default function HistoryScreen() {
   const resultOptions = useMemo(() => [{ value: ALL, label: copy.ALL_RESULTS_LABEL }, ...RESULT_FILTERS], []);
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && records.length === 0) return <SkeletonList rows={5} accessibilityLabel="Cargando historial" />;
+  if (loading && records.length === 0) return <HistorySkeleton loading={loading} />;
   if (error && records.length === 0) return <ErrorState message={error} onRetry={refresh} />;
-  if (records.length === 0) return <EmptyState icon="time-outline" message={copy.EMPTY_MESSAGE} />;
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        illustration="noResults"
+        title={copy.EMPTY_TITLE}
+        message={copy.EMPTY_MESSAGE}
+        action={{ label: copy.EMPTY_ACTION, onPress: goHome, accessibilityHint: copy.EMPTY_ACTION_HINT }}
+      />
+    );
+  }
 
   const viewSwitch = (
     <SegmentedControl<HistoryView> accessibilityLabel={statsCopy.VIEW_GROUP_LABEL} options={VIEW_OPTIONS} value={view} onChange={setView} />
