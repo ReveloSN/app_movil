@@ -16,16 +16,6 @@ export function moveItem<T>(items: readonly T[], from: number, to: number): T[] 
 }
 
 /**
- * Mueve el ítem de `from` a `to` y devuelve SOLO los ítems cuyo `sortOrder` cambia, ya con el nuevo valor
- * (contiguo: 0, 1, 2…, según la posición). La lista llega en su orden actual. Mismo índice o índices fuera
- * de rango: nada cambia. Sirve para guardar un reordenamiento en un solo lote al soltar.
- */
-export function reorderItems<T extends { sortOrder: number }>(items: readonly T[], from: number, to: number): T[] {
-  if (from === to || !isValidIndex(items.length, from) || !isValidIndex(items.length, to)) return [];
-  return moveItem(items, from, to).flatMap((item, index) => (item.sortOrder === index ? [] : [{ ...item, sortOrder: index }]));
-}
-
-/**
  * Rango de posiciones [first, last] que ocupa, en la lista ya ordenada con los críticos arriba, el grupo
  * (críticos o no) del ítem en `index`. Un ítem solo se reordena dentro de su grupo: cruzarlo lo devolvería
  * a su sitio al mostrar la lista.
