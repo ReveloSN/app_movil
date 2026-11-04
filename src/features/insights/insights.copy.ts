@@ -1,17 +1,25 @@
 // Textos de "aprender de tus olvidos". Sin código en el Documento de Contenido: propuestos, pendientes de
 // validar (voz y tono §02: breve, sin culpa, con solución).
 
-import type { OmissionPattern } from './insights.detect';
+import type { InsightPattern } from './insights.detect';
 
 const DAY_PLURAL = ['Los domingos', 'Los lunes', 'Los martes', 'Los miércoles', 'Los jueves', 'Los viernes', 'Los sábados'];
 
-/** Mensaje determinista (sin IA): siempre disponible, también sin conexión o sin cuota. */
-export function patternMessage(pattern: OmissionPattern): string {
-  const lead = pattern.kind === 'weekday' ? `${DAY_PLURAL[pattern.weekday]} sueles omitir` : 'Sueles omitir';
-  return `${lead} «${pattern.label}». ¿Lo marcamos como crítico?`;
+/**
+ * Mensaje determinista (sin IA): siempre disponible, también sin conexión, sin consentimiento o sin cuota.
+ * `action` dice qué se propone: marcar como crítico (el ítem ya está) o agregarlo a la rutina.
+ */
+export function patternMessage(pattern: InsightPattern, action: 'mark_critical' | 'add_item' = 'mark_critical'): string {
+  const verb = pattern.kind === 'forgot_weekday' ? 'sueles olvidar' : 'sueles omitir';
+  const lead = pattern.kind === 'item' ? `Sueles omitir` : `${DAY_PLURAL[pattern.weekday]} ${verb}`;
+  const ask = action === 'add_item' ? '¿Lo agregamos a tu rutina?' : '¿Lo marcamos como crítico?';
+  return `${lead} «${pattern.label}». ${ask}`;
 }
 
-export const INSIGHT_ACCEPT = 'Sí, marcar';
+export const INSIGHT_ACCEPT = 'Marcar crítico';
+export const INSIGHT_ADD = 'Agregar a la rutina';
+/** ER-05 adaptado: la rutina llena no se toca. */
+export const INSIGHT_FULL = 'Tu rutina ya tiene 12 ítems: quita uno para agregarlo.';
 export const INSIGHT_DISMISS = 'Ahora no';
 export const insightMarked = (label: string) => `«${label}» ahora es crítico.`;
 export const INSIGHT_ERROR = 'No pudimos actualizar la rutina. Inténtalo de nuevo.';

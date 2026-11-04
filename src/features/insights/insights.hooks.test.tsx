@@ -161,6 +161,96 @@ describe('useRoutineInsight con IA', () => {
   });
 });
 
+describe('useRoutineInsight con olvidos ("Olvidé algo")', () => {
+  const DAY_PLURAL = ['Los domingos', 'Los lunes', 'Los martes', 'Los miércoles', 'Los jueves', 'Los viernes', 'Los sábados'];
+  // El mismo día de la semana (hora local) de las últimas semanas.
+  const weeksAgo = (weeks: number) => new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000 - 60_000).toISOString();
+  const lead = () => DAY_PLURAL[new Date(weeksAgo(1)).getDay()];
+
+  /** 3 olvidos de `label` el mismo día de la semana y 4 salidas ese día. */
+  async function seedForgot(label: string) {
+    const seeded = await seed();
+    for (const weeks of [1, 2, 3]) await seeded.repos.forgotEvents.add({ routineId: seeded.routineId, label, date: weeksAgo(weeks) });
+    for (const weeks of [1, 2, 3, 4]) {
+      await seeded.repos.records.create({ routineId: seeded.routineId, result: 'completed', date: weeksAgo(weeks), durationSeconds: 5 });
+    }
+    return seeded;
+  }
+
+  it('un ítem que no está en la rutina: "Agregar a la rutina" lo agrega', async () => {
+    const { repos, routineId } = await seedForgot('Paraguas');
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+
+    await waitFor(() => expect(result.current.message).toBe(`${lead()} sueles olvidar «Paraguas». ¿Lo agregamos a tu rutina?`));
+    expect(result.current.acceptLabel).toBe('Agregar a la rutina');
+    await act(async () => result.current.accept());
+
+    expect((await repos.items.getByRoutine(routineId)).map((item) => item.label)).toEqual(['Cargador', 'Paraguas']);
+    expect(mockToast.show).toHaveBeenCalledWith('Añadimos «Paraguas» a tu rutina.');
+    expect(result.current.message).toBeNull();
+  });
+
+  it('con la rutina llena avisa y no agrega', async () => {
+    const { repos, routineId } = await seedForgot('Paraguas');
+    for (let i = 1; i < 12; i += 1) await repos.items.create({ routineId, label: `Ítem ${i}`, sortOrder: i });
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(result.current.acceptLabel).toBe('Agregar a la rutina'));
+
+    await act(async () => result.current.accept());
+
+    expect(await repos.items.getByRoutine(routineId)).toHaveLength(12);
+    expect(result.current.error).toBe('Tu rutina ya tiene 12 ítems: quita uno para agregarlo.');
+    expect(result.current.message).not.toBeNull();
+  });
+
+  it('un ítem que ya está (escrito distinto): "Marcar crítico"', async () => {
+    const { repos, routineId, chargerId } = await seedForgot('cargadór');
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+
+    await waitFor(() => expect(result.current.message).toBe(`${lead()} sueles olvidar «cargadór». ¿Lo marcamos como crítico?`));
+    expect(result.current.acceptLabel).toBe('Marcar crítico');
+    await act(async () => result.current.accept());
+
+    expect((await repos.items.getByRoutine(routineId)).find((item) => item.id === chargerId)?.critical).toBe(true);
+    expect(await repos.items.getByRoutine(routineId)).toHaveLength(1);
+  });
+
+  it('la IA recibe el olvido agregado (source forgot) y solo se usa si propone la misma acción', async () => {
+    Object.assign(mockAi, { enabled: true, consented: true });
+    mockInsight.mockResolvedValue({ message: 'Se te suele quedar el «Paraguas». ¿Lo agregamos a tu rutina?', action: 'add_item' });
+    const { routineId } = await seedForgot('Paraguas');
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+
+    await waitFor(() => expect(result.current.message).toBe('Se te suele quedar el «Paraguas». ¿Lo agregamos a tu rutina?'));
+    expect(mockInsight).toHaveBeenCalledTimes(1);
+    const weekday = new Date(weeksAgo(1)).getDay();
+    expect(mockInsight).toHaveBeenCalledWith(
+      { source: 'forgot', label: 'Paraguas', routine: 'Saliendo de casa', weekday, misses: 3, observations: 4, inRoutine: false, critical: false },
+      `forgot_weekday|r1|paraguas|${weekday}`,
+    );
+  });
+
+  it('sin red ni IA, la sugerencia del olvido sale igual (texto local)', async () => {
+    mockNetwork.isConnected = false;
+    const { routineId } = await seedForgot('Paraguas');
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(result.current.message).toContain('«Paraguas»'));
+    expect(mockInsight).not.toHaveBeenCalled();
+  });
+
+  it('migra antes los olvidos que vivían solo en el teléfono', async () => {
+    const { routineId } = await seed();
+    const old = [1, 2, 3].map((weeks) => ({ id: `old-${weeks}`, routineId, recordId: null, label: 'Gafas', date: weeksAgo(weeks) }));
+    await AsyncStorage.setItem('forgot-events:user-1', JSON.stringify(old));
+    for (const weeks of [1, 2, 3, 4]) {
+      await mockLocal.repositories!.records.create({ routineId, result: 'completed', date: weeksAgo(weeks), durationSeconds: 5 });
+    }
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(result.current.message).toContain('«Gafas»'));
+    expect(await AsyncStorage.getItem('forgot-events:user-1')).toBeNull();
+  });
+});
+
 describe('useForgotItem ("Olvidé algo")', () => {
   it('añade el ítem a la rutina y anota el olvido', async () => {
     const { repos, routineId } = await seed();

@@ -27,5 +27,10 @@ describe('mensaje determinista (sin IA)', () => {
     const base = { routineId: 'r1', label: 'Cargador', misses: 3, observations: 4, critical: false };
     expect(patternMessage({ kind: 'item', recentMisses: 3, ...base })).toBe('Sueles omitir «Cargador». ¿Lo marcamos como crítico?');
     expect(patternMessage({ kind: 'weekday', weekday: 2, ...base })).toBe('Los martes sueles omitir «Cargador». ¿Lo marcamos como crítico?');
+    const forgot = { kind: 'forgot_weekday' as const, routineId: 'r1', label: 'Llaves', weekday: 1, misses: 3, observations: 4 };
+    expect(patternMessage(forgot, 'add_item')).toBe('Los lunes sueles olvidar «Llaves». ¿Lo agregamos a tu rutina?');
+    expect(patternMessage(forgot, 'mark_critical')).toBe('Los lunes sueles olvidar «Llaves». ¿Lo marcamos como crítico?');
+    // Corto y sin emojis: cabe en el mismo límite que el texto de la IA.
+    expect(patternMessage({ ...forgot, label: 'x'.repeat(60), weekday: 3 }, 'add_item').length).toBeLessThanOrEqual(140);
   });
 });
