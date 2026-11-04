@@ -79,16 +79,22 @@ describe('DepartureStatsSection', () => {
     expect(screen.getByLabelText('Mejor racha: 1 día')).toBeTruthy();
   });
 
-  it('sin salidas: estado vacío amable', async () => {
+  it('sin salidas: estado vacío con ilustración oculta a TalkBack', async () => {
     await show([], 'empty');
-    expect(screen.getByText(copy.STATS_EMPTY_TITLE)).toBeTruthy();
+    expect(screen.getByRole('header', { name: copy.STATS_EMPTY_TITLE })).toBeTruthy();
     expect(screen.getByText(copy.STATS_EMPTY_MESSAGE)).toBeTruthy();
+    const art = screen.getByTestId('empty-illustration', { includeHiddenElements: true });
+    expect(art.props.accessibilityElementsHidden).toBe(true);
     expect(screen.queryByLabelText(/Racha actual/)).toBeNull();
   });
 
-  it('cargando: placeholder anunciado', async () => {
+  it('cargando: esqueleto de métricas y barras anunciado una sola vez como ocupado', async () => {
     await show([], 'loading');
-    expect(screen.getByLabelText(copy.STATS_LOADING_LABEL)).toBeTruthy();
+    const group = screen.getByRole('progressbar', { name: copy.STATS_LOADING_LABEL });
+    expect(group.props.accessibilityState).toEqual(expect.objectContaining({ busy: true }));
+    // 2 tarjetas de racha (2 bloques cada una) + total (2) + título semanal (1) + 7 barras = 14 bloques decorativos.
+    expect(screen.getAllByTestId('skeleton-line', { includeHiddenElements: true })).toHaveLength(14);
+    expect(screen.queryByText(copy.STATS_EMPTY_TITLE)).toBeNull();
   });
 });
 

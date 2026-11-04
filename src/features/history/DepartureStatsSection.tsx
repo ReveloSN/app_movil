@@ -1,12 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Skeleton } from '@/components/atoms/Skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/atoms/Skeleton';
 import { AnimatedCounter } from '@/components/molecules/AnimatedCounter';
+import { EmptyState } from '@/components/molecules/EmptyState';
 import { WeeklyBarChart, type WeeklyBarDatum } from '@/components/molecules/WeeklyBarChart';
 import { fadeIn } from '@/shared/theme/motion';
-import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
+import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import * as copy from './stats.copy';
@@ -25,7 +25,10 @@ export function DepartureStatsSection({ status, summary }: DepartureStatsSection
   const styles = useThemedStyles(createStyles);
 
   if (status === 'loading') return <StatsLoading />;
-  if (status === 'empty') return <StatsEmpty />;
+  // Sin salidas: la ilustración de rutinas (lista con "+") invita a hacer la primera verificación.
+  if (status === 'empty') {
+    return <EmptyState inline illustration="noRoutines" title={copy.STATS_EMPTY_TITLE} message={copy.STATS_EMPTY_MESSAGE} />;
+  }
 
   const weekData: WeeklyBarDatum[] = summary.week.map((day) => ({
     key: day.date,
@@ -102,10 +105,14 @@ function RateBlock({ title, rate }: { title: string; rate: CompletionRate }) {
   );
 }
 
+/** Alturas de las barras del esqueleto semanal (7 días, sin valores reales). */
+const WEEK_BAR_HEIGHTS = [48, 72, 40, 96, 60, 84, 36] as const;
+
+/** Esqueleto de Estadísticas: dos tarjetas de racha, una de total y la de barras semanales, con la forma real. */
 function StatsLoading() {
   const styles = useThemedStyles(createStyles);
   return (
-    <View style={styles.stack} accessible accessibilityLabel={copy.STATS_LOADING_LABEL} accessibilityState={{ busy: true }}>
+    <SkeletonGroup accessibilityLabel={copy.STATS_LOADING_LABEL} style={styles.stack}>
       <View style={styles.row}>
         <View style={[styles.card, styles.tile]}>
           <Skeleton height={14} width="60%" />
@@ -116,24 +123,21 @@ function StatsLoading() {
           <Skeleton height={34} width="40%" />
         </View>
       </View>
-      <View style={styles.card}>
-        <Skeleton height={14} width="40%" />
-        <Skeleton height={120} />
+      <View style={[styles.card, styles.totalCard]}>
+        <Skeleton height={14} width="35%" />
+        <Skeleton height={28} width="20%" />
       </View>
-    </View>
-  );
-}
-
-function StatsEmpty() {
-  const { colors, iconSizes } = useAppTheme();
-  const styles = useThemedStyles(createStyles);
-  return (
-    <Animated.View entering={fadeIn} style={styles.empty} accessible accessibilityLabel={`${copy.STATS_EMPTY_TITLE}. ${copy.STATS_EMPTY_MESSAGE}`}>
-      {/* Hueco simple: las ilustraciones llegan después (F5). */}
-      <Ionicons name="stats-chart-outline" size={iconSizes.xl} color={colors.textSecondary} />
-      <Text style={styles.emptyTitle}>{copy.STATS_EMPTY_TITLE}</Text>
-      <Text style={styles.emptyMessage}>{copy.STATS_EMPTY_MESSAGE}</Text>
-    </Animated.View>
+      <View style={styles.card}>
+        <Skeleton height={18} width="40%" />
+        <View style={styles.bars}>
+          {WEEK_BAR_HEIGHTS.map((height, index) => (
+            <View key={index} style={styles.bar}>
+              <Skeleton height={height} />
+            </View>
+          ))}
+        </View>
+      </View>
+    </SkeletonGroup>
   );
 }
 
@@ -186,19 +190,13 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
       ...typography.label,
       color: colors.textSecondary,
     },
-    empty: {
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.xxl,
+    bars: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: spacing.sm,
+      height: 120,
     },
-    emptyTitle: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
-    emptyMessage: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
+    bar: {
+      flex: 1,
     },
   });
