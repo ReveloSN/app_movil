@@ -21,6 +21,9 @@ export const ALL_ROUTINES_LABEL = 'Todas';
 export const ALL_RESULTS_LABEL = 'Todos';
 export const FILTER_EMPTY_MESSAGE = 'Nada con este filtro. Prueba con otro.';
 
+/** Etiqueta (texto, no solo color) de los registros de rutinas de llegada. */
+export const ARRIVAL_ROW_LABEL = 'Llegada';
+
 // 09-4
 export const MOST_SKIPPED_TITLE = 'Más omitidos';
 export const timesLabel = (count: number) => (count === 1 ? '1 vez' : `${count} veces`);

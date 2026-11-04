@@ -161,6 +161,7 @@ export default function HistoryScreen() {
             accentTint={routineAccent(colors, item.routineColor).tint}
             date={item.date}
             result={describeResult(item.result)}
+            kindLabel={item.routineKind === 'arrival' ? copy.ARRIVAL_ROW_LABEL : undefined}
             pendingLabel={item.pending ? PENDING_SYNC_LABEL : undefined}
             onPress={() => setDetail(item)}
             pressHint={copy.openDetailHint}

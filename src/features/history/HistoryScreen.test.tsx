@@ -73,6 +73,12 @@ describe('Historial con estadísticas', () => {
     expect(screen.queryByText('Racha actual')).toBeNull();
   });
 
+  it('la fila de una rutina de llegada lleva la etiqueta «Llegada» en texto; la de salida no', async () => {
+    await renderScreen();
+    expect(screen.getAllByText(copy.ARRIVAL_ROW_LABEL)).toHaveLength(1);
+    expect(screen.getByLabelText(new RegExp(`^Llegando\\. ${copy.ARRIVAL_ROW_LABEL}\\.`))).toBeTruthy();
+  });
+
   it('«Estadísticas» muestra las métricas de salidas y «Historial» devuelve el listado', async () => {
     await renderScreen();
     await fireEvent.press(screen.getByRole('radio', { name: 'Estadísticas' }));

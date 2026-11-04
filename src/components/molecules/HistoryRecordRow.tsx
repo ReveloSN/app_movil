@@ -18,6 +18,8 @@ interface HistoryRecordRowProps {
   /** ISO 8601. */
   date: string;
   result: { tone: ChipTone; icon: IoniconName; label: string };
+  /** Etiqueta del tipo de rutina (ej. «Llegada»): ícono + texto. Sin ella, no se muestra nada. */
+  kindLabel?: string;
   /** Si llega, la verificación aún no se subió: se muestra este texto con un ícono. */
   pendingLabel?: string;
   /** Abre el detalle del registro. */
@@ -33,6 +35,7 @@ export function HistoryRecordRow({
   accentTint,
   date,
   result,
+  kindLabel,
   pendingLabel,
   onPress,
   pressHint,
@@ -49,7 +52,7 @@ export function HistoryRecordRow({
       accessible
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityHint={onPress ? pressHint : undefined}
-      accessibilityLabel={[routineName, time, result.label, pendingLabel].filter(Boolean).join('. ')}
+      accessibilityLabel={[routineName, kindLabel, time, result.label, pendingLabel].filter(Boolean).join('. ')}
     >
       <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
         <Ionicons name={toIoniconName(routineIcon, 'checkbox-outline')} size={iconSizes.md} color={accentColor ?? colors.primary} />
@@ -58,6 +61,12 @@ export function HistoryRecordRow({
         <Text style={styles.name} numberOfLines={1}>
           {routineName}
         </Text>
+        {kindLabel ? (
+          <View style={styles.pending}>
+            <Ionicons name="enter-outline" size={iconSizes.sm} color={colors.textSecondary} />
+            <Text style={styles.time}>{kindLabel}</Text>
+          </View>
+        ) : null}
         {time ? <Text style={styles.time}>{time}</Text> : null}
         {pendingLabel ? (
           <View style={styles.pending}>
