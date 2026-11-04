@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 
 import { AnimatedCheck } from '@/components/atoms/AnimatedCheck';
 import { PressableScale } from '@/components/atoms/PressableScale';
+import { SwipeableRow, useToggleAccessibility } from '@/components/molecules/SwipeableRow';
 import { durations, timing } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -27,39 +28,51 @@ interface ChecklistItemRowProps {
  * Fila tocable de la verificación (56pt). Marcado = verde + check; crítico = bandera + texto
  * para lector de pantalla. Ningún estado depende solo del color.
  */
-export function ChecklistItemRow({ label, icon, critical, criticalLabel, note, checked, onToggle }: ChecklistItemRowProps) {
-  const { colors, iconSizes } = useAppTheme();
+export function ChecklistItemRow({
+  label,
+  icon,
+  critical,
+  criticalLabel,
+  note,
+  checked,
+  onToggle,
+}: ChecklistItemRowProps) {
+  const { colors, iconSizes, radii } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const highlight = useSharedValue(checked ? 1 : 0);
   useEffect(() => {
     highlight.set(withTiming(checked ? 1 : 0, timing(durations.fast)));
   }, [checked, highlight]);
+  const toggleAccessibility = useToggleAccessibility(checked, onToggle);
   const highlightStyle = useAnimatedStyle(() => ({ opacity: highlight.get() }));
 
   return (
-    <PressableScale
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      accessibilityLabel={[critical ? `${label}, ${criticalLabel}` : label, note].filter(Boolean).join('. ')}
-      onPress={onToggle}
-      style={[styles.row, checked && styles.rowChecked]}
-    >
-      {/* Resaltado de la fila marcada: solo cambia la opacidad de una capa teñida. */}
-      <Animated.View pointerEvents="none" style={[styles.highlight, highlightStyle]} />
-      <AnimatedCheck checked={checked} />
-      <Ionicons name={toIoniconName(icon, 'cube-outline')} size={iconSizes.md} color={colors.textMuted} />
-      <View style={styles.texts}>
-        <Text style={[styles.label, checked && styles.labelChecked]} numberOfLines={2}>
-          {label}
-        </Text>
-        {note ? (
-          <Text style={styles.note} numberOfLines={2}>
-            {note}
+    <SwipeableRow checked={checked} radius={radii.lg} onToggle={onToggle}>
+      <PressableScale
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked }}
+        accessibilityLabel={[critical ? `${label}, ${criticalLabel}` : label, note].filter(Boolean).join('. ')}
+        onPress={onToggle}
+        {...toggleAccessibility}
+        style={[styles.row, checked && styles.rowChecked]}
+      >
+        {/* Resaltado de la fila marcada: solo cambia la opacidad de una capa teñida. */}
+        <Animated.View pointerEvents="none" style={[styles.highlight, highlightStyle]} />
+        <AnimatedCheck checked={checked} />
+        <Ionicons name={toIoniconName(icon, 'cube-outline')} size={iconSizes.md} color={colors.textMuted} />
+        <View style={styles.texts}>
+          <Text style={[styles.label, checked && styles.labelChecked]} numberOfLines={2}>
+            {label}
           </Text>
-        ) : null}
-      </View>
-      {critical ? <Ionicons name="flag" size={iconSizes.md} color={colors.criticalText} /> : null}
-    </PressableScale>
+          {note ? (
+            <Text style={styles.note} numberOfLines={2}>
+              {note}
+            </Text>
+          ) : null}
+        </View>
+        {critical ? <Ionicons name="flag" size={iconSizes.md} color={colors.criticalText} /> : null}
+      </PressableScale>
+    </SwipeableRow>
   );
 }
 

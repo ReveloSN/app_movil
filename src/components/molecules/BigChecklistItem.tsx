@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 
 import { AnimatedCheck } from '@/components/atoms/AnimatedCheck';
 import { PressableScale } from '@/components/atoms/PressableScale';
+import { SwipeableRow, useToggleAccessibility } from '@/components/molecules/SwipeableRow';
 import { durations, timing } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -29,37 +30,41 @@ interface BigChecklistItemProps {
  * casilla rellena + texto en color de acción; crítico = bandera con etiqueta escrita (no solo color).
  */
 export function BigChecklistItem({ label, icon, critical, criticalLabel, checked, onToggle }: BigChecklistItemProps) {
-  const { colors, iconSizes } = useAppTheme();
+  const { colors, iconSizes, radii } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const highlight = useSharedValue(checked ? 1 : 0);
   useEffect(() => {
     highlight.set(withTiming(checked ? 1 : 0, timing(durations.fast)));
   }, [checked, highlight]);
+  const toggleAccessibility = useToggleAccessibility(checked, onToggle);
   const highlightStyle = useAnimatedStyle(() => ({ opacity: highlight.get() }));
 
   return (
-    <PressableScale
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      accessibilityLabel={critical ? `${label}, ${criticalLabel}` : label}
-      onPress={onToggle}
-      style={[styles.row, critical && styles.rowCritical, checked && styles.rowChecked]}
-    >
-      <Animated.View pointerEvents="none" style={[styles.highlight, highlightStyle]} />
-      <AnimatedCheck checked={checked} />
-      <Ionicons name={toIoniconName(icon, 'cube-outline')} size={iconSizes.lg} color={colors.textMuted} />
-      <View style={styles.texts}>
-        <Text style={[styles.label, checked && styles.labelChecked]} numberOfLines={2}>
-          {label}
-        </Text>
-        {critical ? (
-          <View style={styles.badge}>
-            <Ionicons name="flag" size={iconSizes.sm} color={colors.criticalText} />
-            <Text style={styles.badgeText}>{criticalLabel}</Text>
-          </View>
-        ) : null}
-      </View>
-    </PressableScale>
+    <SwipeableRow checked={checked} radius={radii.xxl} onToggle={onToggle}>
+      <PressableScale
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked }}
+        accessibilityLabel={critical ? `${label}, ${criticalLabel}` : label}
+        onPress={onToggle}
+        {...toggleAccessibility}
+        style={[styles.row, critical && styles.rowCritical, checked && styles.rowChecked]}
+      >
+        <Animated.View pointerEvents="none" style={[styles.highlight, highlightStyle]} />
+        <AnimatedCheck checked={checked} />
+        <Ionicons name={toIoniconName(icon, 'cube-outline')} size={iconSizes.lg} color={colors.textMuted} />
+        <View style={styles.texts}>
+          <Text style={[styles.label, checked && styles.labelChecked]} numberOfLines={2}>
+            {label}
+          </Text>
+          {critical ? (
+            <View style={styles.badge}>
+              <Ionicons name="flag" size={iconSizes.sm} color={colors.criticalText} />
+              <Text style={styles.badgeText}>{criticalLabel}</Text>
+            </View>
+          ) : null}
+        </View>
+      </PressableScale>
+    </SwipeableRow>
   );
 }
 

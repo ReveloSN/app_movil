@@ -36,4 +36,12 @@ describe('BigChecklistItem', () => {
     expect(screen.getByRole('checkbox', { name: 'Llaves, Crítico' })).toBeTruthy();
     expect(screen.getByText('Crítico')).toBeTruthy();
   });
+
+  it('ofrece marcar/desmarcar como acción de accesibilidad y la ejecuta', async () => {
+    const onToggle = await renderItem({ checked: true });
+    const row = screen.getByRole('checkbox', { name: 'Llaves' });
+    expect(row.props.accessibilityActions).toEqual([{ name: 'toggle', label: 'Desmarcar' }]);
+    await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'toggle' } });
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
 });
