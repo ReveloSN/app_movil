@@ -5,6 +5,8 @@ import '@/features/notifications/background.tasks';
 
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { RootStack } from '@/components/organisms/RootStack';
 import { AuthProvider } from '@/features/auth/AuthProvider';
@@ -27,6 +29,8 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
+    // Raíz de gestos: necesaria para deslizar filas y arrastrar para reordenar.
+    <GestureHandlerRootView style={styles.root}>
     <ThemeModeProvider>
       {/* Avisos breves globales: sobreviven a la navegación (ej. "Rutina guardada." al volver a Inicio). */}
       <ToastProvider>
@@ -49,5 +53,8 @@ export default function RootLayout() {
       </AuthProvider>
       </ToastProvider>
     </ThemeModeProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });
