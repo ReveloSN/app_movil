@@ -4,8 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ReduceMotion, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CountUp } from '@/components/atoms/CountUp';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { AnimatedCounter } from '@/components/molecules/AnimatedCounter';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage, STREAK_SUFFIX, streakLabel } from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
@@ -94,7 +94,7 @@ export default function SummaryScreen() {
             <View style={[styles.card, styles.streak]} accessible accessibilityLabel={streakLabel(streak)}>
               <Ionicons name="flame-outline" size={iconSizes.md} color={colors.primary} />
               {/* El número cuenta hasta la racha; el lector oye la frase completa (etiqueta de la tarjeta). */}
-              <CountUp value={streak} style={styles.duration} />
+              <AnimatedCounter value={streak} style={styles.duration} />
               <Text style={styles.duration}>{STREAK_SUFFIX}</Text>
             </View>
           ) : null}
