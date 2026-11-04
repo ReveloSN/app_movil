@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ItemRepository } from '@/db/repositories/item.repository';
+import { localLoadErrorMessage } from '@/features/local-data/localData.errors';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
+
 import { toChecklistItems } from './checklist.items';
 import type { ChecklistItemState, ChecklistProgress } from './checklist.types';
 
@@ -41,7 +43,7 @@ export function useChecklist(
       (cause: unknown) => {
         if (!isLatest()) return;
         if (__DEV__) console.warn('[checklist.load]', cause);
-        setError(LOAD_ERROR);
+        setError(localLoadErrorMessage(cause, LOAD_ERROR));
         setLoading(false);
       },
     );

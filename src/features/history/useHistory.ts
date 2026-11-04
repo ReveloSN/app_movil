@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LocalDocument } from '@/db/local/local-document.types';
 import type { LocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { localLoadErrorMessage } from '@/features/local-data/localData.errors';
 import { useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useSync } from '@/features/sync/SyncProvider';
@@ -59,7 +60,7 @@ export function useHistory(injectedStore?: Pick<LocalStore, 'read' | 'subscribe'
       (cause: unknown) => {
         if (request !== latestRequest.current) return;
         if (__DEV__) console.warn('[history.load]', cause);
-        setError(LOAD_ERROR);
+        setError(localLoadErrorMessage(cause, LOAD_ERROR));
         setLoading(false);
       },
     );
