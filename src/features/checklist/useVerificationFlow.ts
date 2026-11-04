@@ -1,6 +1,6 @@
 import { router, useNavigation } from 'expo-router';
 import { usePreventRemove, type NavigationAction } from 'expo-router/react-navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
@@ -37,21 +37,40 @@ interface VerificationFlowOptions {
   discardDraft(): Promise<void>;
   /** Háptico de "completada" al terminar; el modo salida ya lo da al celebrar. */
   confirmHaptic?: boolean;
+  /**
+   * Mientras sea true, el gesto de salir se ignora (ni diálogo ni navegación): p. ej. durante la celebración
+   * del modo salida, que ya está guardando y pasa sola al resumen.
+   */
+  exitBlocked?: boolean;
 }
 
 /**
  * Cierre de la verificación compartido por la vista de lista (verify) y el modo salida (go): confirmaciones
  * (crítico sin marcar, "Listo" vacío, salir con ítems marcados), guardado del registro y paso al resumen.
  */
-export function useVerificationFlow({ routineId, items, progress, finish, discardDraft, confirmHaptic = true }: VerificationFlowOptions) {
+export function useVerificationFlow({
+  routineId,
+  items,
+  progress,
+  finish,
+  discardDraft,
+  confirmHaptic = true,
+  exitBlocked = false,
+}: VerificationFlowOptions) {
   const navigation = useNavigation();
   const [dialog, setDialog] = useState<VerificationDialog>(null);
   // true cuando la salida ya está decidida (terminó o confirmó "Salir"): no se vuelve a preguntar.
   const leaving = useRef(false);
 
   // Cubre la X, el botón atrás de Android y el gesto de iOS: solo pregunta si ya hay algo marcado.
+  const exitBlockedRef = useRef(exitBlocked);
+  useEffect(() => {
+    exitBlockedRef.current = exitBlocked;
+  });
   usePreventRemove(progress.checked > 0, ({ data }) => {
     if (leaving.current) dispatchToOwner(navigation, data.action);
+    // Guardando (celebración): atrás no abre el diálogo de salir con el temporizador corriendo.
+    else if (exitBlockedRef.current) return;
     else setDialog({ kind: 'exit', action: data.action });
   });
 

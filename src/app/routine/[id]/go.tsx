@@ -49,9 +49,17 @@ export default function DepartureModeScreen() {
   const { items, loading, error, retry, toggleItem, applyChecked, progress, startedAt } = useChecklist(id);
   const { discard: discardDraft } = useChecklistDraft(id, loading, items, applyChecked);
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
-  // La celebración ya trae su háptico: el cierre no lo repite.
-  const flow = useVerificationFlow({ routineId: id, items, progress, finish, discardDraft, confirmHaptic: false });
   const [celebrating, setCelebrating] = useState(false);
+  // La celebración ya trae su háptico: el cierre no lo repite. Mientras dura, "atrás" se ignora.
+  const flow = useVerificationFlow({
+    routineId: id,
+    items,
+    progress,
+    finish,
+    discardDraft,
+    confirmHaptic: false,
+    exitBlocked: celebrating,
+  });
 
   // Al completar, tras la celebración se guarda igual que "Listo" en verify; si falla, vuelve la lista con su error.
   const completeRef = useRef(flow.complete);

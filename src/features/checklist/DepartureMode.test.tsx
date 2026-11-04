@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { AccessibilityInfo } from 'react-native';
 
 import type { ChecklistItemState } from '@/features/checklist/checklist.types';
@@ -108,6 +109,29 @@ describe('Modo salida', () => {
     });
     expect(mockFinish).toHaveBeenCalledWith('done');
     expect(mockDiscard).toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/routine/[id]/summary' }));
+  });
+
+  it('durante la celebración, atrás se ignora: no abre el diálogo de salir; fuera de ella, sí', async () => {
+    await renderScreen();
+    const pressBack = async () => {
+      const [, handler] = (usePreventRemove as jest.Mock).mock.calls.at(-1) as [boolean, (event: { data: { action: object } }) => void];
+      await act(async () => handler({ data: { action: { type: 'GO_BACK' } } }));
+    };
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Llaves, crítico' }));
+    await pressBack();
+    expect(screen.getByText(/¿Salir sin terminar la verificación\?/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Seguir' }));
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Cartera' }));
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith('Todo listo. Buen camino.');
+    await pressBack();
+    expect(screen.queryByText(/¿Salir sin terminar la verificación\?/)).toBeNull();
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
     expect(mockReplace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/routine/[id]/summary' }));
   });
 });
