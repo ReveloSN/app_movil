@@ -10,7 +10,7 @@ import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SkyBand } from '@/components/molecules/SkyBand';
-import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
+import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { editRoutineLabel, greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
@@ -29,6 +29,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const EMPTY_MESSAGE = 'Aún no tienes rutinas. Empieza con una plantilla o crea la tuya.'; // EV-01
 
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
+const openDepartureMode = (routineId: string) => router.push({ pathname: '/routine/[id]/go', params: { id: routineId } });
 
 /** P03: banda con el cielo de la hora, próxima rutina, tarjetas y el botón "+" con las formas de crear una rutina. */
 export default function RoutinesScreen() {
@@ -73,6 +74,8 @@ export default function RoutinesScreen() {
           when={nextRoutineDescription(next, now)}
           actionLabel={VERIFY_NOW_LABEL}
           onAction={() => openVerification(next.routineId)}
+          secondaryLabel={DEPARTURE_MODE_LABEL}
+          onSecondaryAction={() => openDepartureMode(next.routineId)}
           icon={resolveRoutineIcon(nextRoutine?.icon)}
           accentColor={nextAccent.color}
           accentTint={nextAccent.tint}
