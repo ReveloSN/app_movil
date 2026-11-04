@@ -8,7 +8,7 @@ import { ErrorState } from '@/components/molecules/ErrorState';
 import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
 import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
-import { DepartureStatsSection } from '@/features/history/DepartureStatsSection';
+import { DepartureStatsView } from '@/features/history/DepartureStatsView';
 import * as copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
@@ -18,7 +18,6 @@ import { describeResult, RESULT_FILTERS } from '@/features/history/history.resul
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
 import * as statsCopy from '@/features/history/stats.copy';
-import { useDepartureStats } from '@/features/history/useDepartureStats';
 import { useHistory } from '@/features/history/useHistory';
 import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
@@ -42,7 +41,6 @@ const VIEW_OPTIONS: readonly SegmentOption<HistoryView>[] = [
 export default function HistoryScreen() {
   const history = useHistory();
   const { records, loading, error, refresh } = history;
-  const stats = useDepartureStats(history);
   // Historial | Estadísticas: no se guarda; al volver a la pestaña se ve el listado.
   const [view, setView] = useState<HistoryView>('history');
   const { routines } = useRoutines();
@@ -111,7 +109,7 @@ export default function HistoryScreen() {
           }
         >
           {viewSwitch}
-          <DepartureStatsSection status={stats.status} summary={stats.summary} />
+          <DepartureStatsView history={history} />
         </ScrollView>
       </View>
     );

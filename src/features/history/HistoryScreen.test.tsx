@@ -7,6 +7,7 @@ import { TestProviders } from '@/shared/testing/TestProviders';
 import type { Routine } from '@/shared/types/routine.types';
 
 import HistoryScreen from '@/app/(tabs)/history';
+import { useDepartureStats } from '@/features/history/useDepartureStats';
 
 const mockHistory: { records: HistoryRecord[]; loading: boolean } = { records: [], loading: false };
 const mockRoutines: { list: Routine[] } = { list: [] };
@@ -23,6 +24,10 @@ jest.mock('@/features/routines/useRoutines', () => ({
   useRoutines: () => ({ routines: mockRoutines.list, loading: false, error: null, refresh: () => Promise.resolve() }),
 }));
 jest.mock('@/features/auth/AuthProvider', () => ({ useAuth: () => ({ user: { id: 'u' } }) }));
+jest.mock('@/features/history/useDepartureStats', () => {
+  const actual = jest.requireActual<typeof import('@/features/history/useDepartureStats')>('@/features/history/useDepartureStats');
+  return { ...actual, useDepartureStats: jest.fn(actual.useDepartureStats) };
+});
 jest.mock('@/features/history/RecordDetailSheet', () => ({ RecordDetailSheet: () => null }));
 jest.mock('@/features/insights/WeekSummarySection', () => ({ WeekSummarySection: () => null }));
 jest.setTimeout(20000);
@@ -91,6 +96,23 @@ describe('Historial con estadísticas', () => {
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Historial' }));
     expect(screen.getAllByText('Saliendo de casa')).toHaveLength(2);
+  });
+
+  it('las estadísticas solo se calculan mientras se ve «Estadísticas», no con el listado', async () => {
+    const stats = jest.mocked(useDepartureStats);
+    stats.mockClear();
+    await renderScreen();
+    expect(stats).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Estadísticas' }));
+    expect(stats).toHaveBeenCalled();
+
+    stats.mockClear();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Historial' }));
+    await act(async () => {
+      jest.advanceTimersByTime(120_000);
+    });
+    expect(stats).not.toHaveBeenCalled();
   });
 
   it('con solo rutinas de llegada, Estadísticas muestra el estado vacío', async () => {
