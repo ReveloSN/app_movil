@@ -24,14 +24,11 @@ export function useSpeechToText({ onText }: Options) {
   useEffect(() => {
     onTextRef.current = onText;
   });
-  const activeRef = useRef(false);
 
   useSpeechRecognitionEvent('start', () => {
-    activeRef.current = true;
     setListening(true);
   });
   useSpeechRecognitionEvent('end', () => {
-    activeRef.current = false;
     setListening(false);
   });
   useSpeechRecognitionEvent('result', (event) => {
@@ -39,7 +36,6 @@ export function useSpeechToText({ onText }: Options) {
     if (transcript) onTextRef.current(normalizeDictation(transcript));
   });
   useSpeechRecognitionEvent('error', (event) => {
-    activeRef.current = false;
     setListening(false);
     if (event.error === 'aborted') return;
     if (event.error === 'not-allowed') setError('denied');
@@ -50,7 +46,13 @@ export function useSpeechToText({ onText }: Options) {
 
   useEffect(
     () => () => {
-      if (activeRef.current) ExpoSpeechRecognitionModule.abort();
+      // Siempre: el reconocimiento puede haber arrancado sin que llegara aún el evento «start» (el permiso o
+      // el servicio tardan), y un abort sin nada en curso es inocuo.
+      try {
+        ExpoSpeechRecognitionModule.abort();
+      } catch {
+        // Ya no había nada que cancelar.
+      }
     },
     [],
   );

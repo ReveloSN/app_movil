@@ -108,9 +108,23 @@ describe('useSpeechToText', () => {
     expect(native.abort).toHaveBeenCalledTimes(1);
   });
 
-  it('al desmontar sin reconocimiento activo, no cancela nada', async () => {
-    const { unmount } = await renderHook(() => useSpeechToText({ onText: jest.fn() }));
+  it('al desmontar justo tras arrancar (antes del evento «start»), también lo cancela', async () => {
+    const { result, unmount } = await renderHook(() => useSpeechToText({ onText: jest.fn() }));
+    await act(() => result.current.start());
+    expect(native.start).toHaveBeenCalled();
+    expect(result.current.listening).toBe(false);
     await unmount();
-    expect(native.abort).not.toHaveBeenCalled();
+    expect(native.abort).toHaveBeenCalledTimes(1);
+  });
+
+  it('al desmontar tras terminar el reconocimiento, abortar sigue siendo inocuo (y no lanza)', async () => {
+    native.abort.mockImplementationOnce(() => {
+      throw new Error('nada en curso');
+    });
+    const { unmount } = await renderHook(() => useSpeechToText({ onText: jest.fn() }));
+    await emit('start');
+    await emit('end');
+    await expect(unmount()).resolves.not.toThrow();
+    expect(native.abort).toHaveBeenCalledTimes(1);
   });
 });
