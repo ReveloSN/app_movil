@@ -7,6 +7,7 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { getLocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { clearHomeGeofence } from '@/features/geofence/homeGeofence.store';
 import { useSync } from '@/features/sync/SyncProvider';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -43,6 +44,10 @@ export function AccountSection() {
         .catch((cause: unknown) => {
           if (__DEV__) console.warn('[account.clearGuestData]', cause);
         });
+      // La casa de la geocerca también es de esa copia local: no se queda en el teléfono.
+      await clearHomeGeofence(guestId).catch((cause: unknown) => {
+        if (__DEV__) console.warn('[account.clearGuestHome]', cause);
+      });
     }
     setSigningOut(false);
     setError(result.error);
