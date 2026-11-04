@@ -9,7 +9,7 @@ import type { AiClient } from './ai.client';
 import { AiClientError } from './ai.types';
 
 /** Los mismos límites del servidor (un test lo comprueba). */
-export const AI_STATS_LIMITS = { insightMessage: 160, summary: 280, recommendation: 140, itemLabel: 32, routineName: 24 } as const;
+export const AI_STATS_LIMITS = { insightMessage: 140, summary: 280, recommendation: 140, itemLabel: 32, routineName: 24 } as const;
 
 export interface InsightPatternInput {
   item: string;

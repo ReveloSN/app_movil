@@ -45,7 +45,7 @@ describe('IA con estadísticas (app)', () => {
   it('rechaza respuestas con enlaces, vacías, demasiado largas o de otro modo', () => {
     expect(invalid(() => toInsight({ mode: 'insights', insight: { message: 'Mira www.x.com', action: 'none' } }))).toBe(true);
     expect(invalid(() => toInsight({ mode: 'insights', insight: { message: ' ', action: 'none' } }))).toBe(true);
-    expect(invalid(() => toInsight({ mode: 'insights', insight: { message: 'a'.repeat(161), action: 'none' } }))).toBe(true);
+    expect(invalid(() => toInsight({ mode: 'insights', insight: { message: 'a'.repeat(141), action: 'none' } }))).toBe(true);
     expect(invalid(() => toInsight({ mode: 'suggest', suggestions: [] }))).toBe(true);
     expect(invalid(() => toWeeklySummary({ mode: 'weekly_summary', summary: { resumen: 'Bien' } }))).toBe(true);
   });
