@@ -69,7 +69,11 @@
     "setupFiles": [
       "<rootDir>/jest.setup.js"
     ],
-    "resolver": "react-native-worklets/jest/resolver"
+    "resolver": "react-native-worklets/jest/resolver",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/\\.claude/"
+    ]
   },
   "private": true
 }
