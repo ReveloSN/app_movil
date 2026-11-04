@@ -16,17 +16,19 @@ interface TemplateListProps {
   onUse(template: PresetTemplate): void;
   /** Contenido sobre la lista (ej. título del paso del onboarding). */
   header?: ReactElement;
+  /** Oculta las plantillas de llegada (el onboarding crea la primera rutina de salida). */
+  departuresOnly?: boolean;
 }
 
 /** Plantillas precargadas (P10), cada una con "Usar plantilla". */
-export function TemplateList({ onUse, header }: TemplateListProps) {
+export function TemplateList({ onUse, header, departuresOnly = false }: TemplateListProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useAppTheme();
   const endPadding = useScrollEndPadding();
 
   return (
     <FlatList
-      data={PRESET_TEMPLATES}
+      data={departuresOnly ? PRESET_TEMPLATES.filter((template) => template.kind !== 'arrival') : PRESET_TEMPLATES}
       keyExtractor={(template) => template.id}
       contentContainerStyle={[styles.list, endPadding]}
       ListHeaderComponent={header}

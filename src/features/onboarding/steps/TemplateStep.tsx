@@ -14,6 +14,7 @@ export function TemplateStep({ onUse }: { onUse(template: PresetTemplate): void 
   return (
     <TemplateList
       onUse={onUse}
+      departuresOnly
       header={
         <View style={styles.header}>
           <Text style={styles.title} accessibilityRole="header">
