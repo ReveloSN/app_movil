@@ -51,3 +51,6 @@ export function nextRoutineDescription(next: NextRoutine, now: Date): string {
   if (next.kind === 'schedule') return nextRoutineWhen(next.at, now);
   return next.kind === 'wifi_exit' ? 'Al salir del Wi-Fi' : 'Al llegar al Wi-Fi';
 }
+
+/** Sección de Inicio con las rutinas de llegada (recordatorios al volver a casa). */
+export const ARRIVAL_SECTION_TITLE = 'Al llegar';

@@ -4,6 +4,8 @@ import type { Routine } from '@/shared/types/routine.types';
 import type { Trigger } from '@/shared/types/trigger.types';
 import { parseSqlTime } from '@/shared/utils/formatClock';
 
+import { departureRoutines } from './routine-list';
+
 interface NextRoutineBase {
   routineId: string;
   routineName: string;
@@ -37,14 +39,15 @@ function wifiWindow(trigger: Trigger) {
 }
 
 /**
- * P03-2: la rutina activa que toca antes, con avisos activos. Orden de prioridad:
+ * P03-2: la rutina de salida activa que toca antes, con avisos activos. Orden de prioridad:
  * 1. un aviso por Wi-Fi con franja que cubre este momento (avisaría ya mismo);
  * 2. el aviso por horario más cercano en el futuro;
  * 3. un aviso por Wi-Fi sin franja (sin hora que comparar, solo si no hay horario).
  * Un aviso por Wi-Fi con franja que no cubre este momento no cuenta. null si no hay ninguno.
  */
 export function findNextRoutine(routines: readonly Routine[], triggers: readonly Trigger[], now: Date): NextRoutine | null {
-  const activeRoutines = new Map(routines.filter((routine) => routine.active).map((routine) => [routine.id, routine]));
+  // Las de llegada no son «la próxima salida»: se avisan al volver a casa, no se preparan antes de salir.
+  const activeRoutines = new Map(departureRoutines(routines).filter((routine) => routine.active).map((routine) => [routine.id, routine]));
   let scheduled: NextRoutine | null = null;
   let wifiInWindow: NextRoutine | null = null;
   let wifiAnytime: NextRoutine | null = null;

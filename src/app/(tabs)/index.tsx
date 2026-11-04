@@ -1,8 +1,9 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
@@ -12,15 +13,22 @@ import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import {
+  ARRIVAL_SECTION_TITLE,
   editRoutineLabel,
   EMPTY_ROUTINES_ACTION,
   EMPTY_ROUTINES_MESSAGE,
   EMPTY_ROUTINES_TITLE,
   greeting,
-  LOADING_ROUTINES_LABEL, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
+  LOADING_ROUTINES_LABEL,
+  NEXT_ROUTINE_LABEL,
+  nextRoutineDescription,
+  todayLabel,
+  VERIFY_PRESS_HINT,
+} from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
+import { arrivalRoutines, departureRoutines } from '@/features/routines/routine-list';
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
@@ -31,6 +39,7 @@ import { useFirstAppearance } from '@/shared/hooks/useFirstAppearance';
 import { staggeredEntering } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import type { Routine } from '@/shared/types/routine.types';
 
 const openTemplates = () => router.push('/routine/templates');
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
@@ -43,6 +52,9 @@ export default function RoutinesScreen() {
   const displayName = useDisplayName();
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  // Las salidas van arriba; las de llegada, aparte en «Al llegar».
+  const departures = useMemo(() => departureRoutines(routines), [routines]);
+  const arrivals = useMemo(() => arrivalRoutines(routines), [routines]);
   const nextRoutine = next ? routines.find((routine) => routine.id === next.routineId) : undefined;
   const nextAccent = routineAccent(colors, nextRoutine?.color);
   const sky = homeSky(now);
@@ -89,42 +101,58 @@ export default function RoutinesScreen() {
     </View>
   );
 
+  const renderCard = (item: Routine) => (
+    <RoutineCard
+      name={item.name}
+      icon={item.icon}
+      accentColor={routineAccent(colors, item.color).color}
+      accentTint={routineAccent(colors, item.color).tint}
+      active={item.active}
+      lastCompletedAt={item.lastCompletedAt}
+      actionLabel={VERIFY_NOW_LABEL}
+      onAction={() => openVerification(item.id)}
+      // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
+      onPress={() => openVerification(item.id)}
+      pressHint={VERIFY_PRESS_HINT}
+      onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
+      editLabel={editRoutineLabel(item.name)}
+    />
+  );
+
   return (
     <View style={styles.container}>
       {/* Cambios sin subir o con error: ícono + texto. */}
       <PendingSyncIndicator style={styles.syncStatus} />
       <FlatList
-        data={routines}
+        data={departures}
         keyExtractor={(routine) => routine.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={header}
         ListEmptyComponent={
-          // EV-01 reemplaza a las tarjetas (P1) y ofrece las plantillas.
-          <EmptyState
-            inline
-            illustration="noRoutines"
-            title={EMPTY_ROUTINES_TITLE}
-            message={EMPTY_ROUTINES_MESSAGE}
-            action={{ label: EMPTY_ROUTINES_ACTION, onPress: openTemplates }}
-          />
+          // EV-01 reemplaza a las tarjetas (P1) y ofrece las plantillas. Con solo rutinas de llegada no aplica.
+          arrivals.length > 0 ? null : (
+            <EmptyState
+              inline
+              illustration="noRoutines"
+              title={EMPTY_ROUTINES_TITLE}
+              message={EMPTY_ROUTINES_MESSAGE}
+              action={{ label: EMPTY_ROUTINES_ACTION, onPress: openTemplates }}
+            />
+          )
+        }
+        ListFooterComponent={
+          arrivals.length > 0 ? (
+            <View style={styles.arrivals}>
+              <SectionLabel label={ARRIVAL_SECTION_TITLE} />
+              {arrivals.map((routine) => (
+                <View key={routine.id}>{renderCard(routine)}</View>
+              ))}
+            </View>
+          ) : null
         }
         renderItem={({ item, index }) => (
           <Animated.View entering={firstAppearance ? staggeredEntering(index) : undefined}>
-            <RoutineCard
-              name={item.name}
-              icon={item.icon}
-              accentColor={routineAccent(colors, item.color).color}
-              accentTint={routineAccent(colors, item.color).tint}
-              active={item.active}
-              lastCompletedAt={item.lastCompletedAt}
-              actionLabel={VERIFY_NOW_LABEL}
-              onAction={() => openVerification(item.id)}
-              // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
-              onPress={() => openVerification(item.id)}
-              pressHint={VERIFY_PRESS_HINT}
-              onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
-              editLabel={editRoutineLabel(item.name)}
-            />
+            {renderCard(item)}
           </Animated.View>
         )}
         refreshControl={
@@ -145,6 +173,10 @@ const createStyles = ({ colors, sizes, spacing }: AppTheme) =>
     },
     header: {
       gap: spacing.md,
+    },
+    arrivals: {
+      gap: spacing.md,
+      marginTop: spacing.lg,
     },
     syncStatus: {
       marginHorizontal: spacing.xl,

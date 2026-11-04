@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
+import { DEFAULT_ROUTINE_KIND, type RoutineKind } from '@/shared/types/routine.types';
 
 import { DEFAULT_ITEM_KIND } from './item-kinds';
 import { criticalGroupRange, moveItem, sortCriticalFirst } from './item-order';
@@ -42,6 +43,7 @@ const initialEntries = (draft: RoutineDraft | undefined): ItemFormEntry[] => (dr
 /** Estado local del formulario de rutina. Lo escrito se conserva si el guardado falla. */
 export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIGGERS, startDirty = false }: UseRoutineFormOptions) {
   const [name, setName] = useState(initialDraft?.name ?? '');
+  const [kind, setKind] = useState<RoutineKind>(initialDraft?.kind ?? DEFAULT_ROUTINE_KIND);
   // 04-2: siempre hay ícono y color (los de por defecto si la rutina o la plantilla no traen).
   const [startIcon] = useState<string>(() => resolveRoutineIcon(initialDraft?.icon));
   const [startColor] = useState<string>(() => resolveRoutineColor(initialDraft?.color).key);
@@ -52,7 +54,7 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
   // Lo que había al abrir (también los avisos ya sembrados): base para saber si hay cambios (DC-03).
   const [initialFingerprint] = useState(() =>
     draftFingerprint(
-      toRoutineDraft({ name: initialDraft?.name ?? '', icon: startIcon, color: startColor, items: startItems, triggers }),
+      toRoutineDraft({ name: initialDraft?.name ?? '', kind: initialDraft?.kind, icon: startIcon, color: startColor, items: startItems, triggers }),
     ),
   );
   // Los errores se muestran tras el primer intento de guardar y luego se actualizan en vivo.
@@ -63,8 +65,8 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const draft = useMemo<RoutineDraft>(
-    () => toRoutineDraft({ name, icon, color, items, triggers }),
-    [name, icon, color, items, triggers],
+    () => toRoutineDraft({ name, kind, icon, color, items, triggers }),
+    [name, kind, icon, color, items, triggers],
   );
   const dirty = useMemo(
     () => startDirty || draftFingerprint(draft) !== initialFingerprint,
@@ -147,6 +149,8 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
   return {
     name,
     setName,
+    kind,
+    setKind,
     icon,
     setIcon,
     color,

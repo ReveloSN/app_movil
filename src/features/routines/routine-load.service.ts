@@ -48,7 +48,7 @@ export async function loadRoutineForEdit(deps: RoutineLoadDeps, routine: Routine
   });
 
   return {
-    draft: { name: routine.name, icon: routine.icon ?? undefined, color: routine.color ?? undefined, items: itemDrafts },
+    draft: { name: routine.name, kind: routine.kind, icon: routine.icon ?? undefined, color: routine.color ?? undefined, items: itemDrafts },
     triggers: triggerEntries,
     original: { itemIds: items.map((item) => item.id), triggerIds: triggerEntries.map((entry) => entry.key) },
   };

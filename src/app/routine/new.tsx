@@ -12,7 +12,7 @@ import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
  * borrador de "Crear con IA" (nada se guarda hasta "Guardar cambios").
  */
 export default function NewRoutineScreen() {
-  const { templateId, aiDraftId } = useLocalSearchParams<{ templateId?: string; aiDraftId?: string }>();
+  const { templateId, aiDraftId, kind } = useLocalSearchParams<{ templateId?: string; aiDraftId?: string; kind?: string }>();
   const template = findPresetTemplate(templateId);
   const [aiSeed] = useState(() => getAiDraft(aiDraftId));
   // Los avisos se editan en P06 (otra pantalla): se comparten por este id de formulario.
@@ -28,8 +28,11 @@ export default function NewRoutineScreen() {
   const initialDraft = aiSeed
     ? aiSeed.draft
     : template
-      ? { name: template.name, icon: template.icon, color: template.color, items: [...template.items] }
-      : undefined;
+      ? { name: template.name, kind: template.kind, icon: template.icon, color: template.color, items: [...template.items] }
+      : // Desde «Al llegar» en Inicio la rutina nace de llegada; el tipo se puede cambiar antes de guardar.
+        kind === 'arrival'
+        ? { name: '', kind: 'arrival' as const, items: [] }
+        : undefined;
 
   return (
     <RoutineForm
