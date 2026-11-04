@@ -4,7 +4,7 @@ import { PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import type { SwipeDirection } from '@/features/checklist/checklist.deck';
+import type { SwipeDirection } from './checklist.deck';
 import { durations, easings, springs, timing } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
