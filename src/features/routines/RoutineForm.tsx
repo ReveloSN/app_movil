@@ -165,7 +165,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
 
         {/* 04-5 */}
         <View onLayout={onTriggersLayout}>
-          <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
+          <RoutineTriggersSection formId={formId} routineKind={form.kind} error={form.errors.triggers} />
         </View>
 
         {/* Compartir como copia (solo al editar): lo que se ve en el formulario, sin avisos. */}

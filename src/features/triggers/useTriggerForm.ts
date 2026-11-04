@@ -4,22 +4,25 @@ import { PERMISSION_COPY } from '@/features/permissions/permission.copy';
 import { firstMissingPermission } from '@/features/permissions/permission.service';
 import type { PermissionKind } from '@/features/permissions/permission.types';
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
+import type { RoutineKind } from '@/shared/types/routine.types';
 import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
 import { summarySentence } from './trigger.copy';
+import { defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
 import type { TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
 import { hasTriggerErrors, normalizeTriggerDraft, validateTriggerDraft, type TriggerValidationErrors } from './trigger.validation';
 
 const DEFAULT_TIME: ClockTime = { hour: 7, minute: 0 };
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
-const DEFAULT_WINDOW: TimeWindow = { start: { hour: 6, minute: 0 }, end: { hour: 9, minute: 0 } };
 const DEFAULT_NETWORK_NAME = 'Casa';
 const NO_ERRORS: TriggerValidationErrors = {};
 
 interface UseTriggerFormOptions {
   /** Aviso a editar; sin él, uno nuevo. */
   initial?: TriggerDraft;
+  /** Tipo de la rutina a la que pertenece: una de llegada propone «Llegar al Wi-Fi» y una franja de tarde. */
+  routineKind?: RoutineKind;
   /** Recibe el aviso validado y con los permisos concedidos. */
   onCommit(draft: TriggerDraft): void;
   /** Lleva a P02 por el permiso que falta. Al volver, la pantalla llama a `resume`. */
@@ -57,18 +60,19 @@ const requiredPermissions = (draft: TriggerDraft): PermissionKind[] =>
  */
 export function useTriggerForm({
   initial,
+  routineKind,
   onCommit,
   onNeedPermission,
   findMissingPermission = firstMissingPermission,
 }: UseTriggerFormOptions) {
-  const [kind, setKind] = useState<TriggerKind>(initial?.type ?? 'schedule');
+  const [kind, setKind] = useState<TriggerKind>(initial?.type ?? defaultTriggerKindFor(routineKind));
   const [time, setTime] = useState<ClockTime>(initial?.type === 'schedule' ? initial.time : DEFAULT_TIME);
   const [days, setDays] = useState<Weekday[]>(initial?.type === 'schedule' ? initial.days : WEEKDAYS);
   const wifi = initial?.type === 'schedule' ? undefined : initial;
   const [ssid, setSsid] = useState(wifi?.ssid ?? '');
   const [networkName, setNetworkName] = useState(wifi?.networkName ?? DEFAULT_NETWORK_NAME);
   const [windowEnabled, setWindowEnabled] = useState(Boolean(wifi?.window));
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? DEFAULT_WINDOW);
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? defaultWindowFor(routineKind));
   // Lo que había al abrir P06: base para saber si hay cambios sin guardar.
   const [initialFingerprint] = useState(() =>
     fingerprint(toDraft({ kind, time, days, ssid, networkName, windowEnabled, timeWindow })),

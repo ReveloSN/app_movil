@@ -45,7 +45,7 @@ const openLocationPermission = () => router.push({ pathname: '/routine/permissio
 
 /** P06. Se entra desde P04 con `formId` (y `key` para editar). Guardar devuelve el aviso a P04. */
 export default function TriggerScreen() {
-  const { formId = '', key } = useLocalSearchParams<{ formId?: string; key?: string }>();
+  const { formId = '', key, routineKind } = useLocalSearchParams<{ formId?: string; key?: string; routineKind?: string }>();
   const styles = useThemedStyles(createStyles);
   const { find, upsert } = useTriggerDrafts(formId);
   // Aviso a editar, o la sugerencia (ej. de una plantilla) con la que se precarga.
@@ -54,6 +54,7 @@ export default function TriggerScreen() {
 
   const form = useTriggerForm({
     initial: existing,
+    routineKind: routineKind === 'arrival' ? 'arrival' : 'departure',
     onCommit: (draft) => {
       const entry = { ...draft, key: entryKey };
       upsert(entry);
