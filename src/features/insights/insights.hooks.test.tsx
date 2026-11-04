@@ -3,18 +3,22 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-li
 
 import { InsightCard } from '@/components/molecules/InsightCard';
 import { createLocalRepositories, type LocalRepositories } from '@/db/local/local.repositories';
-import { createLocalStore } from '@/db/local/local.store';
 import { fixedDeps, memoryStorage } from '@/db/local/testing/memoryStorage';
 import { TestProviders } from '@/shared/testing/TestProviders';
 
-import { createForgotStore } from './insights.stores';
+import { createLocalStore, type LocalStore } from '@/db/local/local.store';
+
+import { resetForgotMigrations } from './forgot.migrate';
 import { useForgotItem } from './useForgotItem';
 import { useRoutineInsight } from './useRoutineInsight';
 
-const mockLocal: { repositories?: LocalRepositories } = {};
+const mockLocal: { repositories?: LocalRepositories; store?: LocalStore } = {};
 const mockToast = { show: jest.fn(), hide: jest.fn() };
 jest.mock('@/features/auth/AuthProvider', () => ({ useAuth: () => ({ user: { id: 'user-1' } }) }));
-jest.mock('@/features/local-data/LocalRepositoriesProvider', () => ({ useLocalRepositories: () => mockLocal.repositories }));
+jest.mock('@/features/local-data/LocalRepositoriesProvider', () => ({
+  useLocalRepositories: () => mockLocal.repositories,
+  useLocalStore: () => mockLocal.store,
+}));
 jest.mock('@/features/feedback/toast.context', () => ({ useToast: () => mockToast }));
 jest.mock('@/features/routines/useRoutines', () => ({ useRoutines: () => ({ routines: [{ id: 'r1', name: 'Saliendo de casa' }] }) }));
 jest.mock('@/features/notifications/TriggerRuntimeProvider', () => ({ useTriggerRuntime: () => ({ rearm: () => Promise.resolve() }) }));
@@ -28,8 +32,10 @@ jest.setTimeout(20000);
 const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
 async function seed() {
-  const repos = createLocalRepositories(createLocalStore('user-1', memoryStorage()), fixedDeps());
+  const store = createLocalStore('user-1', memoryStorage());
+  const repos = createLocalRepositories(store, fixedDeps());
   mockLocal.repositories = repos;
+  mockLocal.store = store;
   const routine = await repos.routines.create({ name: 'Saliendo de casa', icon: 'home-outline', color: 'green' });
   const charger = await repos.items.create({ routineId: routine.id, label: 'Cargador', type: 'carry', critical: false, sortOrder: 0 });
   for (const days of [1, 3, 5]) {
@@ -46,6 +52,7 @@ async function seed() {
 
 beforeEach(async () => {
   mockToast.show.mockReset();
+  resetForgotMigrations();
   await AsyncStorage.clear();
 });
 
@@ -87,7 +94,10 @@ describe('useForgotItem ("Olvidé algo")', () => {
 
     expect(done).toBe(true);
     expect((await repos.items.getByRoutine(routineId)).map((item) => item.label)).toContain('Paraguas');
-    expect(await createForgotStore('user-1').getAll()).toEqual([expect.objectContaining({ routineId, recordId: 'rec-1', label: 'Paraguas' })]);
+    expect(await repos.forgotEvents.getAll()).toEqual([expect.objectContaining({ routineId, recordId: 'rec-1', label: 'Paraguas' })]);
+    // Se anotó en la copia local y quedó en la cola para subir (funciona sin red).
+    const { outbox } = await mockLocal.store!.read();
+    expect(outbox.some((pending) => pending.kind === 'insertForgot' && pending.event.label === 'Paraguas')).toBe(true);
     expect(mockToast.show).toHaveBeenCalledWith('Añadimos «Paraguas» a tu rutina.');
   });
 
@@ -102,7 +112,38 @@ describe('useForgotItem ("Olvidé algo")', () => {
 
     expect(await repos.items.getByRoutine(routineId)).toHaveLength(12);
     expect(mockToast.show).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('12 ítems') }));
-    expect(await createForgotStore('user-1').getAll()).toHaveLength(1);
+    expect(await repos.forgotEvents.getAll()).toHaveLength(1);
+  });
+
+  it('si el ítem ya está en la rutina (sin importar mayúsculas ni tildes) lo anota sin duplicarlo', async () => {
+    const { repos, routineId } = await seed();
+    const { result } = await renderHook(() => useForgotItem(routineId, null));
+    await act(async () => {
+      await result.current.add('cargadór');
+    });
+    expect(await repos.items.getByRoutine(routineId)).toHaveLength(1);
+    expect(await repos.forgotEvents.getAll()).toHaveLength(1);
+    expect(mockToast.show).toHaveBeenCalledWith(expect.objectContaining({ message: 'Lo anotamos. «cargadór» ya está en tu rutina.' }));
+  });
+
+  it('migra antes los olvidos que vivían solo en el teléfono, una sola vez', async () => {
+    const { repos, routineId } = await seed();
+    const old = { id: 'old-1', routineId, recordId: null, label: 'Llaves', date: daysAgo(10) };
+    await AsyncStorage.setItem('forgot-events:user-1', JSON.stringify([old]));
+    const { result } = await renderHook(() => useForgotItem(routineId, null));
+
+    await act(async () => {
+      await result.current.add('Paraguas');
+    });
+    await act(async () => {
+      await result.current.add('Gafas');
+    });
+
+    const events = await repos.forgotEvents.getAll();
+    expect(events.map((event) => event.label).sort()).toEqual(['Gafas', 'Llaves', 'Paraguas']);
+    expect(await AsyncStorage.getItem('forgot-events:user-1')).toBeNull();
+    const { outbox } = await mockLocal.store!.read();
+    expect(outbox.filter((pending) => pending.kind === 'insertForgot' && pending.event.id === 'old-1')).toHaveLength(1);
   });
 
   it('sin texto no guarda y explica qué falta', async () => {

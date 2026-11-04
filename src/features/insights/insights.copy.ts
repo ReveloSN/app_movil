@@ -25,6 +25,7 @@ export const FORGOT_CLOSE = 'Cerrar';
 export const forgotAdded = (label: string) => `Añadimos «${label}» a tu rutina.`;
 /** ER-05 adaptado: se anota el olvido aunque la rutina esté llena. */
 export const FORGOT_FULL = 'Lo anotamos. Tu rutina ya tiene 12 ítems: quita uno para añadirlo.';
+export const forgotAlreadyInRoutine = (label: string) => `Lo anotamos. «${label}» ya está en tu rutina.`;
 export const FORGOT_ERROR = 'No pudimos añadirlo. Inténtalo de nuevo.';
 export const forgotInHistory = (labels: readonly string[]) => `Se te quedó: ${labels.join(', ')}`;
 

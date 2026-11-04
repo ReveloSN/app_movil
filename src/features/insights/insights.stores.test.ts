@@ -1,7 +1,7 @@
 import { memoryStorage } from '@/db/local/testing/memoryStorage';
 
 import { patternMessage } from './insights.copy';
-import { createForgotStore, createSnoozeStore } from './insights.stores';
+import { createSnoozeStore } from './insights.stores';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -19,14 +19,6 @@ describe('"Ahora no"', () => {
     expect(await createSnoozeStore('u1', storage).isSnoozed('x', 0)).toBe(false);
     await createSnoozeStore('u2', storage).snooze('x', 0);
     expect(await createSnoozeStore('u1', storage).isSnoozed('x', 1)).toBe(false);
-  });
-});
-
-describe('olvidos anotados', () => {
-  it('guarda y devuelve los eventos', async () => {
-    const store = createForgotStore('u1', memoryStorage());
-    await store.add({ id: 'e1', routineId: 'r1', recordId: 'rec1', label: 'Paraguas', date: '2026-10-17T07:00:00.000Z' });
-    expect(await store.getAll()).toEqual([{ id: 'e1', routineId: 'r1', recordId: 'rec1', label: 'Paraguas', date: '2026-10-17T07:00:00.000Z' }]);
   });
 });
 
