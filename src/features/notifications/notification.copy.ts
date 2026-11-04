@@ -44,3 +44,21 @@ export function triggerBody(lead: string, labels: readonly string[]): string {
 /** Recordatorio (tras posponer o sin respuesta). */
 export const reminderBody = (itemCount: number, routineName: string) =>
   clampTo(`Aún tienes ${things(itemCount)} por revisar en ${routineName}.`, BODY_MAX_LENGTH);
+
+// Recordatorios de llegada a casa («Al llegar»).
+export const ARRIVAL_TITLE = 'Ya llegaste';
+/** Cuántos recordatorios se listan en la notificación expandida; el resto se resume como «y X más». */
+export const ARRIVAL_MAX_LISTED = 6;
+
+/**
+ * Cuerpo de la notificación de llegada. Android la muestra expandida (BigText) con un recordatorio por línea:
+ * "3 recordatorios:\n• Poner a cargar el celular\n• Guardar las llaves\n• Dejar los zapatos". Con uno solo, va
+ * directo. Se listan hasta ARRIVAL_MAX_LISTED; si hay más, la última línea dice «y X más».
+ */
+export function arrivalBody(labels: readonly string[]): string {
+  if (labels.length === 0) return 'Revisa tus recordatorios de llegada.';
+  if (labels.length === 1) return labels[0];
+  const listed = labels.slice(0, ARRIVAL_MAX_LISTED).map((label) => `• ${label}`);
+  const rest = labels.length - listed.length;
+  return [`${labels.length} recordatorios:`, ...listed, ...(rest > 0 ? [`y ${rest} más`] : [])].join('\n');
+}

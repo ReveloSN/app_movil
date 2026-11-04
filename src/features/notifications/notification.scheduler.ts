@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 
 import { CATEGORY_ID, channelFor, minutesToMs, UNANSWERED_REMINDERS } from './notification.config';
-import { notificationTitle, reminderBody } from './notification.copy';
+import { ARRIVAL_TITLE, arrivalBody, notificationTitle, reminderBody } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import type { Occurrence, OccurrenceNotificationData } from './occurrence.types';
 
@@ -85,4 +85,34 @@ export async function snoozeOccurrence(occurrence: Occurrence, now: number, pref
   await cancelOccurrenceNotifications(occurrence);
   const ids = await scheduleReminders(occurrence, now, `${occurrence.key}#s${now}-`, prefs);
   return { ...occurrence, notificationIds: ids, deadline: deadlineAfter(now, prefs) };
+}
+
+type ArrivalBase = Omit<Occurrence, 'deadline' | 'notificationIds' | 'kind'>;
+
+/** Cuánto se recuerda una llegada ya avisada (después se olvida sin registrar nada). */
+const ARRIVAL_RETENTION_MS = 60 * 60_000;
+
+/**
+ * Recordatorio de llegada a casa: una sola notificación, ahora mismo, con los recordatorios de la rutina.
+ * No programa recordatorios por falta de respuesta.
+ */
+export async function scheduleArrival(
+  occurrence: ArrivalBase,
+  labels: readonly string[],
+  now: number,
+  prefs: SchedulePrefs,
+): Promise<Occurrence> {
+  const data: OccurrenceNotificationData = { occurrenceKey: occurrence.key, routineId: occurrence.routineId };
+  const id = await Notifications.scheduleNotificationAsync({
+    identifier: `${occurrence.key}#0`,
+    content: {
+      title: ARRIVAL_TITLE,
+      subtitle: occurrence.routineName,
+      body: arrivalBody(labels),
+      data,
+      sound: prefs.sound, // iOS; en Android lo decide el canal.
+    },
+    trigger: { channelId: channelFor(prefs.sound) },
+  });
+  return { ...occurrence, kind: 'arrival', notificationIds: [id], deadline: now + ARRIVAL_RETENTION_MS };
 }

@@ -2,6 +2,9 @@ import * as BackgroundTask from 'expo-background-task';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
+// Define la tarea de la geocerca de casa: tiene que existir al cargar el bundle sin interfaz.
+import '@/features/geofence/geofence.task';
+
 import { applyNotificationResponse } from './notification.actions';
 import { runTriggerMaintenance } from './trigger.maintenance';
 

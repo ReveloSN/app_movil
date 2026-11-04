@@ -4,7 +4,8 @@ import type { ArmedTrigger } from '@/features/triggers/trigger.types';
 
 import { triggerBody } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
-import { cancelOccurrenceNotifications, scheduleOccurrence, snoozeOccurrence } from './notification.scheduler';
+import { cancelOccurrenceNotifications, scheduleArrival, scheduleOccurrence, snoozeOccurrence } from './notification.scheduler';
+import { loadLastArrivals, saveLastArrivals } from './arrival.cooldown.store';
 import { planPostpone, type PostponeTarget } from './occurrence.postpone';
 import { updateOccurrences } from './occurrence.store';
 import type { Occurrence } from './occurrence.types';
@@ -14,8 +15,11 @@ import type { Occurrence } from './occurrence.types';
  * propios recordatorios. Se rellenan al abrir la app y desde la tarea en segundo plano.
  */
 const SCHEDULE_HORIZON_DAYS = 4;
-/** Un aviso de Wi-Fi no vuelve a sonar antes de esto (evita repetir si la señal parpadea). */
-const WIFI_COOLDOWN_MS = 10 * 60_000;
+/**
+ * Un aviso de Wi-Fi no vuelve a sonar antes de esto (evita repetir si la señal parpadea). La llegada a casa
+ * lo comparte: el Wi-Fi y la geocerca pueden detectar la misma llegada, y solo debe sonar una vez.
+ */
+export const WIFI_COOLDOWN_MS = 10 * 60_000;
 
 const DAY_MS = 24 * 60 * 60_000;
 
@@ -171,5 +175,43 @@ export function cancelAllOccurrences(): Promise<void> {
   return updateOccurrences(async (entries) => {
     await Promise.allSettled(entries.map(cancelOccurrenceNotifications));
     return { entries: [], result: undefined };
+  });
+}
+
+/** Lo mínimo de una rutina de llegada para avisarla. */
+export interface ArrivalTarget {
+  routineId: string;
+  routineName: string;
+  itemLabels: readonly string[];
+}
+
+/**
+ * Avisa que la persona llegó a casa. Es el único camino de las dos detecciones (entrar al Wi-Fi de casa y
+ * la geocerca): aplica el cooldown de 10 minutos POR RUTINA, así que si las dos detectan la misma llegada
+ * solo suena una vez. El cooldown se recuerda aunque la notificación ya se haya cerrado con «Hecho».
+ * Devuelve false si sonó hace muy poco o si está en «No molestar».
+ */
+export function fireArrival(target: ArrivalTarget, ownerId: string, now: number, prefs: NotificationPrefs): Promise<boolean> {
+  return updateOccurrences(async (entries) => {
+    if (prefs.doNotDisturb) return { entries, result: false };
+    const lastFired = await loadLastArrivals(now);
+    if (now - (lastFired[target.routineId] ?? -Infinity) < WIFI_COOLDOWN_MS) return { entries, result: false };
+    const occurrence = await scheduleArrival(
+      {
+        key: `arrival:${target.routineId}@${now}`,
+        triggerId: `arrival:${target.routineId}`,
+        routineId: target.routineId,
+        routineName: target.routineName,
+        itemCount: target.itemLabels.length,
+        ownerId,
+        firesAt: now,
+        signature: 'arrival',
+      },
+      target.itemLabels,
+      now,
+      prefs,
+    );
+    await saveLastArrivals({ ...lastFired, [target.routineId]: now });
+    return { entries: [...entries, occurrence], result: true };
   });
 }

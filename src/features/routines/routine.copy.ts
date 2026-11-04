@@ -71,7 +71,7 @@ export const DEPARTURE_KIND_LABEL = 'Salida';
 export const ARRIVAL_KIND_LABEL = 'Llegada';
 export const ROUTINE_KIND_HINT: Record<'departure' | 'arrival', string> = {
   departure: 'Para no olvidar nada antes de salir.',
-  arrival: 'Recordatorios al volver a casa, como poner el celular a cargar.',
+  arrival: 'Recordatorios al volver a casa, como poner el celular a cargar. Define tu casa en Ajustes para detectarla sin Wi-Fi.',
 };
 export const NAME_PLACEHOLDER: Record<'departure' | 'arrival', string> = {
   departure: 'Ej. Salir al trabajo',

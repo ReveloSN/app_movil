@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 
-import type { HomeGeofence } from './geofence.types';
+import { registerHomeGeofence } from './geofence.service';
+import type { GeofenceStatus, HomeGeofence } from './geofence.types';
 import { clearHomeGeofence, loadHomeGeofence, saveHomeGeofence } from './homeGeofence.store';
 
 /** Lo leído para un usuario: así nunca se muestra la casa de otra sesión mientras carga la nueva. */
@@ -33,10 +34,12 @@ export function useHomeGeofence() {
   const home = ready ? loaded.home : null;
 
   const save = useCallback(
-    async (next: HomeGeofence) => {
-      if (!userId) return;
+    async (next: HomeGeofence): Promise<GeofenceStatus> => {
+      if (!userId) return 'no-home';
       await saveHomeGeofence(userId, next);
       setLoaded({ userId, home: next });
+      // Se (re)registra al guardar: sin permiso de segundo plano queda solo el aviso por Wi-Fi.
+      return registerHomeGeofence(userId);
     },
     [userId],
   );
@@ -45,6 +48,7 @@ export function useHomeGeofence() {
     if (!userId) return;
     await clearHomeGeofence(userId);
     setLoaded({ userId, home: null });
+    await registerHomeGeofence(userId); // Sin casa: quita la geocerca del sistema.
   }, [userId]);
 
   return { home, loading: userId !== null && !ready, save, remove };

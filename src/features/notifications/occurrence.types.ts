@@ -19,6 +19,11 @@ export interface Occurrence {
   notificationIds: string[];
   /** Configuración del aviso al programarla: si cambia, las futuras se reprograman. */
   signature: string;
+  /**
+   * 'arrival' = recordatorio de llegada a casa: suena una sola vez, sin recordatorios ni «sin respuesta»,
+   * y no deja registros. Sin este campo, es un aviso de salida de siempre.
+   */
+  kind?: 'arrival';
 }
 
 /** Datos que viajan dentro de cada notificación. */
