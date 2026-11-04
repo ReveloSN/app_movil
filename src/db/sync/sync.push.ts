@@ -133,20 +133,42 @@ async function sendUpdate(op: OutboxOpOf<'update'>, remote: RemoteDeps): Promise
 }
 
 const FOREIGN_KEY_VIOLATION = '23503';
+const INSUFFICIENT_PRIVILEGE = '42501';
+
+/**
+ * El olvido apunta a algo que el servidor no tiene: la rutina o la verificación. Puede llegar como
+ * 23503 (clave foránea) o, antes, como 42501 de la política de forgot_events (exige que la rutina y la
+ * verificación sean del usuario). 'routine' solo si el mensaje lo dice (forgot_events_routine_id_fkey).
+ */
+function missingReference(cause: unknown): 'routine' | 'unknown' | null {
+  if (!(cause instanceof RepositoryError)) return null;
+  if (cause.code === FOREIGN_KEY_VIOLATION) return cause.message.includes('routine_id') ? 'routine' : 'unknown';
+  if (cause.code === INSUFFICIENT_PRIVILEGE && cause.message.includes('row-level security')) return 'unknown';
+  return null;
+}
 
 /**
  * Insertar un olvido es idempotente (un duplicado no falla). Si la verificación a la que apunta no
  * existe en el servidor (ej. se descartó su subida), el olvido se guarda igual, sin ese enlace.
+ * Si lo que falta es la rutina (se borró en otro dispositivo), el olvido se da por hecho: la cascada
+ * del servidor se lo habría llevado, y la próxima bajada lo quita también de aquí. Cuando el error no
+ * dice cuál falta, se reintenta sin la verificación; si vuelve a faltar algo, es la rutina.
  */
 async function sendForgot(op: OutboxOpOf<'insertForgot'>, remote: RemoteDeps): Promise<Outcome> {
-  try {
-    await remote.forgotEvents.create(op.event);
-  } catch (cause) {
-    if (isConflict(cause)) return DONE;
-    const missingRecord = cause instanceof RepositoryError && cause.code === FOREIGN_KEY_VIOLATION && op.event.recordId !== null;
-    if (!missingRecord) throw cause;
-    await remote.forgotEvents.create({ ...op.event, recordId: null });
-  }
+  /** 'sent': llegó (o ya estaba). 'routineGone': falta la rutina. 'unknownGone': falta la rutina o la verificación. */
+  const create = async (event: typeof op.event) => {
+    try {
+      await remote.forgotEvents.create(event);
+      return 'sent' as const;
+    } catch (cause) {
+      if (isConflict(cause)) return 'sent' as const;
+      const missing = missingReference(cause);
+      if (missing === null) throw cause;
+      return missing === 'routine' || event.recordId === null ? ('routineGone' as const) : ('unknownGone' as const);
+    }
+  };
+  // Tanto si llegó como si su rutina ya no existe, sale de la cola sin avisar nada.
+  if ((await create(op.event)) === 'unknownGone') await create({ ...op.event, recordId: null });
   return DONE;
 }
 

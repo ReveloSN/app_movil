@@ -6,6 +6,7 @@ import { fixedDeps, memoryStorage } from '../local/testing/memoryStorage';
 import { pushOutbox } from './sync.push';
 import { conflictError, fakeRemote, networkError, rejectedError } from './testing/fakeRemote';
 import { forgot } from '../local/testing/outbox.fixtures';
+import { RepositoryError } from '../repositories/repository.types';
 
 function setup(server = fakeRemote()) {
   const store = createLocalStore('user-1', memoryStorage());
@@ -13,6 +14,15 @@ function setup(server = fakeRemote()) {
   const push = () => pushOutbox(store, server.remote);
   return { store, repos, server, push };
 }
+
+const fkError = (constraint: string) =>
+  new RepositoryError(
+    'forgot_events',
+    'create',
+    'referenced',
+    '23503',
+    `insert or update on table "forgot_events" violates foreign key constraint "${constraint}"`,
+  );
 
 const tablesCalled = (calls: string[]) => calls.map((call) => call.split(':')[0]);
 
@@ -321,6 +331,75 @@ describe('pushOutbox', () => {
 
       expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1', recordId: null })]);
       expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('un 23503 de record_id se reintenta sin el enlace', async () => {
+      const { repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', recordId: 'rec-gone', label: 'Llaves' });
+      server.failNext('forgotEvents.create', fkError('forgot_events_record_id_fkey'));
+
+      await push();
+
+      expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1', recordId: null })]);
+    });
+
+    it('si su rutina se borró en otro dispositivo (23503 de routine_id), sale de la cola sin fallar ni avisar', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'gone', recordId: 'rec-1', label: 'Llaves' });
+      server.failNext('forgotEvents.create', fkError('forgot_events_routine_id_fkey'));
+
+      const report = await push();
+
+      expect(server.calls).toEqual(['forgotEvents.create:f1']); // no se reintenta sin la verificación
+      expect(report).toMatchObject({ failed: [], stale: [] });
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('si el 23503 no dice qué falta: se reintenta sin la verificación y, si vuelve a fallar, era la rutina', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'gone', recordId: 'rec-1', label: 'Llaves' });
+      server.failNext('forgotEvents.create', rejectedError('23503', 'forgot_events'));
+      server.failNext('forgotEvents.create', rejectedError('23503', 'forgot_events'));
+
+      const report = await push();
+
+      expect(server.calls).toEqual(['forgotEvents.create:f1', 'forgotEvents.create:f1']);
+      expect(report).toMatchObject({ failed: [], stale: [] });
+      expect(server.tables.forgotEvents).toEqual([]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('sin verificación, un 23503 solo puede ser la rutina: sale de la cola', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'gone', label: 'Llaves' });
+      server.failNext('forgotEvents.create', rejectedError('23503', 'forgot_events'));
+
+      expect((await push()).failed).toEqual([]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('la política de la tabla (42501) se trata igual: sin la rutina, sale de la cola', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'gone', recordId: 'rec-1', label: 'Llaves' });
+      const rls = () =>
+        new RepositoryError('forgot_events', 'create', 'other', '42501', 'new row violates row-level security policy for table "forgot_events"');
+      server.failNext('forgotEvents.create', rls());
+      server.failNext('forgotEvents.create', rls());
+
+      expect((await push()).failed).toEqual([]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('un 42501 que no viene de la política (ej. sin permiso sobre la tabla) sigue siendo un fallo visible', async () => {
+      const { store, repos, server, push } = setup();
+      await repos.forgotEvents.add({ id: 'f1', routineId: 'r1', label: 'Llaves' });
+      server.failNext(
+        'forgotEvents.create',
+        new RepositoryError('forgot_events', 'create', 'other', '42501', 'permission denied for table forgot_events'),
+      );
+
+      expect((await push()).failed).toHaveLength(1);
+      expect((await store.read()).outbox[0].failed).toMatchObject({ code: '42501' });
     });
 
     it('sin la tabla en el servidor (falta la migración) queda pendiente, no fallido, y no frena lo demás', async () => {
