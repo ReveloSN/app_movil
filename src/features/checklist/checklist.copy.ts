@@ -55,3 +55,11 @@ export const DECK_DONE_MESSAGE = 'Toca «Listo» para guardar la verificación.'
 export const EXIT_MESSAGE = 'Ya marcaste algunos ítems. ¿Salir sin terminar la verificación?';
 export const EXIT_CONFIRM = 'Salir';
 export const EXIT_CANCEL = 'Seguir';
+
+// Modo salida (pantalla completa). Sin código en el Documento de Contenido: propuesto, pendiente de validar.
+export const DEPARTURE_MODE_LABEL = 'Modo salida';
+export const DEPARTURE_MODE_HINT = 'Abre la verificación en pantalla completa, con ítems grandes';
+export const DEPARTURE_DONE_LABEL = 'Listo, salgo';
+export const CLOSE_DEPARTURE_LABEL = 'Cerrar modo salida';
+/** Cifra al centro del anillo, ej. "3/8". */
+export const ringCenter = (checked: number, total: number) => `${checked}/${total}`;

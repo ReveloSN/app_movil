@@ -38,6 +38,11 @@ export default function RoutineLayout() {
           name="[id]/verify"
           options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
+        {/* Modo salida: la misma verificación en pantalla completa, con ítems grandes. */}
+        <Stack.Screen
+          name="[id]/go"
+          options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
         <Stack.Screen name="[id]/summary" options={{ headerShown: false, animation: 'fade' }} />
       </Stack>
     </RequireSession>
