@@ -1,6 +1,5 @@
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import { usePreventRemove, type NavigationAction } from 'expo-router/react-navigation';
-import { useRef, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,20 +21,17 @@ import * as copy from '@/features/checklist/checklist.copy';
 import { ChecklistDeck } from '@/features/checklist/ChecklistDeck';
 import type { ViewMode } from '@/features/checklist/checklist.viewmode';
 import { useViewModePreference } from '@/features/checklist/useViewModePreference';
-import { firstUncheckedCritical, isEmptyDone, lastCriticalIndex } from '@/features/checklist/checklist.outcome';
-import type { FinishIntent } from '@/features/checklist/checklist.types';
-import { toSummaryParams } from '@/features/checklist/summaryParams';
 import { useChecklist } from '@/features/checklist/useChecklist';
+import { lastCriticalIndex } from '@/features/checklist/checklist.outcome';
 import { useChecklistDraft } from '@/features/checklist/useChecklistDraft';
-import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lifecycle';
 import { useFinishChecklist } from '@/features/checklist/useFinishChecklist';
-import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
+import { useVerificationFlow } from '@/features/checklist/useVerificationFlow';
 import { usePostponeChecklist } from '@/features/checklist/usePostponeChecklist';
 import { displayIconForItem } from '@/features/routines/item-icon-guess';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { WeatherHint } from '@/features/weather/WeatherHint';
-import { hapticConfirm, hapticToggleOff, hapticToggleOn } from '@/shared/haptics/haptics';
+import { hapticToggleOff, hapticToggleOn } from '@/shared/haptics/haptics';
 import { durations, staggerDelay } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -49,26 +45,8 @@ const VIEW_MODES: readonly SegmentOption<ViewMode>[] = [
   { value: 'deck', label: copy.VIEW_DECK_LABEL },
 ];
 
-type Dialog =
-  | { kind: 'critical'; label: string; intent: FinishIntent }
-  | { kind: 'empty' }
-  | { kind: 'exit'; action: NavigationAction }
-  | null;
-
-// Los diálogos de salir y de "Listo" sin marcar comparten botones del brief; el crítico (DC-02) tiene los suyos.
-function dialogCopy(dialog: Dialog) {
-  if (dialog?.kind === 'critical') {
-    return { message: copy.criticalSkipMessage(dialog.label), confirm: copy.CRITICAL_SKIP_CONFIRM, cancel: copy.CRITICAL_SKIP_CANCEL };
-  }
-  if (dialog?.kind === 'empty') {
-    return { message: copy.EMPTY_DONE_MESSAGE, confirm: copy.CRITICAL_SKIP_CONFIRM, cancel: copy.CRITICAL_SKIP_CANCEL };
-  }
-  return { message: copy.EXIT_MESSAGE, confirm: copy.EXIT_CONFIRM, cancel: copy.EXIT_CANCEL };
-}
-
 export default function VerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation();
   const styles = useThemedStyles(createStyles);
   const { colors } = useAppTheme();
   const routine = useRoutines().routines.find((candidate) => candidate.id === id);
@@ -83,33 +61,12 @@ export default function VerifyScreen() {
   const { finish, finishing, error: finishError } = useFinishChecklist(id, items, startedAt);
   const postponement = usePostponeChecklist({ routineId: id, routineName, itemCount: items.length });
   const busy = finishing || postponement.postponing;
-  const [dialog, setDialog] = useState<Dialog>(null);
-  // true cuando la salida ya está decidida (terminó o confirmó "Salir"): no se vuelve a preguntar.
-  const leaving = useRef(false);
-
-  // Cubre la X, el botón atrás de Android y el gesto de iOS: solo pregunta si ya hay algo marcado.
-  usePreventRemove(progress.checked > 0, ({ data }) => {
-    if (leaving.current) dispatchToOwner(navigation, data.action);
-    else setDialog({ kind: 'exit', action: data.action });
-  });
-
-  async function complete(intent: FinishIntent) {
-    const summary = await finish(intent);
-    if (!summary) return; // El error se muestra sobre los botones.
-    await discardDraft(); // Ya quedó guardada: el widget deja de mostrar lo marcado.
-    if (summary.outcome === 'completed') hapticConfirm();
-    // Las notificaciones ya sonadas de esta rutina quedan respondidas (no cuentan como "sin respuesta").
-    closeRoutineOccurrences(id, Date.now()).catch((cause: unknown) => {
-      if (__DEV__) console.warn('[notifications.close]', cause);
-    });
-    leaving.current = true;
-    router.replace({ pathname: '/routine/[id]/summary', params: toSummaryParams(id, summary) });
-  }
+  const flow = useVerificationFlow({ routineId: id, items, progress, finish, discardDraft });
 
   /** Posponer: cierra el modal y vuelve al origen; los recordatorios avisan en N minutos. */
   async function postpone() {
     if (!(await postponement.postpone())) return; // El error se muestra sobre los botones.
-    leaving.current = true;
+    flow.markLeaving();
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
   }
@@ -121,29 +78,6 @@ export default function VerifyScreen() {
     else hapticToggleOn();
   }
 
-  // DC-02 antes de dejar sin marcar un crítico, con "Listo" o con "Omitir por hoy".
-  function finishAsking(intent: FinishIntent) {
-    if (isEmptyDone(items, intent)) {
-      setDialog({ kind: 'empty' });
-      return;
-    }
-    const critical = firstUncheckedCritical(items);
-    if (critical) setDialog({ kind: 'critical', label: critical.label, intent });
-    else void complete(intent);
-  }
-
-  function confirmDialog() {
-    if (dialog?.kind === 'critical') void complete(dialog.intent);
-    // Confirmó que no marcó nada: se guarda como omitida, no como parcial de 0.
-    if (dialog?.kind === 'empty') void complete('skip');
-    if (dialog?.kind === 'exit') {
-      leaving.current = true;
-      dispatchToOwner(navigation, dialog.action);
-    }
-    setDialog(null);
-  }
-
-  const shownDialog = dialogCopy(dialog);
   // La sugerencia del clima va tras el último crítico (los críticos suben, Documento 2); sin críticos, arriba.
   const hintIndex = lastCriticalIndex(items);
   const weatherHint = <WeatherHint onAdd={addTemporaryItem} />;
@@ -209,7 +143,7 @@ export default function VerifyScreen() {
         <EmphasisPulse active={progress.total > 0 && progress.checked === progress.total}>
           <PrimaryButton
             label={copy.DONE_LABEL}
-            onPress={() => finishAsking('done')}
+            onPress={() => flow.finishAsking('done')}
             loading={finishing}
             disabled={postponement.postponing}
           />
@@ -223,7 +157,7 @@ export default function VerifyScreen() {
             />
           </View>
           <View style={styles.half}>
-            <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => finishAsking('skip')} disabled={busy} />
+            <TextButton label={copy.SKIP_TODAY_LABEL} onPress={() => flow.finishAsking('skip')} disabled={busy} />
           </View>
         </View>
       </ScreenFooter>
@@ -246,12 +180,12 @@ export default function VerifyScreen() {
       />
       {body}
       <ConfirmDialog
-        visible={dialog !== null}
-        message={shownDialog.message}
-        confirmLabel={shownDialog.confirm}
-        cancelLabel={shownDialog.cancel}
-        onConfirm={confirmDialog}
-        onCancel={() => setDialog(null)}
+        visible={flow.dialog !== null}
+        message={flow.dialogText.message}
+        confirmLabel={flow.dialogText.confirm}
+        cancelLabel={flow.dialogText.cancel}
+        onConfirm={flow.confirmDialog}
+        onCancel={flow.cancelDialog}
       />
     </SafeAreaView>
   );
