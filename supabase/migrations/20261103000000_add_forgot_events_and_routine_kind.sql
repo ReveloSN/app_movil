@@ -26,6 +26,8 @@ drop policy if exists "Owners manage forgot events of their routines" on public.
 create policy "Owners manage forgot events of their routines" on public.forgot_events
   for all to authenticated
   using (exists (select 1 from public.routines r where r.id = routine_id and r.user_id = (select auth.uid())))
+  -- La verificación enlazada (si hay) tiene que ser de la misma rutina del olvido. Se califica con
+  -- forgot_events: dentro de la subconsulta, un routine_id suelto sería el de records (rec).
   with check (
     exists (select 1 from public.routines r where r.id = routine_id and r.user_id = (select auth.uid()))
     and (
@@ -33,7 +35,9 @@ create policy "Owners manage forgot events of their routines" on public.forgot_e
       or exists (
         select 1 from public.records rec
           join public.routines r on r.id = rec.routine_id
-         where rec.id = record_id and r.user_id = (select auth.uid())
+         where rec.id = forgot_events.record_id
+           and rec.routine_id = forgot_events.routine_id
+           and r.user_id = (select auth.uid())
       )
     )
   );
