@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 
 import { DEFAULT_ITEM_KIND } from './item-kinds';
-import { sortCriticalFirst } from './item-order';
+import { criticalGroupRange, moveItem, sortCriticalFirst } from './item-order';
 import { resolveRoutineColor, resolveRoutineIcon } from './routine-appearance';
 import { draftFingerprint, toRoutineDraft } from './routine.draft';
 import { MAX_ITEMS, validateRoutineDraft } from './routine.validation';
@@ -111,6 +111,21 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     });
   }
 
+  /**
+   * Reordena: lleva el ítem con esa clave a la posición `toIndex` de la lista que se ve (críticos arriba),
+   * sin salir de su grupo. Un solo cambio de estado por reordenamiento; se guarda con "Guardar".
+   */
+  function moveItemTo(key: string, toIndex: number) {
+    setItems((current) => {
+      const visible = sortCriticalFirst(current);
+      const from = visible.findIndex((item) => item.key === key);
+      if (from === -1) return current;
+      const [first, last] = criticalGroupRange(visible, from);
+      const to = Math.min(Math.max(toIndex, first), last);
+      return to === from ? current : moveItem(visible, from, to);
+    });
+  }
+
   /** Devuelve el resultado (null si ya había un guardado en curso). */
   async function submit(): Promise<SaveRoutineResult | null> {
     if (inFlight.current) return null;
@@ -142,6 +157,7 @@ export function useRoutineForm({ save, onSaved, initialDraft, triggers = NO_TRIG
     addSuggested,
     removeItem,
     restoreItem,
+    moveItemTo,
     canAddItem,
     errors,
     submitting,

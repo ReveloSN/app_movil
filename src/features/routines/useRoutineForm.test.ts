@@ -57,3 +57,43 @@ describe('useRoutineForm: quitar y deshacer', () => {
     expect(save).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('useRoutineForm: reordenar', () => {
+  const labels = (result: { current: { items: { label: string }[] } }) => result.current.items.map((item) => item.label);
+
+  it('mueve un ítem a otra posición', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.moveItemTo(result.current.items[0].key, 2));
+    expect(labels(result)).toEqual(['Billetera', 'Celular', 'Llaves']);
+  });
+
+  it('un ítem no sale de su grupo (los críticos siguen arriba)', async () => {
+    const mixed = {
+      name: 'Salir',
+      items: [
+        { label: 'Llaves', kind: 'carry' as const, critical: true },
+        { label: 'Billetera', kind: 'carry' as const, critical: false },
+        { label: 'Celular', kind: 'carry' as const, critical: false },
+      ],
+    };
+    const { result } = await renderHook(() => useRoutineForm({ save: jest.fn(), onSaved: jest.fn(), initialDraft: mixed }));
+    await act(async () => result.current.moveItemTo(result.current.items[1].key, 0));
+    expect(labels(result)).toEqual(['Llaves', 'Billetera', 'Celular']);
+    await act(async () => result.current.moveItemTo(result.current.items[2].key, 1));
+    expect(labels(result)).toEqual(['Llaves', 'Celular', 'Billetera']);
+  });
+
+  it('una clave desconocida o el mismo lugar no cambian nada', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.moveItemTo('no-existe', 0));
+    await act(async () => result.current.moveItemTo(result.current.items[1].key, 1));
+    expect(labels(result)).toEqual(['Llaves', 'Billetera', 'Celular']);
+    expect(result.current.dirty).toBe(false);
+  });
+
+  it('reordenar marca el formulario como modificado', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.moveItemTo(result.current.items[2].key, 0));
+    expect(result.current.dirty).toBe(true);
+  });
+});

@@ -1,12 +1,12 @@
 import { View, type LayoutChangeEvent } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { ItemSummaryRow } from '@/components/molecules/ItemSummaryRow';
-import { listItemEntering, listItemExiting, listLayout } from '@/shared/theme/motion';
+import { spacing } from '@/shared/theme/tokens';
 
+import { ReorderableItemList } from './ReorderableItemList';
 import { resolveItemIcon } from './item-icons';
 import * as copy from './routine.copy';
 import { MAX_ITEMS, MAX_ITEMS_MESSAGE } from './routine.validation';
@@ -22,10 +22,12 @@ interface RoutineItemsSectionProps {
   onEdit(entry: ItemFormEntry): void;
   onAdd(): void;
   onRemove(key: string): void;
+  /** Reordenar: lleva el ítem a esa posición de la lista que se ve. */
+  onMove(key: string, toIndex: number): void;
 }
 
 /** 04-3 en P04: contador, errores, lista de ítems (críticos arriba) y "Añadir ítem". */
-export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdit, onAdd, onRemove }: RoutineItemsSectionProps) {
+export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdit, onAdd, onRemove, onMove }: RoutineItemsSectionProps) {
   return (
     <>
       <View onLayout={onLayout}>
@@ -38,10 +40,14 @@ export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdi
       {errors.items ? <StatusMessage tone="error" message={errors.items} /> : null}
 
       {items.length === 0 ? <StatusMessage tone="info" message={copy.EMPTY_ITEMS_MESSAGE} /> : null}
-      {/* Al añadir, quitar o reordenar (un crítico sube) los ítems entran, salen y se deslizan a su sitio. */}
-      {items.map((item, index) => (
-        <Animated.View key={item.key} entering={listItemEntering} exiting={listItemExiting} layout={listLayout}>
+      {/* Al añadir, quitar o reordenar los ítems entran, salen y se deslizan a su sitio. */}
+      <ReorderableItemList
+        items={items}
+        gap={spacing.lg}
+        onMove={onMove}
+        renderRow={(item, index, handle) => (
           <ItemSummaryRow
+            leading={handle}
             label={item.label}
             icon={resolveItemIcon(item.icon).icon}
             critical={item.critical}
@@ -53,8 +59,8 @@ export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdi
             onRemove={() => onRemove(item.key)}
             removeLabel={copy.removeItemLabel(item.label)}
           />
-        </Animated.View>
-      ))}
+        )}
+      />
 
       {/* ER-05: al llegar al máximo, se explica por qué ya no se puede añadir. */}
       {canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}

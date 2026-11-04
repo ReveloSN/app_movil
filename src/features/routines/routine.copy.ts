@@ -34,6 +34,13 @@ export const CRITICAL_LABEL = 'Crítico';
 export const ITEM_NOTE_FIELD = 'Nota';
 export const ITEM_NOTE_PLACEHOLDER = 'Opcional. Ej. En el cajón de la entrada';
 export const editItemHint = (label: string) => `Edita «${label}»`;
+/** Reordenar ítems: asa para arrastrar y botones Subir/Bajar (alternativa al arrastre). */
+export const MOVE_UP_LABEL = 'Subir';
+export const MOVE_DOWN_LABEL = 'Bajar';
+export const reorderHandleLabel = (label: string) => `Reordenar «${label}»`;
+export const REORDER_HANDLE_HINT = 'Toca para ver Subir y Bajar. Mantén pulsado y arrastra para moverlo.';
+export const itemMovedMessage = (label: string, position: number, total: number) =>
+  `«${label}» ahora está en la posición ${position} de ${total}.`;
 export const removeItemLabel = (label: string) => `Quitar «${label}»`;
 /** Aviso breve al quitar un ítem (con "Deshacer"). */
 export const itemRemovedMessage = (label: string) => `Quitaste «${label}».`;

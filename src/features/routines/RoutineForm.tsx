@@ -134,6 +134,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           onEdit={(entry) => setEditingItem({ entry, isNew: false })}
           onAdd={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
           onRemove={removeItem}
+          onMove={form.moveItemTo}
         />
 
         {/* 04-4 */}

@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '@/components/atoms/IconButton';
@@ -21,6 +22,8 @@ interface ItemSummaryRowProps {
   /** Sin él no se muestra el botón de quitar. */
   onRemove?(): void;
   removeLabel: string;
+  /** Antes del contenido (ej. el asa para reordenar). */
+  leading?: ReactNode;
 }
 
 /** Fila de un ítem en P04: ícono, etiqueta, bandera de crítico y nota. Tocarla abre P05. */
@@ -35,12 +38,14 @@ export function ItemSummaryRow({
   editHint,
   onRemove,
   removeLabel,
+  leading,
 }: ItemSummaryRowProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
     <View style={[styles.row, error ? styles.rowError : null]}>
+      {leading}
       <PressableScale
         containerStyle={flexOne}
         style={styles.main}
