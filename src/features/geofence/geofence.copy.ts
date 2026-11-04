@@ -9,6 +9,7 @@ export const HOME_INTRO =
 
 export const STATUS_TITLE: Record<GeofenceStatus, string> = {
   'no-home': 'Sin casa definida',
+  'no-arrival': 'Sin rutina de llegada',
   active: 'Activa',
   'no-permission': 'Falta un permiso',
   inactive: 'Inactiva',
@@ -16,6 +17,7 @@ export const STATUS_TITLE: Record<GeofenceStatus, string> = {
 
 export const STATUS_DETAIL: Record<GeofenceStatus, string> = {
   'no-home': 'Mientras tanto, los avisos al llegar solo usan tu Wi-Fi.',
+  'no-arrival': 'Crea o activa una rutina de llegada para que te avisemos al llegar. Mientras tanto, no usamos tu ubicación.',
   active: 'Te avisamos al llegar a casa, incluso con la app cerrada.',
   'no-permission': 'Permite la ubicación «todo el tiempo» para detectar tu llegada. Mientras tanto, solo avisamos por Wi-Fi.',
   inactive: 'El teléfono no tiene la zona registrada. Revisa que la ubicación esté encendida y vuelve a abrir la app.',

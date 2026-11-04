@@ -32,8 +32,9 @@ export async function runTriggerMaintenance(now: number = Date.now(), options: {
 
   await checkWifiTriggers(now).catch(warn('wifi'));
 
-  // La geocerca de casa se vuelve a registrar si el sistema la perdió (reinicio, actualización de Google Play).
-  if (snapshot) await ensureHomeGeofence(snapshot.ownerId).catch(warn('geofence'));
+  // La geocerca de casa se vuelve a registrar si el sistema la perdió (reinicio, actualización de Google Play),
+  // y solo existe mientras haya una rutina de llegada activa: sin ella se quita.
+  if (snapshot) await ensureHomeGeofence(snapshot.ownerId, (snapshot.arrivals?.length ?? 0) > 0).catch(warn('geofence'));
 
   const unanswered = await takeUnanswered(now);
   for (const occurrence of unanswered) {

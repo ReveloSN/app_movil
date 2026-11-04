@@ -1,6 +1,8 @@
 import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 
+import { loadArmedTriggers } from '@/features/triggers/armedTriggers.store';
+
 import type { GeofenceStatus, HomeGeofence } from './geofence.types';
 import { loadHomeGeofence } from './homeGeofence.store';
 
@@ -41,16 +43,33 @@ export async function stopHomeGeofence(): Promise<void> {
 }
 
 /**
- * Registra (o vuelve a registrar, reemplazando) la región de casa del usuario. Sin casa o sin permisos no
- * registra nada y deja sola la detección por Wi-Fi: nunca lanza, devuelve el estado para mostrarlo.
- * Las coordenadas no se escriben en ningún log.
+ * ¿Hay al menos una rutina de llegada activa? Se lee de la copia de avisos armados (la que se actualiza al
+ * crear, borrar o activar rutinas). Sin copia, no.
  */
-export async function registerHomeGeofence(userId: string): Promise<GeofenceStatus> {
+export async function hasArrivalRoutine(): Promise<boolean> {
+  try {
+    return ((await loadArmedTriggers())?.arrivals?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Registra (o vuelve a registrar, reemplazando) la región de casa del usuario. Solo si hay casa, permisos Y
+ * al menos una rutina de llegada activa (`arrivalRoutine`; si no se pasa, se lee de los avisos armados).
+ * Si falta algo no registra nada y deja sola la detección por Wi-Fi: nunca lanza, devuelve el estado para
+ * mostrarlo. Las coordenadas no se escriben en ningún log.
+ */
+export async function registerHomeGeofence(userId: string, arrivalRoutine?: boolean): Promise<GeofenceStatus> {
   try {
     const home = await loadHomeGeofence(userId);
     if (!home) {
       await stopHomeGeofence();
       return 'no-home';
+    }
+    if (!(arrivalRoutine ?? (await hasArrivalRoutine()))) {
+      await stopHomeGeofence();
+      return 'no-arrival';
     }
     if (!(await hasGeofencePermissions())) {
       await stopHomeGeofence();
@@ -67,25 +86,27 @@ export async function registerHomeGeofence(userId: string): Promise<GeofenceStat
 }
 
 /**
- * Al abrir la app y en el mantenimiento: si hay casa y la geocerca no está registrada (Android las borra al
+ * Al abrir la app y en el mantenimiento: si hay casa, una rutina de llegada activa y la geocerca no está registrada (Android las borra al
  * reiniciar el teléfono o actualizar Google Play), la vuelve a registrar. Si ya lo está, no la toca.
  */
-export async function ensureHomeGeofence(userId: string): Promise<GeofenceStatus> {
+export async function ensureHomeGeofence(userId: string, arrivalRoutine?: boolean): Promise<GeofenceStatus> {
+  const needed = arrivalRoutine ?? (await hasArrivalRoutine());
   try {
-    if (await Location.hasStartedGeofencingAsync(HOME_GEOFENCE_TASK)) {
+    if (needed && (await Location.hasStartedGeofencingAsync(HOME_GEOFENCE_TASK))) {
       // Registrada, pero la casa pudo quitarse o el permiso retirarse mientras tanto.
       if ((await loadHomeGeofence(userId)) && (await hasGeofencePermissions())) return 'active';
     }
   } catch {
     // Se intenta registrar de nuevo.
   }
-  return registerHomeGeofence(userId);
+  return registerHomeGeofence(userId, needed);
 }
 
 /** Estado actual para Ajustes, sin cambiar nada. */
 export async function readGeofenceStatus(userId: string): Promise<GeofenceStatus> {
   try {
     if (!(await loadHomeGeofence(userId))) return 'no-home';
+    if (!(await hasArrivalRoutine())) return 'no-arrival';
     if (!(await hasGeofencePermissions())) return 'no-permission';
     return (await Location.hasStartedGeofencingAsync(HOME_GEOFENCE_TASK)) ? 'active' : 'inactive';
   } catch {

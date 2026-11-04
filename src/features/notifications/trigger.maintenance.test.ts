@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { ensureHomeGeofence } from '@/features/geofence/geofence.service';
+import { saveArmedTriggers } from '@/features/triggers/armedTriggers.store';
+
 import { writeNotificationRecord } from './record.writer';
 import { runTriggerMaintenance } from './trigger.maintenance';
 import { updateOccurrences } from './occurrence.store';
@@ -45,5 +48,19 @@ describe('mantenimiento: lo vencido sin respuesta', () => {
 
     expect(writeNotificationRecord).toHaveBeenCalledTimes(1);
     expect(writeNotificationRecord).toHaveBeenCalledWith('r-salida', 'u1', 'no_response', NOW - 1);
+  });
+});
+
+describe('mantenimiento: geocerca de casa', () => {
+  const arrival = { routineId: 'r1', routineName: 'Llegar', itemLabels: [], windows: [] };
+
+  it('pide la geocerca solo si hay una rutina de llegada activa', async () => {
+    await saveArmedTriggers({ ownerId: 'u1', triggers: [], arrivals: [arrival] });
+    await runTriggerMaintenance(NOW);
+    expect(ensureHomeGeofence).toHaveBeenLastCalledWith('u1', true);
+
+    await saveArmedTriggers({ ownerId: 'u1', triggers: [], arrivals: [] });
+    await runTriggerMaintenance(NOW);
+    expect(ensureHomeGeofence).toHaveBeenLastCalledWith('u1', false);
   });
 });

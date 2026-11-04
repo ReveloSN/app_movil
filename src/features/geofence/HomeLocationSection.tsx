@@ -25,6 +25,7 @@ const DEFAULT_RADIUS = 250;
 
 const STATUS_ICON: Record<GeofenceStatus, 'home-outline' | 'checkmark-circle' | 'alert-circle' | 'pause-circle'> = {
   'no-home': 'home-outline',
+  'no-arrival': 'pause-circle',
   active: 'checkmark-circle',
   'no-permission': 'alert-circle',
   inactive: 'pause-circle',

@@ -19,6 +19,8 @@ export const MAX_HOME_RADIUS = 1000;
 export type GeofenceStatus =
   /** Sin casa guardada. */
   | 'no-home'
+  /** Casa guardada, pero ninguna rutina de llegada activa: la geocerca no se registra (no tendría para qué avisar). */
+  | 'no-arrival'
   /** Casa guardada y la geocerca registrada en el sistema. */
   | 'active'
   /** Casa guardada pero falta un permiso: solo funciona el aviso por Wi-Fi. */
