@@ -88,12 +88,17 @@ export default function TriggerScreen() {
         <Text style={styles.sectionTitle} accessibilityRole="header">
           Tipo
         </Text>
-        <RadioCardGroup<TriggerKind>
-          accessibilityLabel="Tipo de aviso"
-          options={KIND_OPTIONS}
-          value={form.kind}
-          onChange={form.setKind}
-        />
+        {form.allowedKinds.length > 1 ? (
+          <RadioCardGroup<TriggerKind>
+            accessibilityLabel="Tipo de aviso"
+            options={KIND_OPTIONS.filter((option) => form.allowedKinds.includes(option.value))}
+            value={form.kind}
+            onChange={form.setKind}
+          />
+        ) : (
+          // Rutina de llegada: un solo tipo posible, así que no hay nada que elegir.
+          <Text style={styles.kindNote}>{copy.ARRIVAL_ONLY_WIFI_HINT}</Text>
+        )}
 
         {/* Al cambiar de tipo, lo de debajo entra con una transición breve (sigue "Quitar animaciones"). */}
         <Animated.View key={isWifi ? 'wifi' : 'schedule'} entering={listItemEntering} style={styles.kindFields}>
@@ -219,6 +224,10 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
       gap: spacing.lg,
       // 24 dp entre el selector de tipo y la sección siguiente (16 del formulario + 8).
       marginTop: spacing.sm,
+    },
+    kindNote: {
+      ...typography.body,
+      color: colors.textSecondary,
     },
     summary: {
       padding: spacing.lg,

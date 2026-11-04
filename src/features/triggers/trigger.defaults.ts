@@ -7,6 +7,13 @@ import type { TimeWindow, TriggerKind } from './trigger.types';
 export const defaultTriggerKindFor = (routineKind: RoutineKind = DEFAULT_ROUTINE_KIND): TriggerKind =>
   routineKind === 'arrival' ? 'wifi_enter' : 'schedule';
 
+/**
+ * Tipos de aviso que admite cada tipo de rutina: una de llegada solo se dispara al conectarse al Wi-Fi de
+ * casa (`wifi_enter`); una de salida admite todos.
+ */
+export const allowedTriggerKindsFor = (routineKind: RoutineKind = DEFAULT_ROUTINE_KIND): readonly TriggerKind[] =>
+  routineKind === 'arrival' ? ['wifi_enter'] : ['schedule', 'wifi_exit', 'wifi_enter'];
+
 const MORNING_WINDOW: TimeWindow = { start: { hour: 6, minute: 0 }, end: { hour: 9, minute: 0 } };
 const EVENING_START: ClockTime = { hour: 16, minute: 0 };
 const EVENING_END: ClockTime = { hour: 23, minute: 0 };

@@ -61,4 +61,6 @@ export const detectedNetworkMessage = (ssid: string) => `Estás conectado a «${
 export const applyNetworkLabel = (ssid: string) => `Usar «${ssid}»`;
 /** ER-03: no hay Wi-Fi, o el teléfono no deja leer su nombre (con permiso y ubicación ya activos). */
 export const NETWORK_NOT_FOUND_MESSAGE = 'No encontramos tu red. Conéctate a ella y vuelve a intentar.';
+/** Rutinas de llegada: solo admiten el aviso al conectarse al Wi-Fi de casa. */
+export const ARRIVAL_ONLY_WIFI_HINT = 'Una rutina de llegada te avisa cuando tu teléfono se conecta al Wi-Fi de casa.';
 export const WINDOW_SWITCH_LABEL = 'Solo en una franja horaria';

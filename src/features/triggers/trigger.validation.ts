@@ -1,6 +1,8 @@
 import { minutesOfDay } from '@/shared/utils/formatClock';
 
+import { allowedTriggerKindsFor } from './trigger.defaults';
 import type { TriggerDraft } from './trigger.types';
+import type { RoutineKind } from '@/shared/types/routine.types';
 
 /** Una rutina admite de 0 a 3 avisos. */
 export const MAX_TRIGGERS = 3;
@@ -9,14 +11,19 @@ export const NETWORK_NAME_MAX_LENGTH = 24;
 export const SSID_MAX_LENGTH = 32;
 
 export interface TriggerValidationErrors {
+  type?: string;
   days?: string;
   ssid?: string;
   networkName?: string;
   window?: string;
 }
 
-export function validateTriggerDraft(draft: TriggerDraft): TriggerValidationErrors {
+export function validateTriggerDraft(draft: TriggerDraft, routineKind?: RoutineKind): TriggerValidationErrors {
   const errors: TriggerValidationErrors = {};
+
+  if (!allowedTriggerKindsFor(routineKind).includes(draft.type)) {
+    errors.type = 'Una rutina de llegada solo admite el aviso al conectarse al Wi-Fi de casa.';
+  }
 
   if (draft.type === 'schedule') {
     if (draft.days.length === 0) errors.days = 'Elige al menos un día.';

@@ -9,7 +9,7 @@ import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
 import { summarySentence } from './trigger.copy';
-import { defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
+import { allowedTriggerKindsFor, defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
 import type { TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
 import { hasTriggerErrors, normalizeTriggerDraft, validateTriggerDraft, type TriggerValidationErrors } from './trigger.validation';
 
@@ -65,10 +65,18 @@ export function useTriggerForm({
   onNeedPermission,
   findMissingPermission = firstMissingPermission,
 }: UseTriggerFormOptions) {
-  const [kind, setKind] = useState<TriggerKind>(initial?.type ?? defaultTriggerKindFor(routineKind));
-  const [time, setTime] = useState<ClockTime>(initial?.type === 'schedule' ? initial.time : DEFAULT_TIME);
-  const [days, setDays] = useState<Weekday[]>(initial?.type === 'schedule' ? initial.days : WEEKDAYS);
-  const wifi = initial?.type === 'schedule' ? undefined : initial;
+  const allowedKinds = useMemo(() => allowedTriggerKindsFor(routineKind), [routineKind]);
+  // Un aviso heredado de un tipo que la rutina ya no admite (p. ej. un horario en una de llegada) se
+  // reemplaza por el tipo permitido: la red y la franja arrancan con los valores por defecto.
+  const initialAllowed = initial && allowedKinds.includes(initial.type) ? initial : undefined;
+  const [kind, setKindState] = useState<TriggerKind>(initialAllowed?.type ?? defaultTriggerKindFor(routineKind));
+  const setKind = useCallback(
+    (next: TriggerKind) => setKindState((current) => (allowedKinds.includes(next) ? next : current)),
+    [allowedKinds],
+  );
+  const [time, setTime] = useState<ClockTime>(initialAllowed?.type === 'schedule' ? initialAllowed.time : DEFAULT_TIME);
+  const [days, setDays] = useState<Weekday[]>(initialAllowed?.type === 'schedule' ? initialAllowed.days : WEEKDAYS);
+  const wifi = initialAllowed?.type === 'schedule' ? undefined : initialAllowed;
   const [ssid, setSsid] = useState(wifi?.ssid ?? '');
   const [networkName, setNetworkName] = useState(wifi?.networkName ?? DEFAULT_NETWORK_NAME);
   const [windowEnabled, setWindowEnabled] = useState(Boolean(wifi?.window));
@@ -90,7 +98,7 @@ export function useTriggerForm({
   );
   const dirty = useMemo(() => fingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
 
-  const errors = useMemo(() => (attempted ? validateTriggerDraft(draft) : NO_ERRORS), [attempted, draft]);
+  const errors = useMemo(() => (attempted ? validateTriggerDraft(draft, routineKind) : NO_ERRORS), [attempted, draft, routineKind]);
 
   const summary = useMemo(() => {
     // Mientras el nombre está vacío, la frase no queda a medias.
@@ -100,9 +108,9 @@ export function useTriggerForm({
 
   // Lo último de cada render, para que `save` y `resume` sean estables: la pantalla llama a
   // `resume` solo al recuperar el foco, y no debe re-ejecutarse en cada cambio del formulario.
-  const latest = useRef({ draft, onCommit, onNeedPermission, findMissingPermission });
+  const latest = useRef({ draft, routineKind, onCommit, onNeedPermission, findMissingPermission });
   useEffect(() => {
-    latest.current = { draft, onCommit, onNeedPermission, findMissingPermission };
+    latest.current = { draft, routineKind, onCommit, onNeedPermission, findMissingPermission };
   });
 
   const continueSave = useCallback(async (previouslyMissing: PermissionKind | null) => {
@@ -128,7 +136,7 @@ export function useTriggerForm({
   const save = useCallback(async () => {
     setAttempted(true);
     setPermissionError(null);
-    if (hasTriggerErrors(validateTriggerDraft(latest.current.draft))) return;
+    if (hasTriggerErrors(validateTriggerDraft(latest.current.draft, latest.current.routineKind))) return;
     await continueSave(null);
   }, [continueSave]);
 
@@ -143,6 +151,7 @@ export function useTriggerForm({
   return {
     kind,
     setKind,
+    allowedKinds,
     time,
     setTime,
     days,
