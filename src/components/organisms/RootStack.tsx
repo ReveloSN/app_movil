@@ -7,6 +7,7 @@ import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area
 
 import { OfflineBanner } from '@/components/molecules/OfflineBanner';
 import { HELP_TITLE } from '@/features/settings/help.content';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
 
@@ -20,6 +21,7 @@ export function RootStack() {
   const { colors, scheme, typography } = useAppTheme();
   const { isConnected } = useNetworkStatus();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
 
   // Con el aviso visible, la franja ya cubre la barra de estado: las pantallas no deben sumar ese margen otra vez.
   const stackInsets = useMemo(() => (isConnected ? insets : { ...insets, top: 0 }), [isConnected, insets]);
@@ -35,9 +37,11 @@ export function RootStack() {
         <Stack
           screenOptions={({ route }) => ({
             headerShown: false,
+            // Pantallas normales entran desde la derecha; con "Quitar animaciones", sin transición.
+            animation: reduceMotion ? ('none' as const) : ('slide_from_right' as const),
             contentStyle: { backgroundColor: colors.background },
             // La verificación (P07) se abre como modal que sube desde abajo, también desde la notificación.
-            ...(opensVerification(route.params) ? { animation: 'slide_from_bottom' as const } : null),
+            ...(opensVerification(route.params) && !reduceMotion ? { animation: 'slide_from_bottom' as const } : null),
           })}
         >
           {/* Opciones fijas aquí y no dentro de la pantalla: aplicarlas al cerrarse hace fallar a Android. */}
