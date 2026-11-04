@@ -1,17 +1,23 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { StatusMessage } from '@/components/atoms/StatusMessage';
-import { EmptyRing } from '@/components/molecules/EmptyRing';
+import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
-import { editRoutineLabel, greeting, LOADING_ROUTINES_LABEL, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
+import {
+  editRoutineLabel,
+  EMPTY_ROUTINES_ACTION,
+  EMPTY_ROUTINES_MESSAGE,
+  EMPTY_ROUTINES_TITLE,
+  greeting,
+  LOADING_ROUTINES_LABEL, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
@@ -22,12 +28,11 @@ import { usePrefetchWeather } from '@/features/weather/WeatherHint';
 import { PendingSyncIndicator } from '@/features/sync/PendingSyncIndicator';
 import { clearFlashMessage, useFlashMessage } from '@/shared/events/flashMessage';
 import { useFirstAppearance } from '@/shared/hooks/useFirstAppearance';
-import { fadeIn, staggeredEntering } from '@/shared/theme/motion';
+import { staggeredEntering } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-const EMPTY_MESSAGE = 'Aún no tienes rutinas. Empieza con una plantilla o crea la tuya.'; // EV-01
-
+const openTemplates = () => router.push('/routine/templates');
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
 const openDepartureMode = (routineId: string) => router.push({ pathname: '/routine/[id]/go', params: { id: routineId } });
 
@@ -95,10 +100,13 @@ export default function RoutinesScreen() {
         ListHeaderComponent={header}
         ListEmptyComponent={
           // EV-01 reemplaza a las tarjetas (P1) y ofrece las plantillas.
-          <Animated.View entering={fadeIn} style={styles.empty} accessible accessibilityLabel={EMPTY_MESSAGE}>
-            <EmptyRing icon="checkbox-outline" />
-            <Text style={styles.emptyText}>{EMPTY_MESSAGE}</Text>
-          </Animated.View>
+          <EmptyState
+            inline
+            illustration="noRoutines"
+            title={EMPTY_ROUTINES_TITLE}
+            message={EMPTY_ROUTINES_MESSAGE}
+            action={{ label: EMPTY_ROUTINES_ACTION, onPress: openTemplates }}
+          />
         }
         renderItem={({ item, index }) => (
           <Animated.View entering={firstAppearance ? staggeredEntering(index) : undefined}>
@@ -129,7 +137,7 @@ export default function RoutinesScreen() {
   );
 }
 
-const createStyles = ({ colors, sizes, spacing, typography }: AppTheme) =>
+const createStyles = ({ colors, sizes, spacing }: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -137,15 +145,6 @@ const createStyles = ({ colors, sizes, spacing, typography }: AppTheme) =>
     },
     header: {
       gap: spacing.md,
-    },
-    empty: {
-      gap: spacing.lg,
-      paddingVertical: spacing.xl,
-    },
-    emptyText: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
     },
     syncStatus: {
       marginHorizontal: spacing.xl,
