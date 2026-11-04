@@ -113,10 +113,22 @@ export function toWeeklySummary(data: unknown): AiWeeklySummary {
 const fit = (text: string, max: number) => text.replace(CONTROL, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 
 // Caché persistente de insights: el mismo patrón en el mismo tramo no vuelve a gastar cuota.
+// Es POR USUARIO: en un teléfono compartido, la caché y el bloqueo de una cuenta no valen para otra.
+// (Las claves anteriores, sin usuario, se ignoran.)
 const INSIGHT_CACHE_KEY = 'ai-insights-cache';
 const INSIGHT_CACHE_LIMIT = 50;
-/** Día local en que el servidor dijo "sin cuota": ese día no se vuelve a intentar un insight. */
+/** Día (de Bogotá) en que el servidor dijo "sin cuota": ese día no se vuelve a intentar un insight. */
 const INSIGHT_BLOCKED_KEY = 'ai-insights-quota-day';
+const insightCacheStorageKey = (userId: string) => `${INSIGHT_CACHE_KEY}:${userId}`;
+const insightBlockedStorageKey = (userId: string) => `${INSIGHT_BLOCKED_KEY}:${userId}`;
+
+/**
+ * La cuota diaria del servidor se cuenta por día de America/Bogota (UTC-5, sin horario de verano):
+ * `(now() at time zone 'America/Bogota')::date`. El bloqueo local usa el mismo día, no el del teléfono,
+ * para que cambiar de zona horaria no lo adelante ni lo atrase respecto al servidor.
+ */
+export const BOGOTA_UTC_OFFSET_MINUTES = -300;
+export const quotaDayOf = (epochMs: number): string => String(localDayNumber(epochMs, () => BOGOTA_UTC_OFFSET_MINUTES));
 
 /** Hash corto y estable (FNV-1a de 32 bits) de los datos que se envían. */
 export function hashText(text: string): string {
@@ -148,6 +160,8 @@ export function insightCacheKey(input: InsightPatternInput, patternId?: string):
 
 interface InsightOptions {
   client: AiClient;
+  /** Cuenta dueña de la caché y del bloqueo por cuota. */
+  userId: string;
   storage?: KeyValueStorage;
   patternId?: string;
   now?: () => number;
@@ -159,31 +173,31 @@ interface InsightOptions {
  */
 export async function requestInsight(
   input: InsightPatternInput,
-  { client, storage = AsyncStorage, patternId, now = Date.now }: InsightOptions,
+  { client, userId, storage = AsyncStorage, patternId, now = Date.now }: InsightOptions,
 ): Promise<AiInsight> {
   const pattern = payloadOf(input);
   const key = insightCacheKey(pattern, patternId);
   let cache: Record<string, AiInsight> = {};
   try {
-    cache = JSON.parse((await storage.getItem(INSIGHT_CACHE_KEY)) ?? '{}') as Record<string, AiInsight>;
+    cache = JSON.parse((await storage.getItem(insightCacheStorageKey(userId))) ?? '{}') as Record<string, AiInsight>;
     if (cache[key]) return toInsight({ mode: 'insights', insight: cache[key] });
   } catch {
     cache = {};
   }
-  const today = String(localDayNumber(now()));
-  if ((await storage.getItem(INSIGHT_BLOCKED_KEY).catch(() => null)) === today) throw new AiClientError('quota_exceeded');
+  const today = quotaDayOf(now());
+  if ((await storage.getItem(insightBlockedStorageKey(userId)).catch(() => null)) === today) throw new AiClientError('quota_exceeded');
   let insight: AiInsight;
   try {
     insight = toInsight(await client({ mode: 'insights', pattern }));
   } catch (cause) {
     if (cause instanceof AiClientError && cause.kind === 'quota_exceeded') {
-      await storage.setItem(INSIGHT_BLOCKED_KEY, today).catch(() => undefined);
+      await storage.setItem(insightBlockedStorageKey(userId), today).catch(() => undefined);
     }
     throw cause;
   }
   const keys = Object.keys(cache).filter((existing) => existing !== key).slice(-(INSIGHT_CACHE_LIMIT - 1));
   const next = Object.fromEntries([...keys.map((existing) => [existing, cache[existing]] as const), [key, insight] as const]);
-  await storage.setItem(INSIGHT_CACHE_KEY, JSON.stringify(next)).catch((cause: unknown) => {
+  await storage.setItem(insightCacheStorageKey(userId), JSON.stringify(next)).catch((cause: unknown) => {
     if (__DEV__) console.warn('[ai.insights.cache]', cause);
   });
   return insight;

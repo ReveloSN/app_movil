@@ -122,7 +122,7 @@ export function useRoutineInsight(routineId: string) {
         setInsight({ ...candidate, message: copy.patternMessage(candidate.pattern, candidate.action) });
         if (!canUseAi || !routineName || aiAskedFor.current === routineId) return;
         aiAskedFor.current = routineId;
-        const aiInsight = await requestPatternInsight(aiInputOf(candidate, routineName), key).catch((cause: unknown) => {
+        const aiInsight = await requestPatternInsight(aiInputOf(candidate, routineName), key, userId).catch((cause: unknown) => {
           // Sin cuota (429), sin red o respuesta inválida: se queda el mensaje determinista.
           if (__DEV__) console.warn('[insights.ai]', cause);
           return null;

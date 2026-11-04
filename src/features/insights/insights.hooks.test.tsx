@@ -112,6 +112,7 @@ describe('useRoutineInsight con IA', () => {
     expect(mockInsight).toHaveBeenCalledWith(
       { item: 'Cargador', routine: 'Saliendo de casa', weekday: null, misses: 3, observations: 3, critical: false },
       'item|r1|cargador|',
+      'user-1',
     );
     // Se va y vuelve la red: el efecto se repite, pero no hay otra llamada.
     mockNetwork.isConnected = false;
@@ -236,6 +237,7 @@ describe('useRoutineInsight con olvidos ("Olvidé algo")', () => {
     expect(mockInsight).toHaveBeenCalledWith(
       { source: 'forgot', label: 'Paraguas', routine: 'Saliendo de casa', weekday, misses: 3, observations: 4, inRoutine: false, critical: false },
       `forgot_weekday|r1|paraguas|${weekday}`,
+      'user-1',
     );
   });
 
