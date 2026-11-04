@@ -89,7 +89,7 @@ const clampRatio = (value: number, top: number) => {
 /**
  * Gráfico de barras de la semana (7 días típicos). Cada barra es un grupo accesible con su texto
  * hablado; el valor numérico va escrito sobre la barra, así no se transmite nada solo por color.
- * El contenedor se anuncia con `summaryLabel`.
+ * La fila de números se anuncia con `summaryLabel` y va antes de las barras en el orden de lectura.
  */
 export function WeeklyBarChart({ data, maxValue, height = 120, summaryLabel }: WeeklyBarChartProps) {
   const { colors, radii } = useAppTheme();
@@ -105,8 +105,10 @@ export function WeeklyBarChart({ data, maxValue, height = 120, summaryLabel }: W
   const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
 
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel={summaryLabel} style={styles.root}>
-      <View style={styles.row} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <View style={styles.root}>
+      {/* El resumen va en la fila de números, no en el contenedor: un contenedor `accessible` agrupa a sus
+          hijos y TalkBack podría no llegar a cada barra. Así se lee primero el resumen y luego cada día. */}
+      <View style={styles.row} accessible accessibilityRole="text" accessibilityLabel={summaryLabel}>
         {data.map((d) => (
           <View key={d.key} style={styles.column}>
             {d.muted ? null : <Text style={[styles.value, d.highlighted && styles.valueToday]}>{String(d.value)}</Text>}

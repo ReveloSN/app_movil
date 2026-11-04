@@ -31,13 +31,13 @@ function layoutChart(barLabel: string, width = 280) {
 describe('WeeklyBarChart', () => {
   beforeEach(() => mockReduced.mockReturnValue(true));
 
-  it('el contenedor se anuncia con su resumen y cada barra con su texto hablado', async () => {
+  it('el resumen se anuncia primero y no agrupa las barras y cada barra con su texto hablado', async () => {
     await render(
       <TestProviders>
         <WeeklyBarChart data={week} summaryLabel={SUMMARY} />
       </TestProviders>,
     );
-    expect(screen.getByRole('image', { name: SUMMARY })).toBeTruthy();
+    expect(screen.getByLabelText(SUMMARY)).toBeTruthy();
     for (const d of week) {
       expect(screen.getByLabelText(d.a11yLabel, { includeHiddenElements: true })).toBeTruthy();
     }
@@ -82,7 +82,7 @@ describe('WeeklyBarChart', () => {
         <WeeklyBarChart data={[]} summaryLabel="Sin datos esta semana" />
       </TestProviders>,
     );
-    expect(screen.getByRole('image', { name: 'Sin datos esta semana' })).toBeTruthy();
+    expect(screen.getByLabelText('Sin datos esta semana')).toBeTruthy();
   });
 
   it('acepta un maxValue fijo y no divide por cero si es 0', async () => {
