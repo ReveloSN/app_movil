@@ -29,14 +29,32 @@ export function routineStreak(
   now: Date,
   offsetOf: UtcOffsetMinutes = deviceUtcOffset,
 ): number {
-  const days = new Set(
+  const days = completedDays(
+    records.filter((record) => record.routineId === routineId),
+    offsetOf,
+  );
+  return streakEndingNear(days, localDayNumber(now.getTime(), offsetOf));
+}
+
+/** Días locales (ver `localDayNumber`) con al menos una verificación completa; ignora fechas inválidas. */
+export function completedDays(
+  records: readonly VerificationRecord[],
+  offsetOf: UtcOffsetMinutes = deviceUtcOffset,
+): Set<number> {
+  return new Set(
     records
-      .filter((record) => record.routineId === routineId && record.result === 'completed')
+      .filter((record) => record.result === 'completed')
       .map((record) => Date.parse(record.date))
       .filter((time) => !Number.isNaN(time))
       .map((time) => localDayNumber(time, offsetOf)),
   );
-  const today = localDayNumber(now.getTime(), offsetOf);
+}
+
+/**
+ * Días seguidos del conjunto que terminan en `today` o, si `today` aún no está, en el día anterior.
+ * Es la semántica común de todas las rachas (P08-4).
+ */
+export function streakEndingNear(days: ReadonlySet<number>, today: number): number {
   let day = days.has(today) ? today : today - 1;
   let streak = 0;
   while (days.has(day)) {
