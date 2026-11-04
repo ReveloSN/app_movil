@@ -55,7 +55,7 @@ describe('guardar una rutina (P04 → Inicio)', () => {
 
   it('queda en la copia local y Inicio la muestra al volver', async () => {
     await renderHome();
-    expect(await screen.findByText('Aún no tienes rutinas. Empieza con una plantilla o crea la tuya.')).toBeTruthy();
+    expect(await screen.findByText('Aún no tienes rutinas')).toBeTruthy();
 
     let status: string | undefined;
     await act(async () => {
