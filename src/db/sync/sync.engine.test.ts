@@ -3,6 +3,7 @@ import { createLocalStore, type StoreChange } from '../local/local.store';
 import { fixedDeps, memoryStorage } from '../local/testing/memoryStorage';
 import { createSyncEngine } from './sync.engine';
 import { fakeRemote, networkError, rejectedError } from './testing/fakeRemote';
+import { createRoutineWithItems } from '@/features/routines/routine.service';
 import { forgot } from '../local/testing/outbox.fixtures';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -119,6 +120,31 @@ describe('createSyncEngine', () => {
     expect(doc.forgotEvents?.map((event) => event.id)).toEqual(['local-1']);
     expect(doc.outbox).toEqual([expect.objectContaining({ kind: 'insertForgot' })]);
     expect(doc.outbox[0].failed).toBeUndefined();
+  });
+
+  it('con un servidor sin la migración, la bajada no pisa el tipo de rutina ni borra los olvidos pendientes', async () => {
+    const server = fakeRemote({}, { migrated: false });
+    const { engine, store, repos } = setup(server);
+    const routine = await createRoutineWithItems(repos, { name: 'Llegar', kind: 'arrival', items: [], triggers: [] });
+    await repos.forgotEvents.add({ id: 'f1', routineId: routine.id, label: 'Gafas' });
+
+    const report = await engine.sync();
+    expect(report).toMatchObject({ pulled: true, push: { failed: [] } });
+    // Otra pasada: ya sin nada que el servidor pueda recibir, la bajada sigue sin pisar nada.
+    await engine.sync();
+
+    const doc = await store.read();
+    expect(doc.tables.routines).toEqual([expect.objectContaining({ id: routine.id, kind: 'arrival' })]);
+    expect(doc.forgotEvents?.map((event) => event.id)).toEqual(['f1']);
+    expect(server.tables.routines[0]).not.toHaveProperty('kind');
+
+    server.migrate();
+    await engine.sync();
+    const migrated = await store.read();
+    expect(migrated.outbox).toEqual([]);
+    expect(migrated.tables.routines[0].kind).toBe('arrival');
+    expect(server.tables.routines[0].kind).toBe('arrival');
+    expect(migrated.forgotEvents?.map((event) => event.id)).toEqual(['f1']);
   });
 
   it('si los olvidos no cambian, no avisa cambios en ellos', async () => {

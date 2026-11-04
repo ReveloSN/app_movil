@@ -115,4 +115,34 @@ describe('mergePulled', () => {
 
     expect(mergePulled(before, tables({ homeNetworks: [{ ...network }] }))).toBe(before.tables);
   });
+
+  describe('servidor sin la columna kind', () => {
+    const withoutKind = ({ kind: _kind, ...rest }: Routine) => rest;
+
+    it('una rutina sin cambios pendientes conserva su tipo local (no vuelve a ser de salida)', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      const merged = mergePulled(local, { ...tables({}), routines: [withoutKind(routine('r1', { name: 'Otro nombre' }))] });
+
+      expect(merged.routines).toEqual([expect.objectContaining({ id: 'r1', name: 'Otro nombre', kind: 'arrival' })]);
+    });
+
+    it('sin cambios devuelve el mismo objeto', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      expect(mergePulled(local, { ...tables({}), routines: [withoutKind(routine('r1'))] })).toBe(local.tables);
+    });
+
+    it('una rutina que no está aquí llega como de salida (el default de la base)', () => {
+      const merged = mergePulled(doc({}), { ...tables({}), routines: [withoutKind(routine('r2'))] });
+
+      expect(merged.routines).toEqual([expect.objectContaining({ id: 'r2', kind: 'departure' })]);
+    });
+
+    it('si el servidor trae el tipo, manda el del servidor', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      expect(mergePulled(local, tables({ routines: [routine('r1')] })).routines[0].kind).toBe('departure');
+    });
+  });
 });

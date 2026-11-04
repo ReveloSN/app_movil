@@ -163,6 +163,106 @@ describe('pushOutbox', () => {
     expect((await store.read()).outbox).toEqual([]);
   });
 
+  describe('servidor sin la migración (sin routines.kind)', () => {
+    const oldServer = () => fakeRemote({}, { migrated: false });
+    const arrivalDraft = {
+      name: 'Llegar',
+      kind: 'arrival' as const,
+      items: [{ label: 'Llaves', kind: 'carry' as const, critical: false }],
+      triggers: [],
+    };
+
+    it('una rutina de llegada creada sin red sube sin su tipo y no bloquea sus ítems ni sus olvidos', async () => {
+      const server = oldServer();
+      const { store, repos, push } = setup(server);
+      const routine = await createRoutineWithItems(repos, arrivalDraft);
+      await repos.forgotEvents.add({ id: 'f1', routineId: routine.id, label: 'Llaves' });
+
+      const report = await push();
+
+      expect(report.failed).toEqual([]);
+      expect(server.tables.routines).toEqual([expect.objectContaining({ id: routine.id, name: 'Llegar' })]);
+      expect(server.tables.routines[0]).not.toHaveProperty('kind');
+      expect(server.tables.items).toEqual([expect.objectContaining({ routineId: routine.id, label: 'Llaves' })]);
+      // Quedan el tipo (como update de solo kind, con la hora de la creación) y el olvido (falta la tabla).
+      const { outbox, tables } = await store.read();
+      expect(outbox).toEqual([
+        expect.objectContaining({ kind: 'update', table: 'routines', id: routine.id, changes: { kind: 'arrival' }, at: routine.updatedAt }),
+        expect.objectContaining({ kind: 'insertForgot' }),
+      ]);
+      expect(outbox.every((op) => !op.failed && !op.sendingSince)).toBe(true);
+      expect(tables.routines[0].kind).toBe('arrival');
+
+      // Sin migrar, la siguiente pasada no cambia nada ni marca fallos.
+      await push();
+      expect((await store.read()).outbox).toHaveLength(2);
+      expect((await store.read()).outbox.every((op) => !op.failed)).toBe(true);
+
+      server.migrate();
+      await push();
+      expect(server.tables.routines[0].kind).toBe('arrival');
+      expect(server.tables.forgotEvents).toEqual([expect.objectContaining({ id: 'f1' })]);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('una rutina de salida sube sin tipo y no deja nada pendiente (la base la deja de salida)', async () => {
+      const server = oldServer();
+      const { store, repos, push } = setup(server);
+      await createRoutineWithItems(repos, { ...arrivalDraft, kind: 'departure' });
+
+      await push();
+
+      expect(server.tables.routines).toHaveLength(1);
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('un cambio de tipo queda pendiente (no fallido) y viaja con el siguiente cambio de la rutina', async () => {
+      const server = oldServer();
+      const { store, repos, push } = setup(server);
+      const routine = await repos.routines.create({ name: 'Casa' });
+      await push();
+      await repos.routines.update(routine.id, { kind: 'arrival' });
+
+      const report = await push();
+      expect(report).toMatchObject({ failed: [], deferred: [expect.objectContaining({ kind: 'update' })] });
+      expect((await store.read()).outbox).toEqual([expect.objectContaining({ changes: { kind: 'arrival' } })]);
+
+      const renamed = await repos.routines.update(routine.id, { name: 'Casa nueva' });
+      await push();
+      expect(server.tables.routines[0]).toMatchObject({ name: 'Casa nueva', updatedAt: renamed.updatedAt });
+      expect((await store.read()).outbox).toEqual([
+        expect.objectContaining({ changes: { kind: 'arrival' }, at: renamed.updatedAt }),
+      ]);
+
+      server.migrate();
+      await push();
+      expect(server.tables.routines[0]).toMatchObject({ name: 'Casa nueva', kind: 'arrival' });
+      expect((await store.read()).outbox).toEqual([]);
+    });
+
+    it('si un cambio posterior quedó aparte en la cola, el tipo se suma a ese y no pierde por ser más viejo', async () => {
+      const server = oldServer();
+      const { store, repos, push } = setup(server);
+      const routine = await repos.routines.create({ name: 'Llegar', kind: 'arrival' });
+      const release = server.holdNext('routines.create');
+
+      const pushing = push();
+      await new Promise((resolve) => setTimeout(resolve, 0)); // el insert ya salió: el cambio queda aparte
+      const renamed = await repos.routines.update(routine.id, { name: 'Llegar a casa' });
+      release();
+      await pushing;
+
+      expect(server.tables.routines[0].name).toBe('Llegar a casa');
+      expect((await store.read()).outbox).toEqual([
+        expect.objectContaining({ kind: 'update', changes: { kind: 'arrival' }, at: renamed.updatedAt }),
+      ]);
+
+      server.migrate();
+      await push();
+      expect(server.tables.routines[0]).toMatchObject({ name: 'Llegar a casa', kind: 'arrival' });
+    });
+  });
+
   describe('olvidos', () => {
     it('sube el olvido después de su rutina y lo saca de la cola', async () => {
       const { store, repos, server, push } = setup();

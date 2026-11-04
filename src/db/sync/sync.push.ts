@@ -1,4 +1,5 @@
 import { deleteRoutineCascade } from '@/features/routines/routine-delete.service';
+import { DEFAULT_ROUTINE_KIND } from '@/shared/types/routine.types';
 
 import type { LocalTableName, OutboxFailure, OutboxOp, OutboxOpOf } from '../local/local-document.types';
 import type { LocalStore } from '../local/local.store';
@@ -46,6 +47,11 @@ type Outcome =
   | { type: 'remap'; to: string }
   | { type: 'failed'; failure: OutboxFailure }
   | { type: 'deferred' }
+  /**
+   * La rutina se subió sin su tipo (el servidor aún no tiene la columna kind). `sent`: si llegó el
+   * resto del cambio. El tipo queda pendiente en la cola (ver parkKind).
+   */
+  | { type: 'kindPending'; id: string; kind: unknown; sent: boolean }
   | { type: 'offline' };
 
 const DONE: Outcome = { type: 'done' };
@@ -73,9 +79,9 @@ async function resolveNetworkConflict(op: OutboxOpOf<'insert'>, remote: RemoteDe
   return { type: 'remap', to: twin.id };
 }
 
-async function sendInsert(op: OutboxOpOf<'insert'>, remote: RemoteDeps): Promise<Outcome> {
+async function insertRow(op: OutboxOpOf<'insert'>, values: Record<string, unknown>, remote: RemoteDeps): Promise<Outcome> {
   try {
-    await repositoryFor(remote, op.table).create(op.values);
+    await repositoryFor(remote, op.table).create(values);
     return DONE;
   } catch (cause) {
     if (!isConflict(cause)) throw cause;
@@ -87,6 +93,43 @@ async function sendInsert(op: OutboxOpOf<'insert'>, remote: RemoteDeps): Promise
     }
     return DONE; // Mismo id: un intento anterior ya llegó.
   }
+}
+
+/** El servidor rechazó el cambio de una rutina porque todavía no tiene la columna kind. */
+const lacksKindColumn = (table: LocalTableName, values: Record<string, unknown>, cause: unknown) =>
+  table === 'routines' && 'kind' in values && schemaGapOfError(cause) === 'routineKind';
+
+const withoutKind = ({ kind: _kind, ...rest }: Record<string, unknown>) => rest;
+
+/**
+ * Servidor sin la columna kind: la rutina se crea igual, sin su tipo (la base la deja de salida), para
+ * que sus ítems, avisos e historial no queden bloqueados. Si era de llegada, el tipo queda pendiente.
+ */
+async function sendInsert(op: OutboxOpOf<'insert'>, remote: RemoteDeps): Promise<Outcome> {
+  try {
+    return await insertRow(op, op.values, remote);
+  } catch (cause) {
+    if (!lacksKindColumn(op.table, op.values, cause)) throw cause;
+  }
+  const outcome = await insertRow(op, withoutKind(op.values), remote);
+  const { kind } = op.values;
+  return outcome.type !== 'done' || kind === DEFAULT_ROUTINE_KIND ? outcome : { type: 'kindPending', id: op.id, kind, sent: true };
+}
+
+/** Igual que el insert: sin la columna kind se sube el resto del cambio y el tipo queda pendiente. */
+async function sendUpdate(op: OutboxOpOf<'update'>, remote: RemoteDeps): Promise<Outcome> {
+  const apply = async (changes: Record<string, unknown>) =>
+    (await repositoryFor(remote, op.table).updateIfOlder(op.id, changes, op.at)) === 'applied' ? DONE : STALE;
+  try {
+    return await apply(op.changes);
+  } catch (cause) {
+    if (!lacksKindColumn(op.table, op.changes, cause)) throw cause;
+  }
+  const rest = withoutKind(op.changes);
+  const sent = Object.keys(rest).length > 0;
+  // Si el resto perdió contra un cambio más reciente, el tipo (de la misma hora) también pierde.
+  if (sent && (await apply(rest)).type === 'stale') return STALE;
+  return { type: 'kindPending', id: op.id, kind: op.changes.kind, sent };
 }
 
 const FOREIGN_KEY_VIOLATION = '23503';
@@ -112,7 +155,7 @@ async function send(op: OutboxOp, remote: RemoteDeps): Promise<Outcome> {
     case 'insert':
       return sendInsert(op, remote);
     case 'update':
-      return (await repositoryFor(remote, op.table).updateIfOlder(op.id, op.changes, op.at)) === 'applied' ? DONE : STALE;
+      return sendUpdate(op, remote);
     case 'delete':
       await repositoryFor(remote, op.table).delete(op.id);
       return DONE;
@@ -169,6 +212,40 @@ const claimNext = (store: LocalStore, attempted: ReadonlySet<string>, now: strin
     return { doc: { ...doc, outbox: doc.outbox.map((op) => (op.opId === next.opId ? claimed : op)) }, result: claimed };
   }, 'sync');
 
+const inFlight = (op: OutboxOp) => op.sendingSince !== undefined;
+
+/**
+ * Deja pendiente el tipo de una rutina que el servidor (sin la columna kind) no pudo recibir. Va como un
+ * update de solo kind, con la hora del cambio original, en el lugar de `sent`; si después ya hay otro
+ * update de la misma rutina en la cola, el tipo se suma a ese (sin pisar un kind más nuevo), para que
+ * nunca quede detrás de un cambio más reciente y pierda por "gana el más reciente".
+ * Los cambios que se hagan luego se mezclan con él (outbox.compaction). Mientras esté en la cola, la
+ * bajada no pisa la rutina local; cuando el servidor tenga la columna, sube como cualquier update.
+ */
+function parkKind(outbox: readonly OutboxOp[], sent: OutboxOp, id: string, kind: unknown): OutboxOp[] {
+  const index = outbox.findIndex((op) => op.opId === sent.opId);
+  if (index < 0) return [...outbox]; // No puede pasar: lo que se está enviando no se quita.
+  const nextIndex = outbox.findIndex(
+    (op, position) => position > index && op.kind === 'update' && op.table === 'routines' && op.id === id && !inFlight(op),
+  );
+  if (nextIndex >= 0) {
+    const next = outbox[nextIndex] as OutboxOpOf<'update'>;
+    const merged: OutboxOp = { ...next, changes: { kind, ...next.changes } };
+    return outbox.flatMap((op, position) => (position === index ? [] : position === nextIndex ? [merged] : [op]));
+  }
+  const parked: OutboxOpOf<'update'> = {
+    kind: 'update',
+    table: 'routines',
+    id,
+    changes: { kind },
+    opId: sent.opId,
+    queuedAt: sent.queuedAt,
+    at: sent.at,
+    attempts: sent.attempts,
+  };
+  return outbox.map((op, position) => (position === index ? parked : op));
+}
+
 const applyOutcome = (store: LocalStore, sent: OutboxOp, outcome: Outcome) =>
   store.update((doc) => {
     const others = doc.outbox.filter((op) => op.opId !== sent.opId);
@@ -184,6 +261,8 @@ const applyOutcome = (store: LocalStore, sent: OutboxOp, outcome: Outcome) =>
       case 'deferred':
       case 'offline':
         return { doc: { ...doc, outbox: replaceSent(withoutSending(sent)) }, result: undefined };
+      case 'kindPending':
+        return { doc: { ...doc, outbox: parkKind(doc.outbox, sent, outcome.id, outcome.kind) }, result: undefined };
     }
   }, 'sync');
 
@@ -206,6 +285,11 @@ async function pushAll(store: LocalStore, remote: RemoteDeps, now: () => Date): 
       // Lo que sigue podría apuntar a la fila que no se creó: se corta la pasada, como sin red.
       // De un olvido o un update no depende nada: se sigue con lo demás (si no, todo esperaría a la migración).
       if (op.kind === 'insert') return report;
+      continue;
+    }
+    if (outcome.type === 'kindPending') {
+      report.deferred.push(withoutSending(op));
+      if (outcome.sent) report.sent += 1;
       continue;
     }
     if (outcome.type === 'failed') {

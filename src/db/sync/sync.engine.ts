@@ -1,10 +1,10 @@
-import type { LocalDocument, LocalTables } from '../local/local-document.types';
+import type { LocalDocument } from '../local/local-document.types';
 import type { LocalStore } from '../local/local.store';
 import { isNetworkError } from '../repositories/repository.types';
 import type { ForgotEvent } from '@/shared/types/forgot-event.types';
 
 import { mergeForgotEvents, sameForgotEvents } from './sync.forgot';
-import { mergePulled } from './sync.merge';
+import { mergePulled, type RemoteTables } from './sync.merge';
 import { mergeRecords, sameRecords } from './sync.records';
 import { pushOutbox, type PushReport, type RemoteDeps } from './sync.push';
 
@@ -27,7 +27,7 @@ function mergeForgot(current: ForgotEvent[] | undefined, remote: ForgotEvent[], 
   return current && sameForgotEvents(current, merged) ? current : merged;
 }
 
-async function fetchRemoteTables(remote: RemoteDeps): Promise<LocalTables> {
+async function fetchRemoteTables(remote: RemoteDeps): Promise<RemoteTables> {
   const [routines, items, triggers, homeNetworks, settings] = await Promise.all([
     remote.routines.getAll(),
     remote.items.getAll(),
@@ -61,7 +61,7 @@ export function createSyncEngine(
     const push = await pushOutbox(store, remote, now);
     if (push.offline) return { push, pulled: false, changed: false };
 
-    let snapshot: LocalTables;
+    let snapshot: RemoteTables;
     let remoteRecords: Awaited<ReturnType<RemoteDeps['records']['getAll']>>;
     let remoteForgot: ForgotEvent[] | null;
     try {
