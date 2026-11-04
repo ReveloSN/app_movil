@@ -18,6 +18,9 @@ export function saluteForHour(hour: number): string {
 export const VERIFY_PRESS_HINT = 'Abre la verificación';
 export const editRoutineLabel = (name: string) => `Editar ${name}`;
 
+/** Lo que oye el lector de pantalla mientras cargan las rutinas. */
+export const LOADING_ROUTINES_LABEL = 'Cargando rutinas';
+
 /** 03-2 (nombre del bloque en el Documento de Contenido). */
 export const NEXT_ROUTINE_LABEL = 'Próxima rutina';
 

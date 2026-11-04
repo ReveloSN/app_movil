@@ -8,10 +8,10 @@ import { EmptyRing } from '@/components/molecules/EmptyRing';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { RoutineCard } from '@/components/molecules/RoutineCard';
-import { SkeletonList } from '@/components/molecules/SkeletonList';
+import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
-import { editRoutineLabel, greeting, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
+import { editRoutineLabel, greeting, LOADING_ROUTINES_LABEL, NEXT_ROUTINE_LABEL, nextRoutineDescription, todayLabel, VERIFY_PRESS_HINT } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
@@ -50,7 +50,7 @@ export default function RoutinesScreen() {
   useFocusEffect(useCallback(() => clearFlashMessage, []));
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && routines.length === 0) return <SkeletonList accessibilityLabel="Cargando rutinas" />;
+  if (loading && routines.length === 0) return <HomeSkeleton loading accessibilityLabel={LOADING_ROUTINES_LABEL} />;
   if (error && routines.length === 0) return <ErrorState message={error} onRetry={refresh} />;
 
   const header = (

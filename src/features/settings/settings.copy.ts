@@ -7,6 +7,7 @@ export const SETTINGS_SAVE_ERROR = 'No se pudo guardar el cambio. Revisa tu cone
 
 // 11-1
 export const NETWORKS_TITLE = 'Redes de casa';
+export const LOADING_NETWORKS_LABEL = 'Cargando redes';
 export const NETWORKS_EMPTY = 'Aún no tienes redes. Se agregan al crear un aviso de Wi-Fi.';
 export const NETWORKS_LOAD_ERROR = 'No pudimos cargar tus redes.';
 export const RENAME_LABEL = 'Renombrar';
