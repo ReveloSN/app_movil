@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { loadArmedTriggers } from '@/features/triggers/armedTriggers.store';
 import { createSerialQueue } from '@/shared/lib/serialQueue';
 
-import { ACTION_DONE, ACTION_SKIP, ACTION_SNOOZE, ACTION_VERIFY } from './notification.config';
+import { ACTION_DONE, ACTION_SKIP, ACTION_SNOOZE, ACTION_VERIFY, ARRIVAL_CATEGORY_ID } from './notification.config';
 import { loadNotificationPrefs } from './notification.prefs';
 import { closeOccurrence, postponeOccurrence } from './occurrence.lifecycle';
 import type { OccurrenceNotificationData } from './occurrence.types';
@@ -12,8 +12,12 @@ import { writeNotificationRecord } from './record.writer';
 
 export type ResponseKind = 'verify' | 'snooze' | 'skip' | 'done';
 
-/** Tocar el cuerpo de la notificación equivale a "Verificar". */
-export function responseKind(actionIdentifier: string): ResponseKind | null {
+/**
+ * Tocar el cuerpo de la notificación equivale a "Verificar", salvo en la de llegada a casa: esa no abre
+ * ninguna verificación (no es una salida), solo se descarta, como «Hecho».
+ */
+export function responseKind(actionIdentifier: string, categoryIdentifier?: string | null): ResponseKind | null {
+  if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER && categoryIdentifier === ARRIVAL_CATEGORY_ID) return 'done';
   if (actionIdentifier === ACTION_VERIFY || actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) return 'verify';
   if (actionIdentifier === ACTION_SNOOZE) return 'snooze';
   if (actionIdentifier === ACTION_SKIP) return 'skip';
@@ -54,7 +58,7 @@ function markHandled(responseId: string): Promise<boolean> {
  * - verify: la vez queda respondida (se cancelan sus recordatorios). Abrir P07 lo hace quien tenga navegación.
  * - snooze: reprograma según "Posponer" de Ajustes (2/5/10 min), sin registro.
  * - skip: registro "skipped".
- * - done: la llegada a casa queda atendida (se cierra y se quita de la bandeja). NO crea ningún registro: no es una
+ * - done: (acción «Hecho» o toque del cuerpo de la llegada) la llegada a casa queda atendida (se cierra y se quita de la bandeja). NO crea ningún registro: no es una
  *   salida ni cuenta para la racha.
  * Devuelve el tipo de respuesta y la rutina, o null si la notificación no es de una rutina.
  */
@@ -62,7 +66,7 @@ export async function applyNotificationResponse(
   response: Notifications.NotificationResponse,
   now: number = Date.now(),
 ): Promise<{ kind: ResponseKind; routineId: string } | null> {
-  const kind = responseKind(response.actionIdentifier);
+  const kind = responseKind(response.actionIdentifier, response.notification.request.content.categoryIdentifier);
   const data = occurrenceData(response);
   if (!kind || !data) return null;
 

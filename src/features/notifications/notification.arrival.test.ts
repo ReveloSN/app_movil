@@ -68,10 +68,13 @@ describe('contenido de la notificación de llegada', () => {
 });
 
 describe('acción «Hecho»', () => {
-  const response = (actionIdentifier: string, occurrenceKey: string) =>
+  const response = (actionIdentifier: string, occurrenceKey: string, categoryIdentifier?: string) =>
     ({
       actionIdentifier,
-      notification: { date: 1, request: { identifier: `${occurrenceKey}#0`, content: { data: { occurrenceKey, routineId: 'r1' } } } },
+      notification: {
+        date: 1,
+        request: { identifier: `${occurrenceKey}#0`, content: { categoryIdentifier, data: { occurrenceKey, routineId: 'r1' } } },
+      },
     }) as unknown as Notifications.NotificationResponse;
 
   it('se reconoce como respuesta «done»', () => {
@@ -83,6 +86,23 @@ describe('acción «Hecho»', () => {
     const [occurrence] = await loadOccurrences();
 
     const outcome = await applyNotificationResponse(response(ACTION_DONE, occurrence.key), NOW + 1000);
+
+    expect(outcome).toEqual({ kind: 'done', routineId: 'r1' });
+    expect(await loadOccurrences()).toEqual([]);
+    expect(Notifications.dismissNotificationAsync).toHaveBeenCalled();
+    expect(writeNotificationRecord).not.toHaveBeenCalled();
+  });
+
+  it('tocar el cuerpo de la llegada solo la cierra: no es «verify» ni abre la verificación', async () => {
+    const tap = Notifications.DEFAULT_ACTION_IDENTIFIER;
+    expect(responseKind(tap, ARRIVAL_CATEGORY_ID)).toBe('done');
+    // En una notificación de salida (u otra sin categoría) el toque sigue siendo «Verificar».
+    expect(responseKind(tap, 'otra-categoria')).toBe('verify');
+    expect(responseKind(tap)).toBe('verify');
+
+    await fireArrival({ routineId: 'r1', routineName: 'Llegar', itemLabels: labels(1) }, 'u1', NOW, DEFAULT_PREFS);
+    const [occurrence] = await loadOccurrences();
+    const outcome = await applyNotificationResponse(response(tap, occurrence.key, ARRIVAL_CATEGORY_ID), NOW + 1000);
 
     expect(outcome).toEqual({ kind: 'done', routineId: 'r1' });
     expect(await loadOccurrences()).toEqual([]);
