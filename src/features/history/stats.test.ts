@@ -1,7 +1,15 @@
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 import type { UtcOffsetMinutes } from './history.streak';
-import { bestStreak, departureRecords, departureRoutineIdsOf, globalStreak } from './stats';
+import {
+  bestStreak,
+  completionRate,
+  departureRecords,
+  departureRoutineIdsOf,
+  departureSummary,
+  globalStreak,
+  weeklySeries,
+} from './stats';
 
 let seq = 0;
 const rec = (date: string, result = 'completed', routineId = 'out'): VerificationRecord => ({
@@ -132,5 +140,163 @@ describe('bestStreak', () => {
   it('nunca es menor que la racha actual', () => {
     const records = [rec(nov(2)), rec(nov(3)), rec(nov(4))];
     expect(bestStreak(records, BOGOTA)).toBeGreaterThanOrEqual(globalStreak(records, NOW, BOGOTA));
+  });
+});
+
+const oct = (day: number, time = '12:00') => `2026-10-${String(day).padStart(2, '0')}T${time}:00.000Z`;
+
+describe('completionRate', () => {
+  it('sin datos devuelve null (nunca divide por 0)', () => {
+    expect(completionRate([], { days: 7 }, NOW, BOGOTA)).toEqual({
+      completed: 0,
+      partial: 0,
+      skipped: 0,
+      noResponse: 0,
+      total: 0,
+      rate: null,
+    });
+    // Registros solo fuera del rango o con resultado desconocido: tampoco hay datos.
+    expect(completionRate([rec(oct(1)), rec(nov(4), 'otro')], { days: 7 }, NOW, BOGOTA).rate).toBeNull();
+    expect(completionRate([rec(nov(4))], { days: 0 }, NOW, BOGOTA).rate).toBeNull();
+  });
+
+  it('completadas / (completadas + parciales + omitidas + sin respuesta)', () => {
+    const records = [rec(nov(4)), rec(nov(3)), rec(nov(2), 'partial'), rec(nov(1), 'skipped'), rec(oct(31), 'no_response')];
+    expect(completionRate(records, { days: 7 }, NOW, BOGOTA)).toEqual({
+      completed: 2,
+      partial: 1,
+      skipped: 1,
+      noResponse: 1,
+      total: 5,
+      rate: 0.4,
+    });
+  });
+
+  it('solo parciales: 0 % y el conteo aparte', () => {
+    const result = completionRate([rec(nov(4), 'partial'), rec(nov(3), 'partial')], { days: 7 }, NOW, BOGOTA);
+    expect(result.rate).toBe(0);
+    expect(result.partial).toBe(2);
+  });
+
+  it('el rango son los últimos N días locales, incluido hoy; lo posterior a hoy queda fuera', () => {
+    // 7 días: del 29 de octubre al 4 de noviembre.
+    const records = [rec(oct(28)), rec(oct(29), 'partial'), rec(nov(4)), rec(nov(5))];
+    expect(completionRate(records, { days: 7 }, NOW, BOGOTA)).toMatchObject({ completed: 1, partial: 1, total: 2, rate: 0.5 });
+    expect(completionRate(records, { days: 30 }, NOW, BOGOTA)).toMatchObject({ completed: 2, total: 3 });
+    expect(completionRate(records, { days: 1 }, NOW, BOGOTA)).toMatchObject({ completed: 1, total: 1, rate: 1 });
+  });
+
+  it('los bordes del rango siguen la medianoche local', () => {
+    // 00:30 del 29 de octubre en Bogotá (05:30 UTC) entra; 23:30 del 28 (04:30 UTC del 29) no.
+    const records = [rec('2026-10-29T05:30:00.000Z'), rec('2026-10-29T04:30:00.000Z', 'partial')];
+    expect(completionRate(records, { days: 7 }, NOW, BOGOTA)).toMatchObject({ completed: 1, partial: 0, rate: 1 });
+    // En Tokio hoy ya es el 5: el rango va del 30 de octubre al 5 de noviembre.
+    expect(completionRate([rec(oct(29)), rec(nov(5, '01:00'))], { days: 7 }, NOW, TOKYO)).toMatchObject({ total: 1 });
+  });
+});
+
+describe('weeklySeries', () => {
+  it('7 días de lunes a domingo de la semana en curso, con hoy y futuro marcados', () => {
+    const series = weeklySeries([], NOW, BOGOTA);
+    expect(series.map((day) => day.date)).toEqual([
+      '2026-11-02',
+      '2026-11-03',
+      '2026-11-04',
+      '2026-11-05',
+      '2026-11-06',
+      '2026-11-07',
+      '2026-11-08',
+    ]);
+    expect(series.map((day) => day.weekday)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(series.map((day) => day.isToday)).toEqual([false, false, true, false, false, false, false]);
+    expect(series.map((day) => day.isFuture)).toEqual([false, false, false, true, true, true, true]);
+    expect(series.every((day) => day.total === 0)).toBe(true);
+  });
+
+  it('cuenta cada resultado por día e ignora lo de fuera de la semana', () => {
+    const records = [
+      rec(nov(2)),
+      rec(nov(2, '13:00'), 'partial'),
+      rec(nov(3), 'skipped'),
+      rec(nov(4), 'no_response'),
+      rec(nov(4, '13:00')),
+      rec(nov(4, '14:00'), 'raro'),
+      rec(nov(1)), // domingo de la semana anterior
+      rec(nov(9)), // lunes de la siguiente
+    ];
+    const [monday, tuesday, wednesday, thursday] = weeklySeries(records, NOW, BOGOTA);
+    expect(monday).toMatchObject({ completed: 1, partial: 1, skipped: 0, noResponse: 0, total: 2 });
+    expect(tuesday).toMatchObject({ completed: 0, skipped: 1, total: 1 });
+    expect(wednesday).toMatchObject({ completed: 1, noResponse: 1, total: 2 });
+    expect(thursday.total).toBe(0);
+    expect(weeklySeries(records, NOW, BOGOTA).reduce((sum, day) => sum + day.total, 0)).toBe(5);
+  });
+
+  it('el lunes la semana arranca de cero y el domingo es el último día', () => {
+    const mondayMorning = new Date('2026-11-02T13:00:00.000Z'); // 08:00 del lunes en Bogotá
+    const series = weeklySeries([rec(nov(1)), rec(nov(2))], mondayMorning, BOGOTA);
+    expect(series[0]).toMatchObject({ date: '2026-11-02', isToday: true, completed: 1 });
+    expect(series.slice(1).every((day) => day.isFuture)).toBe(true);
+
+    const sundayNight = new Date('2026-11-09T04:30:00.000Z'); // 23:30 del domingo 8 en Bogotá
+    const sunday = weeklySeries([rec('2026-11-09T04:00:00.000Z')], sundayNight, BOGOTA);
+    expect(sunday[0].date).toBe('2026-11-02');
+    expect(sunday[6]).toMatchObject({ date: '2026-11-08', isToday: true, completed: 1 });
+    expect(sunday.some((day) => day.isFuture)).toBe(false);
+  });
+
+  it('la semana y los días dependen de la zona horaria', () => {
+    // 16:00 UTC del domingo 1: en Bogotá es domingo (semana anterior); en Tokio, 01:00 del lunes 2.
+    const records = [rec('2026-11-01T16:00:00.000Z')];
+    expect(weeklySeries(records, NOW, BOGOTA)[0].total).toBe(0);
+    const tokyo = weeklySeries(records, NOW, TOKYO);
+    expect(tokyo[0]).toMatchObject({ date: '2026-11-02', completed: 1 });
+    expect(tokyo[3].isToday).toBe(true); // en Tokio NOW ya es el jueves 5
+  });
+
+  it('es determinista con now inyectado', () => {
+    const records = [rec(nov(3)), rec(nov(4), 'partial')];
+    expect(weeklySeries(records, NOW, BOGOTA)).toEqual(weeklySeries([...records].reverse(), NOW, BOGOTA));
+    expect(weeklySeries(records, new Date('2026-11-10T15:00:00.000Z'), BOGOTA).every((day) => day.total === 0)).toBe(true);
+  });
+});
+
+describe('departureSummary', () => {
+  const ids = departureRoutineIdsOf([
+    { id: 'out', kind: 'departure' },
+    { id: 'gym', kind: 'departure' },
+    { id: 'home', kind: 'arrival' },
+  ]);
+
+  it('reúne racha, mejor racha, cumplimiento 7/30 días, totales y semana solo con salidas', () => {
+    const records = [
+      rec(nov(4)),
+      rec(nov(3), 'completed', 'gym'),
+      rec(nov(2), 'partial'),
+      rec(oct(20)),
+      rec(oct(21)),
+      rec(oct(22)),
+      rec(oct(23)),
+      rec(nov(1), 'completed', 'home'), // llegada: fuera
+      rec(nov(2), 'completed', 'home'), // llegada: no tapa el hueco del 2
+      rec(nov(4), 'skipped', 'deleted'), // rutina borrada: fuera
+    ];
+    const summary = departureSummary(records, ids, NOW, BOGOTA);
+    expect(summary.currentStreak).toBe(2);
+    expect(summary.bestStreak).toBe(4);
+    expect(summary.last7Days).toMatchObject({ completed: 2, partial: 1, total: 3 });
+    expect(summary.last7Days.rate).toBeCloseTo(2 / 3);
+    expect(summary.last30Days).toMatchObject({ completed: 6, total: 7 });
+    expect(summary.totalDepartures).toBe(6);
+    expect(summary.totalRecords).toBe(7);
+    expect(summary.week.map((day) => day.total)).toEqual([1, 1, 1, 0, 0, 0, 0]);
+  });
+
+  it('sin salidas: ceros, tasas null y semana vacía', () => {
+    const summary = departureSummary([rec(nov(4), 'completed', 'home')], ids, NOW, BOGOTA);
+    expect(summary).toMatchObject({ currentStreak: 0, bestStreak: 0, totalDepartures: 0, totalRecords: 0 });
+    expect(summary.last7Days.rate).toBeNull();
+    expect(summary.last30Days.rate).toBeNull();
+    expect(summary.week).toHaveLength(7);
   });
 });
