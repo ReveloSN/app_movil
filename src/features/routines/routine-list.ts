@@ -16,3 +16,10 @@ export const departureRoutines = <T extends Pick<Routine, 'kind'>>(routines: rea
 /** Rutinas de llegada («Al llegar»): recordatorios al volver a casa. */
 export const arrivalRoutines = <T extends Pick<Routine, 'kind'>>(routines: readonly T[]): T[] =>
   routines.filter((routine) => routine.kind === 'arrival');
+
+/**
+ * Si la tarjeta de Inicio ofrece «Verificar ahora». Las de llegada no: verificar crearía un registro de
+ * salida que ensuciaría el historial, y su recordatorio se atiende con «Hecho» en la notificación.
+ * De la tarjeta de llegada solo se puede editar.
+ */
+export const canVerifyFromHome = (routine: Pick<Routine, 'kind'>): boolean => routine.kind !== 'arrival';

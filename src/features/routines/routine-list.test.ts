@@ -1,6 +1,6 @@
 import type { Routine } from '@/shared/types/routine.types';
 
-import { upsertRoutine } from './routine-list';
+import { canVerifyFromHome, upsertRoutine } from './routine-list';
 
 const routine = (id: string, name: string): Routine => ({
   id,
@@ -24,5 +24,12 @@ describe('lista de rutinas tras guardar', () => {
     const list = [routine('r1', 'Casa'), routine('r2', 'Trabajo')];
     const saved = routine('r2', 'Trabajo nuevo');
     expect(upsertRoutine(list, saved)).toEqual([list[0], saved]);
+  });
+});
+
+describe('tarjeta de Inicio', () => {
+  it('«Verificar ahora» solo se ofrece en rutinas de salida; la de llegada solo se edita', () => {
+    expect(canVerifyFromHome(routine('r1', 'Casa'))).toBe(true);
+    expect(canVerifyFromHome({ ...routine('r2', 'Llegar'), kind: 'arrival' })).toBe(false);
   });
 });

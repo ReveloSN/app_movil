@@ -28,7 +28,7 @@ import {
 import { homeSky } from '@/features/home/homeSky';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
-import { arrivalRoutines, departureRoutines } from '@/features/routines/routine-list';
+import { arrivalRoutines, canVerifyFromHome, departureRoutines } from '@/features/routines/routine-list';
 import { useNextRoutine } from '@/features/routines/useNextRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useDisplayName } from '@/features/settings/useDisplayName';
@@ -101,23 +101,27 @@ export default function RoutinesScreen() {
     </View>
   );
 
-  const renderCard = (item: Routine) => (
-    <RoutineCard
-      name={item.name}
-      icon={item.icon}
-      accentColor={routineAccent(colors, item.color).color}
-      accentTint={routineAccent(colors, item.color).tint}
-      active={item.active}
-      lastCompletedAt={item.lastCompletedAt}
-      actionLabel={VERIFY_NOW_LABEL}
-      onAction={() => openVerification(item.id)}
-      // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
-      onPress={() => openVerification(item.id)}
-      pressHint={VERIFY_PRESS_HINT}
-      onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
-      editLabel={editRoutineLabel(item.name)}
-    />
-  );
+  // Las de llegada no se verifican desde aquí (ensuciaría el historial de salidas): solo se editan.
+  const renderCard = (item: Routine) => {
+    const verifiable = canVerifyFromHome(item);
+    return (
+      <RoutineCard
+        name={item.name}
+        icon={item.icon}
+        accentColor={routineAccent(colors, item.color).color}
+        accentTint={routineAccent(colors, item.color).tint}
+        active={item.active}
+        lastCompletedAt={item.lastCompletedAt}
+        actionLabel={verifiable ? VERIFY_NOW_LABEL : undefined}
+        onAction={verifiable ? () => openVerification(item.id) : undefined}
+        // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
+        onPress={verifiable ? () => openVerification(item.id) : undefined}
+        pressHint={VERIFY_PRESS_HINT}
+        onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
+        editLabel={editRoutineLabel(item.name)}
+      />
+    );
+  };
 
   return (
     <View style={styles.container}>
