@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAiPrefs } from '@/features/ai/ai.prefs';
 import { requestPatternInsight } from '@/features/ai/ai.service';
+import type { InsightPatternInput } from '@/features/ai/ai.stats';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useToast } from '@/features/feedback/toast.context';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
@@ -18,10 +19,22 @@ interface InsightState {
   message: string;
 }
 
+/** Lo que viaja a la IA: solo conteos y etiquetas, nunca el historial. */
+const aiInputOf = (pattern: OmissionPattern, routine: string): InsightPatternInput => ({
+  item: pattern.label,
+  routine,
+  weekday: pattern.kind === 'weekday' ? pattern.weekday : null,
+  misses: pattern.misses,
+  observations: pattern.observations,
+  critical: pattern.critical,
+});
+
 /**
  * Sugerencia de "aprender de tus olvidos" para una rutina: el patrón más repetido de un ítem que aún no es
- * crítico y que la persona no pospuso esta semana. El mensaje es determinista; si la IA está activa,
- * aceptada y hay conexión, se intenta redactar con ella (si falla, queda el determinista).
+ * crítico y que la persona no pospuso esta semana. La detección es local y determinista, y el mensaje
+ * determinista sale siempre (sin red, sin consentimiento, sin cuota o si la IA falla). Si la IA está activa,
+ * aceptada y hay conexión, se le pide que lo redacte: como mucho UNA llamada por apertura de la pantalla, y
+ * ninguna si ese patrón y su tramo de omisiones ya están en caché.
  */
 export function useRoutineInsight(routineId: string) {
   const local = useLocalRepositories();
@@ -33,6 +46,8 @@ export function useRoutineInsight(routineId: string) {
   const [insight, setInsight] = useState<InsightState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Rutina para la que ya se intentó la IA en esta apertura (el efecto puede repetirse al volver la red). */
+  const aiAskedFor = useRef<string | null>(null);
   const userId = user?.id ?? null;
   const routineName = routines.find((routine) => routine.id === routineId)?.name ?? '';
   const canUseAi = ai.enabled && ai.consented && isConnected;
@@ -49,16 +64,10 @@ export function useRoutineInsight(routineId: string) {
         if (await snooze.isSnoozed(patternKey(pattern), now)) continue;
         if (!active) return;
         setInsight({ pattern, message: copy.patternMessage(pattern) });
-        if (!canUseAi || !routineName) return;
-        const aiInsight = await requestPatternInsight({
-          item: pattern.label,
-          routine: routineName,
-          weekday: pattern.kind === 'weekday' ? pattern.weekday : null,
-          misses: pattern.misses,
-          observations: pattern.observations,
-          critical: pattern.critical,
-        }).catch((cause: unknown) => {
-          // La sugerencia no depende de la IA: se queda el mensaje determinista.
+        if (!canUseAi || !routineName || aiAskedFor.current === routineId) return;
+        aiAskedFor.current = routineId;
+        const aiInsight = await requestPatternInsight(aiInputOf(pattern, routineName), patternKey(pattern)).catch((cause: unknown) => {
+          // Sin cuota (429), sin red o respuesta inválida: se queda el mensaje determinista.
           if (__DEV__) console.warn('[insights.ai]', cause);
           return null;
         });

@@ -34,9 +34,12 @@ export async function requestItemSuggestions(
   return suggestions;
 }
 
-/** Mensaje de un olvido que se repite (datos agregados), cacheado por patrón. */
-export const requestPatternInsight = (pattern: InsightPatternInput, client: AiClient = defaultClient): Promise<AiInsight> =>
-  requestInsight(pattern, { client });
+/** Mensaje de un olvido que se repite (datos agregados), cacheado por patrón y tramo de omisiones. */
+export const requestPatternInsight = (
+  pattern: InsightPatternInput,
+  patternId?: string,
+  client: AiClient = defaultClient,
+): Promise<AiInsight> => requestInsight(pattern, { client, patternId });
 
 /** Resumen de la semana a partir de estadísticas agregadas (lo pide la persona). */
 export const requestWeekSummary = (stats: WeeklyStatsInput, client: AiClient = defaultClient): Promise<AiWeeklySummary> =>

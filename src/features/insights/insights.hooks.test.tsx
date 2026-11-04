@@ -3,10 +3,11 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-li
 
 import { InsightCard } from '@/components/molecules/InsightCard';
 import { createLocalRepositories, type LocalRepositories } from '@/db/local/local.repositories';
-import { fixedDeps, memoryStorage } from '@/db/local/testing/memoryStorage';
-import { TestProviders } from '@/shared/testing/TestProviders';
-
 import { createLocalStore, type LocalStore } from '@/db/local/local.store';
+import { fixedDeps, memoryStorage } from '@/db/local/testing/memoryStorage';
+import { requestPatternInsight } from '@/features/ai/ai.service';
+import { AiClientError } from '@/features/ai/ai.types';
+import { TestProviders } from '@/shared/testing/TestProviders';
 
 import { resetForgotMigrations } from './forgot.migrate';
 import { useForgotItem } from './useForgotItem';
@@ -22,10 +23,13 @@ jest.mock('@/features/local-data/LocalRepositoriesProvider', () => ({
 jest.mock('@/features/feedback/toast.context', () => ({ useToast: () => mockToast }));
 jest.mock('@/features/routines/useRoutines', () => ({ useRoutines: () => ({ routines: [{ id: 'r1', name: 'Saliendo de casa' }] }) }));
 jest.mock('@/features/notifications/TriggerRuntimeProvider', () => ({ useTriggerRuntime: () => ({ rearm: () => Promise.resolve() }) }));
-// IA apagada: el mensaje es el determinista (la función nunca depende de la IA).
-jest.mock('@/features/ai/ai.prefs', () => ({ useAiPrefs: () => ({ enabled: false, consented: false }) }));
+// Por defecto IA apagada: el mensaje es el determinista (la función nunca depende de la IA).
+const mockAi = { enabled: false, consented: false };
+const mockNetwork = { isConnected: true };
+jest.mock('@/features/ai/ai.prefs', () => ({ useAiPrefs: () => mockAi }));
 jest.mock('@/features/ai/ai.service', () => ({ requestPatternInsight: jest.fn() }));
-jest.mock('@/shared/network/useNetworkStatus', () => ({ useNetworkStatus: () => ({ isConnected: true }) }));
+jest.mock('@/shared/network/useNetworkStatus', () => ({ useNetworkStatus: () => mockNetwork }));
+const mockInsight = jest.mocked(requestPatternInsight);
 
 jest.setTimeout(20000);
 
@@ -36,7 +40,7 @@ async function seed() {
   const repos = createLocalRepositories(store, fixedDeps());
   mockLocal.repositories = repos;
   mockLocal.store = store;
-  const routine = await repos.routines.create({ name: 'Saliendo de casa', icon: 'home-outline', color: 'green' });
+  const routine = await repos.routines.create({ id: 'r1', name: 'Saliendo de casa', icon: 'home-outline', color: 'green' });
   const charger = await repos.items.create({ routineId: routine.id, label: 'Cargador', type: 'carry', critical: false, sortOrder: 0 });
   for (const days of [1, 3, 5]) {
     await repos.records.create({
@@ -52,6 +56,9 @@ async function seed() {
 
 beforeEach(async () => {
   mockToast.show.mockReset();
+  mockInsight.mockReset();
+  Object.assign(mockAi, { enabled: false, consented: false });
+  mockNetwork.isConnected = true;
   resetForgotMigrations();
   await AsyncStorage.clear();
 });
@@ -79,6 +86,78 @@ describe('useRoutineInsight', () => {
     const second = await renderHook(() => useRoutineInsight(routineId));
     await act(async () => undefined);
     expect(second.result.current.message).toBeNull();
+  });
+});
+
+describe('useRoutineInsight con IA', () => {
+  const DETERMINISTIC = 'Sueles omitir «Cargador». ¿Lo marcamos como crítico?';
+
+  it('con consentimiento y red, la IA redacta: una sola llamada por apertura', async () => {
+    Object.assign(mockAi, { enabled: true, consented: true });
+    mockInsight.mockResolvedValue({ message: 'El «Cargador» se te suele quedar. ¿Lo marcamos como crítico?', action: 'mark_critical' });
+    const { routineId } = await seed();
+    const { result, rerender } = await renderHook(() => useRoutineInsight(routineId));
+
+    await waitFor(() => expect(result.current.message).toBe('El «Cargador» se te suele quedar. ¿Lo marcamos como crítico?'));
+    expect(mockInsight).toHaveBeenCalledTimes(1);
+    expect(mockInsight).toHaveBeenCalledWith(
+      { item: 'Cargador', routine: 'Saliendo de casa', weekday: null, misses: 3, observations: 3, critical: false },
+      'item|r1|cargador|',
+    );
+    // Se va y vuelve la red: el efecto se repite, pero no hay otra llamada.
+    mockNetwork.isConnected = false;
+    await rerender({});
+    mockNetwork.isConnected = true;
+    await rerender({});
+    await act(async () => undefined);
+    expect(mockInsight).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [
+      'sin red',
+      () => {
+        Object.assign(mockAi, { enabled: true, consented: true });
+        mockNetwork.isConnected = false;
+      },
+    ],
+    ['sin consentimiento', () => Object.assign(mockAi, { enabled: true, consented: false })],
+    ['con la IA apagada', () => Object.assign(mockAi, { enabled: false, consented: true })],
+  ])('%s no llama a la IA y queda el texto local', async (_case, setup) => {
+    setup();
+    const { routineId } = await seed();
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(result.current.message).toBe(DETERMINISTIC));
+    await act(async () => undefined);
+    expect(mockInsight).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['sin cuota (429)', () => mockInsight.mockRejectedValue(new AiClientError('quota_exceeded'))],
+    ['error del servidor', () => mockInsight.mockRejectedValue(new AiClientError('server'))],
+    ['acción distinta a la del botón', () => mockInsight.mockResolvedValue({ message: 'Otra cosa', action: 'none' })],
+  ])('%s → texto determinista local', async (_case, setup) => {
+    Object.assign(mockAi, { enabled: true, consented: true });
+    setup();
+    const { routineId } = await seed();
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(mockInsight).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    expect(result.current.message).toBe(DETERMINISTIC);
+  });
+
+  it('un patrón pospuesto no llama a la IA', async () => {
+    Object.assign(mockAi, { enabled: true, consented: true });
+    const { routineId } = await seed();
+    const first = await renderHook(() => useRoutineInsight(routineId));
+    await waitFor(() => expect(first.result.current.message).not.toBeNull());
+    await act(async () => first.result.current.dismiss());
+    mockInsight.mockClear();
+
+    const second = await renderHook(() => useRoutineInsight(routineId));
+    await act(async () => undefined);
+    expect(second.result.current.message).toBeNull();
+    expect(mockInsight).not.toHaveBeenCalled();
   });
 });
 
