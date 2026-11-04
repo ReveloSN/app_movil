@@ -20,7 +20,8 @@ export const PERMISSION_COPY: Record<PermissionKind, PermissionCopy> = {
   location: {
     title: 'Ubicación',
     icon: 'location-outline',
-    reason: 'Para detectar tu Wi-Fi, el teléfono pide acceso a la ubicación. No la guardamos.',
+    reason:
+      'Para detectar tu Wi-Fi y, si quieres, tu casa, el teléfono pide acceso a la ubicación. La ubicación de tu casa se guarda solo en este teléfono y no se envía a ningún lado.',
   },
 };
 

@@ -48,8 +48,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Para detectar tu Wi-Fi, el teléfono pide acceso a la ubicación. No la guardamos.",
-          "locationAlwaysAndWhenInUsePermission": "Para notar que saliste de tu Wi-Fi aunque la app esté cerrada. No guardamos tu ubicación.",
+          "locationWhenInUsePermission": "Para detectar tu Wi-Fi y, si quieres, definir tu casa con tu ubicación actual. La ubicación de tu casa se guarda solo en tu teléfono y no se envía a ningún lado.",
+          "locationAlwaysAndWhenInUsePermission": "Para notar que saliste o llegaste a casa aunque la app esté cerrada. La ubicación de tu casa se guarda solo en tu teléfono y no se envía a ningún lado.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],

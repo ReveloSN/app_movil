@@ -11,7 +11,17 @@ export const HELP_ENTRIES: readonly HelpEntry[] = [
   {
     question: '¿Por qué la app pide mi ubicación?',
     answer:
-      'Para leer el nombre de tu Wi-Fi, el teléfono exige ese permiso. No guardamos tu ubicación: solo comparamos el nombre de la red con tus redes de casa.',
+      'Para leer el nombre de tu Wi-Fi, el teléfono exige ese permiso. Si defines tu casa en Ajustes, también la usamos para avisarte al llegar. Las coordenadas de tu casa se guardan solo en tu teléfono: no se envían a ningún lado ni se suben a tu cuenta.',
+  },
+  {
+    question: '¿Cómo funciona «Al llegar»?',
+    answer:
+      'Crea una rutina de tipo «Llegada», por ejemplo «Poner a cargar el celular» y «Guardar las llaves». Cuando llegues a casa te llega una notificación con esos recordatorios. Detectamos tu llegada por el Wi-Fi de casa o, si lo configuras en Ajustes, por tu ubicación. Si ambos lo detectan, te avisamos una sola vez. Las rutinas de llegada no cuentan para tu racha de salidas.',
+  },
+  {
+    question: '¿Por qué el aviso de llegada tarda unos minutos?',
+    answer:
+      'Android no avisa al instante que llegaste: puede tardar unos minutos, sobre todo con la app cerrada o con el ahorro de batería activado. Para que funcione mejor, permite la ubicación «todo el tiempo» y no restrinjas la batería de la app. Sin ese permiso, solo avisamos por Wi-Fi.',
   },
   {
     question: '¿Por qué un aviso de Wi-Fi llegó tarde?',
