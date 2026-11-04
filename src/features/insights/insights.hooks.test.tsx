@@ -76,6 +76,15 @@ describe('useRoutineInsight', () => {
     expect(result.current.message).toBeNull();
   });
 
+  it('en una rutina de llegada no propone nada aunque haya omisiones', async () => {
+    const { repos, routineId } = await seed();
+    await repos.routines.update(routineId, { kind: 'arrival' });
+    const { result } = await renderHook(() => useRoutineInsight(routineId));
+    await act(async () => undefined);
+    await act(async () => undefined);
+    expect(result.current.message).toBeNull();
+  });
+
   it('"Ahora no" lo oculta y no vuelve a salir esa semana', async () => {
     const { routineId } = await seed();
     const first = await renderHook(() => useRoutineInsight(routineId));

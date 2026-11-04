@@ -3,6 +3,7 @@
 
 import type { WeeklyStatsInput } from '@/features/ai/ai.stats';
 import { mostSkippedItems } from '@/features/history/history.filter';
+import { departureRecords } from '@/features/history/stats';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -46,8 +47,16 @@ const inRange = (record: VerificationRecord, from: number, to: number) => {
   return Number.isFinite(at) && at >= from && at < to;
 };
 
-/** Estadísticas de la semana de `now` (de lunes a domingo) comparadas con la anterior. */
-export function buildWeeklyStats(records: readonly VerificationRecord[], now: Date): WeeklyStatsInput {
+/**
+ * Estadísticas de la semana de `now` (de lunes a domingo) comparadas con la anterior. Solo cuentan las
+ * rutinas de salida (`departureRoutineIds`): las de llegada quedan fuera de las cifras, la racha y la IA.
+ */
+export function buildWeeklyStats(
+  allRecords: readonly VerificationRecord[],
+  departureRoutineIds: ReadonlySet<string>,
+  now: Date,
+): WeeklyStatsInput {
+  const records = departureRecords(allRecords, departureRoutineIds);
   const start = mondayOf(now).getTime();
   const end = start + 7 * DAY_MS;
   const week = records.filter((record) => inRange(record, start, end));

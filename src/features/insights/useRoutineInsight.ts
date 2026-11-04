@@ -4,6 +4,7 @@ import { useAiPrefs } from '@/features/ai/ai.prefs';
 import { requestPatternInsight } from '@/features/ai/ai.service';
 import type { InsightPatternInput } from '@/features/ai/ai.stats';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { departureRecords, departureRoutineIdsOf } from '@/features/history/stats';
 import { useToast } from '@/features/feedback/toast.context';
 import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
@@ -109,7 +110,8 @@ export function useRoutineInsight(routineId: string) {
       const candidates = candidatesFor(
         {
           forgot: detectForgotPatterns(events, records, now, undefined, routineIds).filter(ofRoutine),
-          omissions: detectPatterns(records, now).filter(ofRoutine),
+          // Las rutinas de llegada no forman patrones de omisión.
+          omissions: detectPatterns(departureRecords(records, departureRoutineIdsOf(allRoutines)), now).filter(ofRoutine),
         },
         items,
       );
