@@ -1,6 +1,6 @@
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { Modal, PanResponder, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, ReduceMotion, SlideInDown, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { durations, easings, springs, timing } from '@/shared/theme/motion';
@@ -11,9 +11,6 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const DRAG_CLOSE_DISTANCE = 96;
 const DRAG_CLOSE_VELOCITY = 0.8;
 const OFFSCREEN = 800;
-
-const sheetEntering = SlideInDown.duration(durations.slow).easing(easings.enter).reduceMotion(ReduceMotion.System);
-const scrimEntering = FadeIn.duration(durations.slow).reduceMotion(ReduceMotion.System);
 
 interface BottomSheetProps {
   visible?: boolean;
@@ -34,6 +31,9 @@ interface BottomSheetProps {
 /**
  * Hoja inferior (P05, detalle de registro, aviso de IA): el fondo se atenúa, la hoja sube desde abajo y
  * se puede cerrar arrastrándola desde su asa o su encabezado. Sigue "Quitar animaciones".
+ *
+ * La entrada la mueve un solo valor (`dragY`) que arranca fuera de pantalla: con `entering` de Reanimated
+ * dentro de un Modal, Android dibujaba la hoja un instante en su sitio y luego la bajaba para subirla.
  */
 export function BottomSheet({
   visible = true,
@@ -45,7 +45,15 @@ export function BottomSheet({
   style,
 }: BottomSheetProps) {
   const styles = useThemedStyles(createStyles);
-  const dragY = useSharedValue(0);
+  // Arranca fuera de pantalla: el primer cuadro nunca muestra la hoja en su sitio final.
+  const dragY = useSharedValue(OFFSCREEN);
+
+  useEffect(() => {
+    if (!visible) return;
+    dragY.set(withTiming(0, timing(durations.slow, easings.enter)));
+    // Al cerrar (o desmontar) vuelve abajo: la próxima apertura no hereda un arrastre anterior.
+    return () => dragY.set(OFFSCREEN);
+  }, [visible, dragY]);
 
   const panResponder = useMemo(
     () =>
@@ -72,11 +80,13 @@ export function BottomSheet({
   );
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: dragY.get() }] }));
+  // El fondo sigue a la hoja: aparece al subir y se apaga al arrastrar hacia abajo.
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: Math.max(0, 1 - dragY.get() / OFFSCREEN) }));
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onRequestClose} statusBarTranslucent navigationBarTranslucent>
       <View style={styles.root}>
-        <Animated.View entering={scrimEntering} style={[StyleSheet.absoluteFill, styles.scrim]}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, scrimStyle]}>
           <Pressable
             style={styles.flex}
             onPress={closeLabel ? onRequestClose : undefined}
@@ -85,7 +95,7 @@ export function BottomSheet({
             accessibilityLabel={closeLabel}
           />
         </Animated.View>
-        <Animated.View entering={sheetEntering} style={[styles.sheet, style, sheetStyle]} accessibilityViewIsModal>
+        <Animated.View style={[styles.sheet, style, sheetStyle]} accessibilityViewIsModal>
           <View {...panResponder.panHandlers}>
             <View style={styles.handle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
             {header}
