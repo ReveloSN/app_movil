@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { useRoutines } from '@/features/routines/useRoutines';
+import { useMinuteClock } from '@/shared/hooks/useMinuteClock';
 
 import { departureRoutineIdsOf, departureSummary, type DepartureSummary } from './stats';
 import type { HistoryData } from './useHistory';
@@ -14,22 +15,6 @@ export interface DepartureStats {
   summary: DepartureSummary;
   error: string | null;
   refresh(): Promise<void>;
-}
-
-const MINUTE_MS = 60_000;
-const minuteOf = () => Math.floor(Date.now() / MINUTE_MS);
-
-/**
- * "Ahora" estable: cambia una vez por minuto, no en cada render. Así el resumen no se recalcula
- * mientras se escribe, se desplaza o se anima, pero el día siguiente se detecta en menos de un minuto.
- */
-function useMinuteClock(): Date {
-  const [minute, setMinute] = useState(minuteOf);
-  useEffect(() => {
-    const timer = setInterval(() => setMinute(minuteOf()), MINUTE_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return useMemo(() => new Date(minute * MINUTE_MS), [minute]);
 }
 
 /**

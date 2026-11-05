@@ -24,6 +24,7 @@ import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
 import { routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
+import { useMinuteClock } from '@/shared/hooks/useMinuteClock';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -47,8 +48,8 @@ export default function HistoryScreen() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const swipeLock = useTabSwipeLockHandlers();
-  // Fecha de "Tu semana" en cada render (las estadísticas son baratas; la clave de la semana cambia el lunes).
-  const weekNow = new Date();
+  // Fecha de "Tu semana": cambia por minuto, no por render (la clave de la semana cambia el lunes).
+  const weekNow = useMinuteClock();
   // 09-3: vive en la pestaña; no se guarda.
   const [filter, setFilter] = useState<HistoryFilter>(NO_FILTER);
   const [detail, setDetail] = useState<HistoryEntry | null>(null);
