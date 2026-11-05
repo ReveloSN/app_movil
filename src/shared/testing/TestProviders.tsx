@@ -19,7 +19,7 @@ export function TestProviders({ children, insets, mode = 'light' }: TestProvider
     <SafeAreaProvider
       initialMetrics={{ insets: { ...NO_INSETS, ...insets }, frame: { x: 0, y: 0, width: 360, height: 640 } }}
     >
-      <ThemeModeContext.Provider value={{ mode, setMode: noop, toggle: noop }}>{children}</ThemeModeContext.Provider>
+      <ThemeModeContext.Provider value={{ mode, preference: mode, setPreference: noop }}>{children}</ThemeModeContext.Provider>
     </SafeAreaProvider>
   );
 }

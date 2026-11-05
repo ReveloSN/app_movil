@@ -1,5 +1,5 @@
 import { emptyDocument } from '@/db/local/local.store';
-import { op, record } from '@/db/local/testing/outbox.fixtures';
+import { forgot, op, record } from '@/db/local/testing/outbox.fixtures';
 import type { Routine } from '@/shared/types/routine.types';
 
 import { describeChange, discardMessage, failureReason } from './sync.describe';
@@ -8,6 +8,7 @@ const routine: Routine = {
   id: 'r1',
   userId: 'u1',
   name: 'Salir de casa',
+  kind: 'departure',
   icon: null,
   color: null,
   active: true,
@@ -36,6 +37,12 @@ describe('describeChange', () => {
     );
     expect(describeChange(op({ kind: 'insertRecord', record: record('rec-1', 'r1') }), tables)).toBe(
       'Guardar la verificación de «Salir de casa»',
+    );
+  });
+
+  it('a un olvido lo nombra por lo que se olvidó', () => {
+    expect(describeChange(op({ kind: 'insertForgot', event: forgot('f1', 'r1', { label: 'Paraguas' }) }), tables)).toBe(
+      'Guardar el olvido «Paraguas»',
     );
   });
 

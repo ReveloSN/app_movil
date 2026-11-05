@@ -1,3 +1,4 @@
+import type { RoutineKind } from '@/shared/types/routine.types';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 /** Registro con el nombre e ícono de su rutina ya resueltos. */
@@ -6,6 +7,8 @@ export interface HistoryEntry extends VerificationRecord {
   routineIcon: string | null;
   /** Clave de color de la rutina (04-2); sin ella, el principal. */
   routineColor?: string | null;
+  /** Tipo de la rutina (salida o llegada); null si ya no existe. */
+  routineKind?: RoutineKind | null;
   /** Todavía espera en la cola para subir al servidor. */
   pending?: boolean;
 }

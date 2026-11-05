@@ -5,6 +5,7 @@ import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { ListActionRow } from '@/components/molecules/ListActionRow';
 import { TriggerRow } from '@/components/molecules/TriggerRow';
+import type { RoutineKind } from '@/shared/types/routine.types';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { UNDO_LABEL } from '@/features/feedback/feedback.copy';
 import { useToast } from '@/features/feedback/toast.context';
@@ -19,14 +20,16 @@ import { useTriggerDrafts } from './TriggerDraftsProvider';
 interface RoutineTriggersSectionProps {
   /** Formulario de P04 al que pertenecen los avisos. */
   formId: string;
+  /** Salida o llegada: P06 propone el aviso que corresponde. */
+  routineKind?: RoutineKind;
   error?: string;
 }
 
-const openTrigger = (formId: string, key?: string) =>
-  router.push({ pathname: '/routine/trigger', params: key ? { formId, key } : { formId } });
+const openTrigger = (formId: string, routineKind: RoutineKind, key?: string) =>
+  router.push({ pathname: '/routine/trigger', params: key ? { formId, routineKind, key } : { formId, routineKind } });
 
 /** Bloque de avisos de P04 (04-5): lista agrupada (0–3), cada uno editable en P06. */
-export function RoutineTriggersSection({ formId, error }: RoutineTriggersSectionProps) {
+export function RoutineTriggersSection({ formId, routineKind = 'departure', error }: RoutineTriggersSectionProps) {
   const styles = useThemedStyles(createStyles);
   const { drafts, remove, upsert } = useTriggerDrafts(formId);
   const toast = useToast();
@@ -55,14 +58,14 @@ export function RoutineTriggersSection({ formId, error }: RoutineTriggersSection
               icon={strategy.icon}
               summary={summarySentence(strategy.describe(draft))}
               typeLabel={strategy.label}
-              onEdit={() => openTrigger(formId, draft.key)}
+              onEdit={() => openTrigger(formId, routineKind, draft.key)}
               onRemove={() => removeWithUndo(draft)}
             />
           );
         })}
         <ListActionRow
           label={ADD_TRIGGER_LABEL}
-          onPress={() => openTrigger(formId)}
+          onPress={() => openTrigger(formId, routineKind)}
           disabled={full}
           disabledHint={MAX_TRIGGERS_REACHED}
         />

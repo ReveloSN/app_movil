@@ -1,15 +1,16 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
-import { SwitchRow } from '@/components/molecules/SwitchRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
+import { oldForgotKey } from '@/db/local/forgot.migration';
 import { getLocalStore } from '@/db/local/local.store';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { clearHomeGeofence } from '@/features/geofence/homeGeofence.store';
 import { useSync } from '@/features/sync/SyncProvider';
-import { useThemeMode } from '@/shared/theme/themeMode.context';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
@@ -22,11 +23,10 @@ import {
   signOutWarning,
 } from './settings.copy';
 
-/** Cuenta (al final de P11): quién tiene la sesión, modo oscuro y cerrar sesión. */
+/** Cuenta (al final de P11): quién tiene la sesión y cerrar sesión. */
 export function AccountSection() {
   const { user, signOut } = useAuth();
   const { pendingCount, failedChanges } = useSync();
-  const { mode, toggle } = useThemeMode();
   const styles = useThemedStyles(createStyles);
   const [warning, setWarning] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -46,6 +46,14 @@ export function AccountSection() {
         .catch((cause: unknown) => {
           if (__DEV__) console.warn('[account.clearGuestData]', cause);
         });
+      // Los olvidos de la versión anterior vivían fuera de la copia local: tampoco se quedan.
+      await AsyncStorage.removeItem(oldForgotKey(guestId)).catch((cause: unknown) => {
+        if (__DEV__) console.warn('[account.clearGuestForgot]', cause);
+      });
+      // La casa de la geocerca también es de esa copia local: no se queda en el teléfono.
+      await clearHomeGeofence(guestId).catch((cause: unknown) => {
+        if (__DEV__) console.warn('[account.clearGuestHome]', cause);
+      });
     }
     setSigningOut(false);
     setError(result.error);
@@ -64,7 +72,6 @@ export function AccountSection() {
       <View style={styles.card}>
         <Text style={styles.label}>{SIGNED_IN_AS_LABEL}</Text>
         <Text style={styles.value}>{accountLabel(user)}</Text>
-        <SwitchRow icon="contrast-outline" label="Modo oscuro" value={mode === 'dark'} onValueChange={() => toggle()} />
       </View>
       {error ? <StatusMessage tone="error" message={error} /> : null}
       {/* Con borde, no lleno: la primaria es para la tarea de la pantalla, y en P11 cerrar sesión es una acción de cuenta al final. */}

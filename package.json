@@ -22,6 +22,7 @@
     "expo-notifications": "~57.0.21",
     "expo-router": "~57.0.24",
     "expo-secure-store": "~57.0.4",
+    "expo-speech-recognition": "^57.1.1",
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "expo-task-manager": "~57.0.21",
@@ -29,6 +30,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-android-widget": "^0.26.0",
+    "react-native-gesture-handler": "~2.32.0",
     "react-native-pager-view": "8.0.2",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
@@ -56,7 +58,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint && npm test -- --ci"
   },
   "jest": {
     "preset": "jest-expo",
@@ -66,7 +70,11 @@
     "setupFiles": [
       "<rootDir>/jest.setup.js"
     ],
-    "resolver": "react-native-worklets/jest/resolver"
+    "resolver": "react-native-worklets/jest/resolver",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/\\.claude/"
+    ]
   },
   "private": true
 }

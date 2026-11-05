@@ -7,6 +7,7 @@ const routine = (id: string, name: string, active = true): Routine => ({
   id,
   userId: 'u1',
   name,
+  kind: 'departure',
   icon: null,
   color: null,
   active,
@@ -109,6 +110,36 @@ describe('próxima rutina (P03-2)', () => {
       expect(findNextRoutine([routine('r1', 'Llegar')], [wifi('t1', 'r1', 'wifi_enter')], SATURDAY_10AM)).toMatchObject({ kind: 'wifi_enter' });
       expect(findNextRoutine([routine('r1', 'Llegar')], [wifi('t1', 'r1', 'wifi_enter', undefined, false)], SATURDAY_10AM)).toBeNull();
       expect(findNextRoutine([routine('r1', 'Llegar', false)], [wifi('t1', 'r1', 'wifi_enter')], SATURDAY_10AM)).toBeNull();
+    });
+  });
+
+  describe('rutina ya verificada hoy', () => {
+    const doneToday = (r: Routine): Routine => ({ ...r, lastCompletedAt: new Date(2026, 9, 17, 8, 0).toISOString() });
+
+    it('no es la próxima de hoy: se elige otra rutina con aviso más tarde', () => {
+      const next = findNextRoutine(
+        [doneToday(routine('r1', 'Estudio')), routine('r2', 'Dormir')],
+        [schedule('t1', 'r1', '18:00:00', [6]), schedule('t2', 'r2', '22:30:00', [6])],
+        SATURDAY_10AM,
+      );
+      expect(next).toMatchObject({ routineId: 'r2' });
+    });
+
+    it('sigue contando para mañana si tiene aviso ese día', () => {
+      const next = findNextRoutine([doneToday(routine('r1', 'Estudio'))], [schedule('t1', 'r1', '18:00:00', [6, 0])], SATURDAY_10AM);
+      expect(next).toMatchObject({ routineId: 'r1', kind: 'schedule' });
+      expect(next?.kind === 'schedule' && next.at.getDay()).toBe(0);
+    });
+
+    it('si su único aviso es de hoy y ya se verificó, no hay próxima hasta la semana siguiente', () => {
+      const next = findNextRoutine([doneToday(routine('r1', 'Estudio'))], [schedule('t1', 'r1', '18:00:00', [6])], SATURDAY_10AM);
+      expect(next?.kind === 'schedule' && next.at.getDate()).toBe(24);
+    });
+
+    it('una verificación de ayer no la oculta', () => {
+      const yesterday: Routine = { ...routine('r1', 'Estudio'), lastCompletedAt: new Date(2026, 9, 16, 8, 0).toISOString() };
+      const next = findNextRoutine([yesterday], [schedule('t1', 'r1', '18:00:00', [6])], SATURDAY_10AM);
+      expect(next).toMatchObject({ routineId: 'r1' });
     });
   });
 });

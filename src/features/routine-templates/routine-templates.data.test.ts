@@ -1,10 +1,10 @@
 import { ITEM_LABEL_MAX_LENGTH, MAX_ITEMS, ROUTINE_NAME_MAX_LENGTH } from '@/features/routines/routine.validation';
 import { ROUTINE_COLORS, ROUTINE_ICONS } from '@/features/routines/routine-appearance';
 
-import { PRESET_TEMPLATES } from './routine-templates.data';
+import { findPresetTemplate, PRESET_TEMPLATES } from './routine-templates.data';
 
 describe('plantillas precargadas', () => {
-  it('conservan las de siempre y suman Estudiante, Casa/Familia y Gimnasio', () => {
+  it('conservan las de siempre y suman Estudiante, Casa/Familia, Gimnasio y Llegar a casa', () => {
     expect(PRESET_TEMPLATES.map((template) => template.id)).toEqual([
       'leaving-home',
       'end-of-study',
@@ -14,6 +14,7 @@ describe('plantillas precargadas', () => {
       'to-class',
       'family-outing',
       'gym',
+      'arriving-home',
     ]);
   });
 
@@ -33,5 +34,25 @@ describe('plantillas precargadas', () => {
 
   it('reparten al menos tres colores distintos, para que Inicio no sea de un solo tono', () => {
     expect(new Set(PRESET_TEMPLATES.map((template) => template.color)).size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('plantilla «Llegar a casa»', () => {
+  const template = findPresetTemplate('arriving-home');
+
+  it('es una rutina de llegada con recordatorios de llegar', () => {
+    expect(template?.kind).toBe('arrival');
+    expect(template?.name).toBe('Llegar a casa');
+    expect(template?.items.map((entry) => entry.label)).toEqual(
+      expect.arrayContaining(['Poner a cargar el celular', 'Guardar las llaves']),
+    );
+  });
+
+  it('sugiere el aviso de llegar al Wi-Fi de casa (la red se detecta al configurarlo)', () => {
+    expect(template?.suggestedTriggerDraft).toEqual({ type: 'wifi_enter', ssid: '', networkName: 'Casa', window: null });
+  });
+
+  it('las demás plantillas siguen siendo de salida', () => {
+    expect(PRESET_TEMPLATES.filter((entry) => entry.kind === 'arrival').map((entry) => entry.id)).toEqual(['arriving-home']);
   });
 });

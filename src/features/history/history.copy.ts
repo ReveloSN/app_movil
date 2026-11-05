@@ -6,7 +6,13 @@ import { formatClock } from '@/shared/utils/formatClock';
 import { formatDayHeading, toLocalDayKey } from './history.dates';
 
 /** EV-02 */
+export const EMPTY_TITLE = 'Todavía no hay verificaciones';
 export const EMPTY_MESSAGE = 'Aquí verás cada verificación que hagas.';
+export const EMPTY_ACTION = 'Ir a Inicio';
+export const EMPTY_ACTION_HINT = 'Vuelve a Inicio para verificar una rutina';
+
+/** Lo que oye el lector de pantalla mientras carga el primer listado. */
+export const LOADING_LABEL = 'Cargando historial';
 
 // 09-3
 export const FILTER_ROUTINE_LABEL = 'Rutina';
@@ -14,6 +20,9 @@ export const FILTER_RESULT_LABEL = 'Resultado';
 export const ALL_ROUTINES_LABEL = 'Todas';
 export const ALL_RESULTS_LABEL = 'Todos';
 export const FILTER_EMPTY_MESSAGE = 'Nada con este filtro. Prueba con otro.';
+
+/** Etiqueta (texto, no solo color) de los registros de rutinas de llegada. */
+export const ARRIVAL_ROW_LABEL = 'Llegada';
 
 // 09-4
 export const MOST_SKIPPED_TITLE = 'Más omitidos';

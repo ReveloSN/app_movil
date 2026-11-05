@@ -23,7 +23,19 @@ export type AiRequest =
   | { mode: 'suggest'; name: string; items: string[] }
   | {
       mode: 'insights';
-      pattern: { item: string; routine: string; weekday: number | null; misses: number; observations: number; critical: boolean };
+      /** Sin `source` es una omisión (compatible con el servidor anterior); 'forgot' viene de "Olvidé algo". */
+      pattern:
+        | { source?: 'omission'; item: string; routine: string; weekday: number | null; misses: number; observations: number; critical: boolean }
+        | {
+            source: 'forgot';
+            label: string;
+            routine: string;
+            weekday: number;
+            misses: number;
+            observations: number;
+            inRoutine: boolean;
+            critical: boolean;
+          };
     }
   | {
       mode: 'weekly_summary';

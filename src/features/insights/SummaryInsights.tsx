@@ -33,7 +33,7 @@ export function SummaryInsights({ routineId, recordId }: SummaryInsightsProps) {
         <InsightCard
           icon="bulb-outline"
           message={insight.message}
-          acceptLabel={copy.INSIGHT_ACCEPT}
+          acceptLabel={insight.acceptLabel}
           dismissLabel={copy.INSIGHT_DISMISS}
           onAccept={() => void insight.accept()}
           onDismiss={() => void insight.dismiss()}

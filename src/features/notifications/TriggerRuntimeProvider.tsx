@@ -8,9 +8,11 @@ import type { SettingsRepository } from '@/db/repositories/settings.repository';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
 import { clearArmedTriggers, loadArmedTriggers, saveArmedTriggers } from '@/features/triggers/armedTriggers.store';
-import { fetchArmedTriggers, type TriggerSyncDeps } from '@/features/triggers/trigger.sync';
+import { stopHomeGeofence } from '@/features/geofence/geofence.service';
+import { fetchArmedSnapshot, type TriggerSyncDeps } from '@/features/triggers/trigger.sync';
 import { clearLastSsid } from '@/features/triggers/wifi/wifiSnapshot.store';
 
+import { clearLastArrivals } from './arrival.cooldown.store';
 import { registerBackgroundTasks } from './background.tasks';
 import { configureNotifications, registerNotificationActions } from './notification.config';
 import {
@@ -39,6 +41,9 @@ const warn = (scope: string) => (cause: unknown) => {
 async function disarm(): Promise<void> {
   await cancelAllOccurrences();
   await clearArmedTriggers();
+  await clearLastArrivals();
+  // Sin sesión, la geocerca no debe seguir avisando (la casa queda guardada en el teléfono, sin usarse).
+  await stopHomeGeofence();
   await clearLastSsid();
   await clearNotificationPrefs();
 }
@@ -81,7 +86,7 @@ export function TriggerRuntimeProvider({
     const previous = await loadArmedTriggers();
     if (previous && previous.ownerId !== userId) await disarm();
     try {
-      await saveArmedTriggers({ ownerId: userId, triggers: await fetchArmedTriggers(deps) });
+      await saveArmedTriggers({ ownerId: userId, ...(await fetchArmedSnapshot(deps)) });
       // Ajustes guardados en el teléfono. Sin fila, quedan los por defecto.
       const [row] = await settings.getAll();
       if (row) {

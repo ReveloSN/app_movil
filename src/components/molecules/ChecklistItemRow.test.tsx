@@ -27,4 +27,18 @@ describe('ChecklistItemRow', () => {
     await fireEvent.press(screen.getByRole('checkbox', { name: 'Llaves, crítico' }));
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('ofrece "Marcar" como acción de accesibilidad y la ejecuta (el deslizar no es la única vía)', async () => {
+    const onToggle = await renderRow(false);
+    const row = screen.getByRole('checkbox', { name: 'Llaves, crítico' });
+    expect(row.props.accessibilityActions).toEqual([{ name: 'toggle', label: 'Marcar' }]);
+    await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'toggle' } });
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('ofrece "Desmarcar" cuando ya está marcada', async () => {
+    await renderRow(true);
+    const row = screen.getByRole('checkbox', { name: 'Llaves, crítico' });
+    expect(row.props.accessibilityActions).toEqual([{ name: 'toggle', label: 'Desmarcar' }]);
+  });
 });

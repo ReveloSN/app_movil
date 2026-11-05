@@ -42,8 +42,11 @@ const serial = createSerialQueue();
  */
 export function updateOccurrences<T>(change: (entries: Occurrence[]) => Promise<{ entries: Occurrence[]; result: T }>): Promise<T> {
   return serial(async () => {
-    const { entries, result } = await change(await read());
-    await write(entries);
+    const current = await read();
+    const before = JSON.stringify(current);
+    const { entries, result } = await change(current);
+    // Sin cambios no se toca el almacenamiento: esto corre en cada arranque, cada primer plano y cada tarea.
+    if (JSON.stringify(entries) !== before) await write(entries);
     return result;
   });
 }

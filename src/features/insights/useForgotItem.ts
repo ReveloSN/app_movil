@@ -3,20 +3,23 @@ import { useCallback, useState } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useToast } from '@/features/feedback/toast.context';
-import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
+import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import { MAX_ITEMS, validateItemDraft } from '@/features/routines/routine.validation';
 import { hapticToggleOn } from '@/shared/haptics/haptics';
 
+import { ensureForgotMigrated } from './forgot.migrate';
 import * as copy from './insights.copy';
-import { createForgotStore } from './insights.stores';
+import { itemKey } from './insights.detect';
 
 /**
- * "Olvidé algo" (P08): anota el olvido de esta verificación y, si cabe (máx. 12), añade el ítem a la
- * rutina al instante. Devuelve true si terminó (la hoja se cierra) o false con el error a la vista.
+ * "Olvidé algo" (P08): anota el olvido de esta verificación en la copia local (se sube con la próxima
+ * sincronización; funciona sin red y sin IA) y, si cabe (máx. 12) y no está ya, añade el ítem a la rutina
+ * al instante. Devuelve true si terminó (la hoja se cierra) o false con el error a la vista.
  */
 export function useForgotItem(routineId: string, recordId: string | null) {
   const local = useLocalRepositories();
+  const store = useLocalStore();
   const { user } = useAuth();
   const { rearm } = useTriggerRuntime();
   const toast = useToast();
@@ -35,8 +38,14 @@ export function useForgotItem(routineId: string, recordId: string | null) {
       setSaving(true);
       setError(null);
       try {
-        await createForgotStore(user.id).add({ id: Crypto.randomUUID(), routineId, recordId, label, date: new Date().toISOString() });
+        await ensureForgotMigrated(user.id, store);
+        // El id lo pone el teléfono: reintentar el guardado no duplica el olvido.
+        await local.forgotEvents.add({ id: Crypto.randomUUID(), routineId, recordId, label });
         const items = await local.items.getByRoutine(routineId);
+        if (items.some((item) => itemKey(item.label) === itemKey(label))) {
+          toast.show({ message: copy.forgotAlreadyInRoutine(label), tone: 'info' });
+          return true;
+        }
         if (items.length >= MAX_ITEMS) {
           toast.show({ message: copy.FORGOT_FULL, tone: 'info' });
           return true;
@@ -57,7 +66,7 @@ export function useForgotItem(routineId: string, recordId: string | null) {
         setSaving(false);
       }
     },
-    [local, user, routineId, recordId, rearm, toast],
+    [local, store, user, routineId, recordId, rearm, toast],
   );
 
   return { add, saving, error, clearError: () => setError(null) };

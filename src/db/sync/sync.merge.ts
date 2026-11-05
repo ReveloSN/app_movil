@@ -1,5 +1,11 @@
+import { DEFAULT_ROUTINE_KIND, type Routine } from '@/shared/types/routine.types';
+
 import type { LocalDocument, LocalTableName, LocalTables, OutboxOp } from '../local/local-document.types';
 import { targetOf } from '../local/outbox.dependencies';
+import type { RemoteRoutine } from '../repositories/routine.repository';
+
+/** Lo bajado del servidor: como las tablas locales, pero las rutinas pueden venir sin tipo (base sin migrar). */
+export type RemoteTables = Omit<LocalTables, 'routines'> & { routines: RemoteRoutine[] };
 
 type Row = Record<string, unknown>;
 
@@ -53,12 +59,24 @@ const canonical = (tables: LocalTables) =>
   );
 
 /**
+ * Si el servidor no trae el tipo (todavía no tiene la columna kind), cada rutina conserva el que tiene
+ * aquí: así una rutina de llegada no vuelve a ser de salida. Una que no está aquí es de salida, como en la base.
+ */
+function withLocalKind(local: readonly Routine[], remote: readonly RemoteRoutine[]): Routine[] {
+  const localKind = new Map(local.map((routine) => [routine.id, routine.kind]));
+  return remote.map((routine) =>
+    routine.kind ? { ...routine, kind: routine.kind } : { ...routine, kind: localKind.get(routine.id) ?? DEFAULT_ROUTINE_KIND },
+  );
+}
+
+/**
  * Mezcla lo bajado del servidor con la copia local (§2.3): el servidor reemplaza lo que no tiene cambios
  * pendientes; lo pendiente conserva lo local salvo los campos que solo pone el servidor; lo creado aquí
  * sin subir se queda; lo borrado en otro dispositivo (sin nada pendiente aquí) desaparece.
  * Si no cambia nada, devuelve las mismas tablas (mismo objeto): así no se avisa a nadie.
  */
-export function mergePulled(doc: LocalDocument, remote: LocalTables): LocalTables {
+export function mergePulled(doc: LocalDocument, pulled: RemoteTables): LocalTables {
+  const remote: LocalTables = { ...pulled, routines: withLocalKind(doc.tables.routines, pulled.routines) };
   const pending = pendingKeys(doc.outbox);
   const deletedRoutines = new Set(doc.outbox.flatMap((op) => (op.kind === 'deleteRoutine' ? [op.id] : [])));
 

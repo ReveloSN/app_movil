@@ -1,5 +1,5 @@
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
-import type { Routine } from '@/shared/types/routine.types';
+import type { Routine, RoutineKind } from '@/shared/types/routine.types';
 
 import type { RoutineOriginal } from './routine-edit.service';
 
@@ -20,6 +20,8 @@ export interface ItemDraft {
 
 export interface RoutineDraft {
   name: string;
+  /** Salida o llegada. Sin él, es de salida (como las rutinas anteriores). Solo se elige al crear. */
+  kind?: RoutineKind;
   /** Nombre de ícono de Ionicons (04-2). Sin él, se guarda el de por defecto (nunca null). */
   icon?: string;
   /** Clave de color de 04-2 (ej. "green"). Sin ella, se guarda la de por defecto. */

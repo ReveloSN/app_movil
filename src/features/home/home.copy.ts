@@ -16,7 +16,17 @@ export function saluteForHour(hour: number): string {
 
 // Tarjeta de rutina (03-3): sin código en el Documento de Contenido, propuesto, pendiente de validar.
 export const VERIFY_PRESS_HINT = 'Abre la verificación';
+export const VERIFIED_TODAY_LABEL = 'Verificada hoy';
+export const VERIFY_AGAIN_LABEL = 'Verificar otra vez';
 export const editRoutineLabel = (name: string) => `Editar ${name}`;
+
+/** Lo que oye el lector de pantalla mientras cargan las rutinas. */
+export const LOADING_ROUTINES_LABEL = 'Cargando rutinas';
+
+// EV-01: sin rutinas todavía (título, texto y salida hacia las plantillas).
+export const EMPTY_ROUTINES_TITLE = 'Aún no tienes rutinas';
+export const EMPTY_ROUTINES_MESSAGE = 'Empieza con una plantilla o crea la tuya.';
+export const EMPTY_ROUTINES_ACTION = 'Ver plantillas';
 
 /** 03-2 (nombre del bloque en el Documento de Contenido). */
 export const NEXT_ROUTINE_LABEL = 'Próxima rutina';
@@ -43,3 +53,6 @@ export function nextRoutineDescription(next: NextRoutine, now: Date): string {
   if (next.kind === 'schedule') return nextRoutineWhen(next.at, now);
   return next.kind === 'wifi_exit' ? 'Al salir del Wi-Fi' : 'Al llegar al Wi-Fi';
 }
+
+/** Sección de Inicio con las rutinas de llegada (recordatorios al volver a casa). */
+export const ARRIVAL_SECTION_TITLE = 'Al llegar';

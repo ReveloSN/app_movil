@@ -10,7 +10,7 @@ const rowKey = (row: RowRef) => `${row.table}:${row.id}`;
 
 export const sameRow = (a: RowRef, b: RowRef) => a.table === b.table && a.id === b.id;
 
-/** Fila que modifica la operación. null para una verificación: ninguna operación depende de ella. */
+/** Fila que modifica la operación. null para una verificación o un olvido: ninguna operación depende de ellos. */
 export function targetOf(change: OutboxChange): RowRef | null {
   switch (change.kind) {
     case 'insert':
@@ -20,6 +20,7 @@ export function targetOf(change: OutboxChange): RowRef | null {
     case 'deleteRoutine':
       return { table: 'routines', id: change.id };
     case 'insertRecord':
+    case 'insertForgot':
       return null;
   }
 }
@@ -27,6 +28,7 @@ export function targetOf(change: OutboxChange): RowRef | null {
 /** Filas que tienen que existir en el servidor para que la operación funcione (sus claves foráneas). */
 export function referencesOf(change: OutboxChange): RowRef[] {
   if (change.kind === 'insertRecord') return [{ table: 'routines', id: change.record.routineId }];
+  if (change.kind === 'insertForgot') return [{ table: 'routines', id: change.event.routineId }];
   if (change.kind !== 'insert' && change.kind !== 'update') return [];
   const values = change.kind === 'insert' ? change.values : change.changes;
   return Object.entries(FOREIGN_KEYS[change.table] ?? {}).flatMap(([field, table]) => {

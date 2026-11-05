@@ -34,6 +34,13 @@ export const CRITICAL_LABEL = 'Crítico';
 export const ITEM_NOTE_FIELD = 'Nota';
 export const ITEM_NOTE_PLACEHOLDER = 'Opcional. Ej. En el cajón de la entrada';
 export const editItemHint = (label: string) => `Edita «${label}»`;
+/** Reordenar ítems: asa para arrastrar y botones Subir/Bajar (alternativa al arrastre). */
+export const MOVE_UP_LABEL = 'Subir';
+export const MOVE_DOWN_LABEL = 'Bajar';
+export const reorderHandleLabel = (label: string) => `Reordenar «${label}»`;
+export const REORDER_HANDLE_HINT = 'Toca para ver Subir y Bajar. Mantén pulsado y arrastra para moverlo.';
+export const itemMovedMessage = (label: string, position: number, total: number) =>
+  `«${label}» ahora está en la posición ${position} de ${total}.`;
 export const removeItemLabel = (label: string) => `Quitar «${label}»`;
 /** Aviso breve al quitar un ítem (con "Deshacer"). */
 export const itemRemovedMessage = (label: string) => `Quitaste «${label}».`;
@@ -57,3 +64,16 @@ export const DELETE_CANCEL = 'Cancelar';
 // Sin código en el Documento de Contenido.
 export const LOAD_ROUTINE_ERROR = 'No pudimos cargar esta rutina. Revisa tu conexión e inténtalo de nuevo.';
 export const ROUTINE_NOT_FOUND = 'Esta rutina ya no existe.';
+
+// Tipo de rutina (salida o llegada). Solo se elige al crear.
+export const ROUTINE_KIND_LABEL = 'Tipo de rutina';
+export const DEPARTURE_KIND_LABEL = 'Salida';
+export const ARRIVAL_KIND_LABEL = 'Llegada';
+export const ROUTINE_KIND_HINT: Record<'departure' | 'arrival', string> = {
+  departure: 'Para no olvidar nada antes de salir.',
+  arrival: 'Recordatorios al volver a casa, como poner el celular a cargar. Define tu casa en Ajustes para detectarla sin Wi-Fi.',
+};
+export const NAME_PLACEHOLDER: Record<'departure' | 'arrival', string> = {
+  departure: 'Ej. Salir al trabajo',
+  arrival: 'Ej. Llegar a casa',
+};

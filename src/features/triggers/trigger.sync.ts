@@ -4,7 +4,7 @@ import type { RoutineRepository } from '@/db/repositories/routine.repository';
 import type { TriggerRepository } from '@/db/repositories/trigger.repository';
 
 import { fromTriggerRow } from './trigger.mapping';
-import type { ArmedTrigger } from './trigger.types';
+import type { ArmedTrigger, ArrivalRoutine } from './trigger.types';
 
 export interface TriggerSyncDeps {
   routines: Pick<RoutineRepository, 'getAll'>;
@@ -13,11 +13,22 @@ export interface TriggerSyncDeps {
   homeNetworks: Pick<HomeNetworkRepository, 'getAll'>;
 }
 
+/** Lo que el teléfono deja armado para avisar sin red: los avisos y las rutinas de llegada. */
+export interface ArmedSnapshotData {
+  triggers: ArmedTrigger[];
+  arrivals: ArrivalRoutine[];
+}
+
 /**
  * Avisos activos del usuario (copia local) con lo necesario para notificar sin red: nombre de la rutina
  * e ítems en orden. Se ignoran los de rutinas pausadas y las filas incompletas.
  */
 export async function fetchArmedTriggers(deps: TriggerSyncDeps): Promise<ArmedTrigger[]> {
+  return (await fetchArmedSnapshot(deps)).triggers;
+}
+
+/** Los avisos armados y, aparte, las rutinas de llegada activas (la geocerca avisa sin depender de un aviso). */
+export async function fetchArmedSnapshot(deps: TriggerSyncDeps): Promise<ArmedSnapshotData> {
   const [routines, items, triggers, networks] = await Promise.all([
     deps.routines.getAll(),
     deps.items.getAll(),
@@ -33,7 +44,7 @@ export async function fetchArmedTriggers(deps: TriggerSyncDeps): Promise<ArmedTr
     labelsByRoutine.set(item.routineId, [...(labelsByRoutine.get(item.routineId) ?? []), item.label]);
   }
 
-  return triggers.flatMap((trigger) => {
+  const armed = triggers.flatMap((trigger) => {
     const routine = routinesById.get(trigger.routineId);
     const draft = trigger.active && routine ? fromTriggerRow(trigger, networksById) : null;
     if (!routine || !draft) return [];
@@ -44,7 +55,19 @@ export async function fetchArmedTriggers(deps: TriggerSyncDeps): Promise<ArmedTr
         routineId: routine.id,
         routineName: routine.name,
         itemLabels: labelsByRoutine.get(routine.id) ?? [],
+        routineKind: routine.kind,
       },
     ];
   });
+
+  const arrivals = [...routinesById.values()]
+    .filter((routine) => routine.kind === 'arrival')
+    .map((routine) => ({
+      routineId: routine.id,
+      routineName: routine.name,
+      itemLabels: labelsByRoutine.get(routine.id) ?? [],
+      windows: armed.flatMap((trigger) => (trigger.routineId === routine.id && trigger.type === 'wifi_enter' ? [trigger.window] : [])),
+    }));
+
+  return { triggers: armed, arrivals };
 }

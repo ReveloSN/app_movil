@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
+import { TextButton } from '@/components/atoms/TextButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
@@ -19,10 +20,13 @@ interface NextRoutineCardProps {
   /** Color de la rutina y su tinte (ya resueltos al tema). */
   accentColor: string;
   accentTint: string;
+  /** Acción discreta bajo la primaria (ej. "Modo salida"); solo se muestra si llegan las dos. */
+  secondaryLabel?: string;
+  onSecondaryAction?(): void;
 }
 
 /** Bloque destacado de Inicio (P03-2): nombre en estilo Título y cuándo suena debajo. */
-export function NextRoutineCard({ label, name, when, actionLabel, onAction, icon, accentColor, accentTint }: NextRoutineCardProps) {
+export function NextRoutineCard({ label, name, when, actionLabel, onAction, icon, accentColor, accentTint, secondaryLabel, onSecondaryAction }: NextRoutineCardProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -45,6 +49,7 @@ export function NextRoutineCard({ label, name, when, actionLabel, onAction, icon
       </View>
       {/* La primaria de Inicio (Documento 2, P03): lo que se hace cada día. El nombre va en la etiqueta hablada. */}
       <PrimaryButton icon="checkmark-done" label={actionLabel} accessibilityLabel={`${actionLabel}, ${name}`} onPress={onAction} />
+      {secondaryLabel && onSecondaryAction ? <TextButton label={secondaryLabel} onPress={onSecondaryAction} /> : null}
     </View>
   );
 }

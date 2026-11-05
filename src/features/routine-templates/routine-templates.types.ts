@@ -1,6 +1,7 @@
 import type { RoutineColorKey } from '@/features/routines/routine-appearance';
 import type { ItemDraft } from '@/features/routines/routines.types';
 import type { TriggerDraft } from '@/features/triggers/trigger.types';
+import type { RoutineKind } from '@/shared/types/routine.types';
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
 /**
@@ -10,6 +11,8 @@ import type { IoniconName } from '@/shared/utils/ioniconName';
 export interface PresetTemplate {
   id: string;
   name: string;
+  /** Salida o llegada. Sin él, es de salida. */
+  kind?: RoutineKind;
   /** Máx. 70 caracteres. */
   description: string;
   icon: IoniconName;

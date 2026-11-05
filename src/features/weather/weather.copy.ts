@@ -8,7 +8,6 @@ export const CHANGE_CITY_LABEL = 'Cambiar ciudad';
 export const WEATHER_SWITCH = 'Sugerencias de clima';
 export const WEATHER_HINT_NO_CITY = 'Elige una ciudad para activarlas.';
 export const WEATHER_HINT = 'Si va a llover, te sugerimos el paraguas al verificar.';
-export const WEATHER_ATTRIBUTION = 'Datos del clima: Open-Meteo.com';
 export const cityLabel = (city: { name: string; region: string | null; country: string | null }) =>
   [city.name, city.region, city.country].filter(Boolean).join(', ');
 export const useCityLabel = (label: string) => `Usar ${label}`;
@@ -18,7 +17,7 @@ export const SAVE_ERROR = 'No se pudo guardar el cambio. Inténtalo de nuevo.';
 
 // Aviso breve de privacidad (primera vez).
 export const CONSENT_TITLE = 'Clima';
-export const CONSENT_TEXT = 'Se envía la ciudad elegida a Open-Meteo para consultar el clima; no se envía nada más.';
+export const CONSENT_TEXT = 'Solo enviamos la ciudad que elegiste para consultar el clima.';
 export const CONSENT_ACCEPT = 'Entendido';
 export const CONSENT_DECLINE = 'Ahora no';
 

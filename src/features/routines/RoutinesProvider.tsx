@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { localLoadErrorMessage } from '@/features/local-data/localData.errors';
 import { useLocalRepositories, useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import type { Routine } from '@/shared/types/routine.types';
 
@@ -62,7 +63,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
       (cause: unknown) => {
         if (!isLatest()) return;
         if (__DEV__) console.warn('[routines.getAll]', cause);
-        setError(LOAD_ERROR);
+        setError(localLoadErrorMessage(cause, LOAD_ERROR));
         setLoading(false);
       },
     );

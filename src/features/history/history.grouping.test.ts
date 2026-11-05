@@ -7,6 +7,7 @@ const routine = (overrides: Partial<Routine>): Routine => ({
   id: 'r1',
   userId: 'u1',
   name: 'Cerrando el estudio',
+  kind: 'departure',
   icon: 'school-outline',
   color: 'blue',
   active: true,
@@ -30,6 +31,14 @@ describe('groupRecordsByDay', () => {
     const [group] = groupRecordsByDay([record('a', 'r1', '2026-10-13T15:00:00.000Z')], [routine({})]);
 
     expect(group.records[0]).toMatchObject({ routineName: 'Cerrando el estudio', routineIcon: 'school-outline', routineColor: 'blue' });
+  });
+
+  it('conserva el tipo de la rutina para etiquetar las de llegada', () => {
+    const [group] = groupRecordsByDay(
+      [record('a', 'r1', '2026-10-13T15:00:00.000Z'), record('b', 'r2', '2026-10-13T16:00:00.000Z')],
+      [routine({}), routine({ id: 'r2', kind: 'arrival' })],
+    );
+    expect(group.records.map((entry) => entry.routineKind)).toEqual(['arrival', 'departure']);
   });
 
   it('si la rutina ya no existe, usa el nombre de rutina eliminada y no inventa color', () => {

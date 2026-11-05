@@ -1,9 +1,12 @@
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
+import { departureSummary } from '@/features/history/stats';
+
 import { buildWeeklyStats, deterministicSummary, isEmptyWeek, mondayOf, weekKey } from './weekly';
 
 // Jueves 15 de octubre de 2026, 20:00 (hora local): la semana empieza el lunes 12.
 const NOW = new Date(2026, 9, 15, 20, 0);
+const DEPARTURES: ReadonlySet<string> = new Set(['r1']);
 const at = (month: number, day: number, hour = 7) => new Date(2026, month, day, hour).toISOString();
 
 let seq = 0;
@@ -36,7 +39,7 @@ describe('buildWeeklyStats', () => {
   ];
 
   it('cuenta la semana actual y compara con la anterior', () => {
-    expect(buildWeeklyStats(records, NOW)).toEqual({
+    expect(buildWeeklyStats(records, DEPARTURES, NOW)).toEqual({
       weekStart: '2026-10-12',
       completed: 2,
       partial: 2,
@@ -51,11 +54,40 @@ describe('buildWeeklyStats', () => {
 
   it('la racha cuenta días seguidos con alguna completa hasta hoy', () => {
     const streak = [13, 14, 15].map((day) => record(at(9, day), 'completed'));
-    expect(buildWeeklyStats(streak, NOW).streak).toBe(3);
+    expect(buildWeeklyStats(streak, DEPARTURES, NOW).streak).toBe(3);
+  });
+
+  it('las rutinas de llegada quedan fuera de las cifras, la racha y lo omitido', () => {
+    const arrival = (date: string, result: string): VerificationRecord => ({ ...record(date, result, ['Zapatos']), routineId: 'arrival' });
+    const mixed = [
+      record(at(9, 14), 'completed'),
+      record(at(9, 15), 'completed'),
+      arrival(at(9, 13), 'completed'),
+      arrival(at(9, 15), 'partial'),
+      arrival(at(9, 15, 9), 'skipped'),
+    ];
+    const stats = buildWeeklyStats(mixed, DEPARTURES, NOW);
+    expect(stats).toMatchObject({ completed: 2, partial: 0, skipped: 0, streak: 2, topSkipped: [] });
+    // Sin ninguna rutina de salida la semana queda vacía.
+    expect(isEmptyWeek(buildWeeklyStats(mixed, new Set(), NOW))).toBe(true);
+  });
+
+  it('«Tu semana» y Estadísticas dan la misma racha, también con otra zona horaria', () => {
+    // 23:30 en Bogotá (UTC-5) ya es el día siguiente en UTC: la racha depende de la zona que se inyecta.
+    const bogota = () => -300;
+    const utc = () => 0;
+    const nowBogota = new Date(Date.UTC(2026, 9, 16, 4, 0)); // jueves 15, 23:00 en Bogotá
+    const late = (day: number) => ({ ...record(new Date(Date.UTC(2026, 9, day, 3, 30)).toISOString(), 'completed') }); // día anterior 22:30 en Bogotá
+    const records = [late(14), late(15), late(16)];
+    for (const offsetOf of [bogota, utc]) {
+      const weekly = buildWeeklyStats(records, DEPARTURES, nowBogota, offsetOf).streak;
+      expect(weekly).toBe(departureSummary(records, DEPARTURES, nowBogota, offsetOf).currentStreak);
+    }
+    expect(buildWeeklyStats(records, DEPARTURES, nowBogota, bogota).streak).toBe(3);
   });
 
   it('semana sin verificaciones: vacía y sin mejor ni peor día', () => {
-    const stats = buildWeeklyStats([record(at(9, 8), 'completed')], NOW);
+    const stats = buildWeeklyStats([record(at(9, 8), 'completed')], DEPARTURES, NOW);
     expect(isEmptyWeek(stats)).toBe(true);
     expect(stats.bestDay).toBeNull();
     expect(stats.worstDay).toBeNull();
@@ -64,7 +96,7 @@ describe('buildWeeklyStats', () => {
 
 describe('deterministicSummary', () => {
   it('breve, sin culpa y con UNA recomendación sobre lo más omitido', () => {
-    const summary = deterministicSummary(buildWeeklyStats([record(at(9, 12), 'completed'), record(at(9, 14), 'partial', ['Cargador'])], NOW));
+    const summary = deterministicSummary(buildWeeklyStats([record(at(9, 12), 'completed'), record(at(9, 14), 'partial', ['Cargador'])], DEPARTURES, NOW));
     expect(summary.resumen).toBe('Esta semana verificaste 2 veces: 1 completa. Es 1 más que la semana pasada. Tu mejor día fue el lunes.');
     expect(summary.recomendacion).toBe('«Cargador» se quedó 1 vez: déjalo junto a la puerta la noche antes.');
   });

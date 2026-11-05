@@ -5,6 +5,8 @@ import { requestWeekSummary } from '@/features/ai/ai.service';
 import { AiClientError, type AiErrorKind } from '@/features/ai/ai.types';
 import { useAiAccess } from '@/features/ai/useAiAccess';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { departureRoutineIdsOf } from '@/features/history/stats';
+import { useRoutines } from '@/features/routines/useRoutines';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 import { buildWeeklyStats, deterministicSummary, isEmptyWeek, weekKey } from './weekly';
@@ -27,7 +29,10 @@ export function useWeeklySummary(records: readonly VerificationRecord[], now: Da
   const ai = useAiAccess();
   const userId = user?.id ?? null;
   const week = weekKey(now);
-  const stats = useMemo(() => buildWeeklyStats(records, now), [records, now]);
+  const { routines } = useRoutines();
+  // Las rutinas de llegada no entran en "Tu semana" (ni en lo que se envía a la IA).
+  const departureIds = useMemo(() => departureRoutineIdsOf(routines), [routines]);
+  const stats = useMemo(() => buildWeeklyStats(records, departureIds, now), [records, departureIds, now]);
   const [summary, setSummary] = useState<StoredWeekSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);

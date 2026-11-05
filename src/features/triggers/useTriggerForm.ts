@@ -4,22 +4,25 @@ import { PERMISSION_COPY } from '@/features/permissions/permission.copy';
 import { firstMissingPermission } from '@/features/permissions/permission.service';
 import type { PermissionKind } from '@/features/permissions/permission.types';
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
+import type { RoutineKind } from '@/shared/types/routine.types';
 import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
 import { summarySentence } from './trigger.copy';
+import { allowedTriggerKindsFor, defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
 import type { TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
 import { hasTriggerErrors, normalizeTriggerDraft, validateTriggerDraft, type TriggerValidationErrors } from './trigger.validation';
 
 const DEFAULT_TIME: ClockTime = { hour: 7, minute: 0 };
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
-const DEFAULT_WINDOW: TimeWindow = { start: { hour: 6, minute: 0 }, end: { hour: 9, minute: 0 } };
 const DEFAULT_NETWORK_NAME = 'Casa';
 const NO_ERRORS: TriggerValidationErrors = {};
 
 interface UseTriggerFormOptions {
   /** Aviso a editar; sin él, uno nuevo. */
   initial?: TriggerDraft;
+  /** Tipo de la rutina a la que pertenece: una de llegada propone «Llegar al Wi-Fi» y una franja de tarde. */
+  routineKind?: RoutineKind;
   /** Recibe el aviso validado y con los permisos concedidos. */
   onCommit(draft: TriggerDraft): void;
   /** Lleva a P02 por el permiso que falta. Al volver, la pantalla llama a `resume`. */
@@ -57,18 +60,27 @@ const requiredPermissions = (draft: TriggerDraft): PermissionKind[] =>
  */
 export function useTriggerForm({
   initial,
+  routineKind,
   onCommit,
   onNeedPermission,
   findMissingPermission = firstMissingPermission,
 }: UseTriggerFormOptions) {
-  const [kind, setKind] = useState<TriggerKind>(initial?.type ?? 'schedule');
-  const [time, setTime] = useState<ClockTime>(initial?.type === 'schedule' ? initial.time : DEFAULT_TIME);
-  const [days, setDays] = useState<Weekday[]>(initial?.type === 'schedule' ? initial.days : WEEKDAYS);
-  const wifi = initial?.type === 'schedule' ? undefined : initial;
+  const allowedKinds = useMemo(() => allowedTriggerKindsFor(routineKind), [routineKind]);
+  // Un aviso heredado de un tipo que la rutina ya no admite (p. ej. un horario en una de llegada) se
+  // reemplaza por el tipo permitido: la red y la franja arrancan con los valores por defecto.
+  const initialAllowed = initial && allowedKinds.includes(initial.type) ? initial : undefined;
+  const [kind, setKindState] = useState<TriggerKind>(initialAllowed?.type ?? defaultTriggerKindFor(routineKind));
+  const setKind = useCallback(
+    (next: TriggerKind) => setKindState((current) => (allowedKinds.includes(next) ? next : current)),
+    [allowedKinds],
+  );
+  const [time, setTime] = useState<ClockTime>(initialAllowed?.type === 'schedule' ? initialAllowed.time : DEFAULT_TIME);
+  const [days, setDays] = useState<Weekday[]>(initialAllowed?.type === 'schedule' ? initialAllowed.days : WEEKDAYS);
+  const wifi = initialAllowed?.type === 'schedule' ? undefined : initialAllowed;
   const [ssid, setSsid] = useState(wifi?.ssid ?? '');
   const [networkName, setNetworkName] = useState(wifi?.networkName ?? DEFAULT_NETWORK_NAME);
   const [windowEnabled, setWindowEnabled] = useState(Boolean(wifi?.window));
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? DEFAULT_WINDOW);
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? defaultWindowFor(routineKind));
   // Lo que había al abrir P06: base para saber si hay cambios sin guardar.
   const [initialFingerprint] = useState(() =>
     fingerprint(toDraft({ kind, time, days, ssid, networkName, windowEnabled, timeWindow })),
@@ -86,7 +98,7 @@ export function useTriggerForm({
   );
   const dirty = useMemo(() => fingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
 
-  const errors = useMemo(() => (attempted ? validateTriggerDraft(draft) : NO_ERRORS), [attempted, draft]);
+  const errors = useMemo(() => (attempted ? validateTriggerDraft(draft, routineKind) : NO_ERRORS), [attempted, draft, routineKind]);
 
   const summary = useMemo(() => {
     // Mientras el nombre está vacío, la frase no queda a medias.
@@ -96,9 +108,9 @@ export function useTriggerForm({
 
   // Lo último de cada render, para que `save` y `resume` sean estables: la pantalla llama a
   // `resume` solo al recuperar el foco, y no debe re-ejecutarse en cada cambio del formulario.
-  const latest = useRef({ draft, onCommit, onNeedPermission, findMissingPermission });
+  const latest = useRef({ draft, routineKind, onCommit, onNeedPermission, findMissingPermission });
   useEffect(() => {
-    latest.current = { draft, onCommit, onNeedPermission, findMissingPermission };
+    latest.current = { draft, routineKind, onCommit, onNeedPermission, findMissingPermission };
   });
 
   const continueSave = useCallback(async (previouslyMissing: PermissionKind | null) => {
@@ -124,7 +136,7 @@ export function useTriggerForm({
   const save = useCallback(async () => {
     setAttempted(true);
     setPermissionError(null);
-    if (hasTriggerErrors(validateTriggerDraft(latest.current.draft))) return;
+    if (hasTriggerErrors(validateTriggerDraft(latest.current.draft, latest.current.routineKind))) return;
     await continueSave(null);
   }, [continueSave]);
 
@@ -139,6 +151,7 @@ export function useTriggerForm({
   return {
     kind,
     setKind,
+    allowedKinds,
     time,
     setTime,
     days,

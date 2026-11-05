@@ -7,6 +7,7 @@ export const SETTINGS_SAVE_ERROR = 'No se pudo guardar el cambio. Revisa tu cone
 
 // 11-1
 export const NETWORKS_TITLE = 'Redes de casa';
+export const LOADING_NETWORKS_LABEL = 'Cargando redes';
 export const NETWORKS_EMPTY = 'Aún no tienes redes. Se agregan al crear un aviso de Wi-Fi.';
 export const NETWORKS_LOAD_ERROR = 'No pudimos cargar tus redes.';
 export const RENAME_LABEL = 'Renombrar';
@@ -58,3 +59,11 @@ const unsyncedSignOutMessage = (count: number) =>
 /** Qué confirmar antes de cerrar sesión; null si no hace falta preguntar. */
 export const signOutWarning = (user: AuthUser | null, unsyncedCount: number): string | null =>
   user?.isAnonymous ? GUEST_SIGN_OUT_MESSAGE : unsyncedCount > 0 ? unsyncedSignOutMessage(unsyncedCount) : null;
+
+// Apariencia (tema claro, oscuro o del sistema).
+export const APPEARANCE_SECTION_TITLE = 'Apariencia';
+export const APPEARANCE_GROUP_LABEL = 'Tema de la aplicación';
+export const THEME_LIGHT_LABEL = 'Claro';
+export const THEME_DARK_LABEL = 'Oscuro';
+export const THEME_SYSTEM_LABEL = 'Sistema';
+export const THEME_SYSTEM_HINT = 'Con «Sistema», la app usa el tema claro u oscuro de tu teléfono.';

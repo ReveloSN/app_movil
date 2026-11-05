@@ -8,6 +8,7 @@ import {
   DISCARD_SINGLE_MESSAGE,
   discardWithDependentsMessage,
   FAILURE_REASONS,
+  forgotTitle,
   recordTitle,
   UNKNOWN_FAILURE,
 } from './sync.copy';
@@ -38,6 +39,8 @@ export function describeChange(op: OutboxOp, tables: LocalTables): string {
       return DELETE_ROUTINE_TITLE;
     case 'insertRecord':
       return recordTitle(tables.routines.find((routine) => routine.id === op.record.routineId)?.name ?? null);
+    case 'insertForgot':
+      return forgotTitle(op.event.label);
     default: {
       const values = op.kind === 'insert' ? op.values : op.kind === 'update' ? op.changes : {};
       return CHANGE_TITLES[op.table][op.kind](nameFor(op.table, op.id, values, tables));
@@ -49,9 +52,19 @@ export const failureReason = (failure: OutboxFailure | undefined) =>
   (failure?.code && FAILURE_REASONS[failure.code]) || UNKNOWN_FAILURE;
 
 type DependentKind = keyof typeof DEPENDENT_LABELS;
-const ORDER: readonly DependentKind[] = ['items', 'triggers', 'records', 'routines', 'homeNetworks', 'settings'];
-const kindOf = (op: OutboxOp): DependentKind | null =>
-  op.kind === 'insertRecord' ? 'records' : op.kind === 'deleteRoutine' ? 'routines' : op.table;
+const ORDER: readonly DependentKind[] = ['items', 'triggers', 'records', 'forgotEvents', 'routines', 'homeNetworks', 'settings'];
+function kindOf(op: OutboxOp): DependentKind | null {
+  switch (op.kind) {
+    case 'insertRecord':
+      return 'records';
+    case 'insertForgot':
+      return 'forgotEvents';
+    case 'deleteRoutine':
+      return 'routines';
+    default:
+      return op.table;
+  }
+}
 
 /** Confirmación de "Descartar": `discarded` empieza por el cambio fallido y sigue con sus dependientes. */
 export function discardMessage(discarded: readonly OutboxOp[]): string {

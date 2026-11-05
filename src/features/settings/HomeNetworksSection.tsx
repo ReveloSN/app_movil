@@ -1,14 +1,15 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { Skeleton, SkeletonGroup } from '@/components/atoms/Skeleton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { NetworkRow } from '@/components/molecules/NetworkRow';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { NETWORK_NAME_MAX_LENGTH } from '@/features/triggers/trigger.validation';
-import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
+import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDateTime } from '@/shared/utils/formatDateTime';
 
@@ -22,7 +23,6 @@ const ROW_LABELS = { rename: copy.RENAME_LABEL, remove: copy.DELETE_LABEL, save:
  * (borrarla dejaría ese aviso sin red).
  */
 export function HomeNetworksSection() {
-  const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const { networks, loading, error, actionError, refresh, rename, remove } = useHomeNetworks();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -85,7 +85,10 @@ export function HomeNetworksSection() {
       {actionError ? <StatusMessage tone="error" message={actionError} /> : null}
       <View style={styles.card}>
         {loading && networks.length === 0 ? (
-          <ActivityIndicator style={styles.padded} color={colors.primary} accessibilityLabel="Cargando redes" />
+          <SkeletonGroup accessibilityLabel={copy.LOADING_NETWORKS_LABEL} style={[styles.padded, styles.group]}>
+            <Skeleton width="60%" />
+            <Skeleton width="40%" height={12} />
+          </SkeletonGroup>
         ) : error && networks.length === 0 ? (
           <View style={[styles.padded, styles.group]}>
             <StatusMessage tone="error" message={error} />

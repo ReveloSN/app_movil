@@ -1,4 +1,5 @@
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
+import type { RoutineKind } from '@/shared/types/routine.types';
 
 /** Valor guardado en triggers.type. */
 export type TriggerKind = 'schedule' | 'wifi_exit' | 'wifi_enter';
@@ -44,4 +45,18 @@ export type ArmedTrigger = TriggerDraft & {
   routineId: string;
   routineName: string;
   itemLabels: string[];
+  /** Tipo de la rutina. Las copias guardadas antes de existir este campo no lo traen: son de salida. */
+  routineKind?: RoutineKind;
 };
+
+/**
+ * Rutina de llegada activa, con lo necesario para avisar sin red al llegar a casa (por geocerca no hay
+ * un aviso de Wi-Fi que la nombre). `windows` son las franjas de sus avisos de «Llegar al Wi-Fi»: si
+ * tiene alguno sin franja, o ninguno, avisa a cualquier hora.
+ */
+export interface ArrivalRoutine {
+  routineId: string;
+  routineName: string;
+  itemLabels: string[];
+  windows: (TimeWindow | null)[];
+}

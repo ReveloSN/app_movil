@@ -1,3 +1,5 @@
+import type { ForgotEvent } from '@/shared/types/forgot-event.types';
+
 import type { OutboxChange, OutboxMeta, PendingRecord } from '../local-document.types';
 
 let sequence = 0;
@@ -18,4 +20,13 @@ export const record = (id: string, routineId: string): PendingRecord => ({
   date: '2026-10-14T10:00:00.000Z',
   itemsChecked: null,
   durationSeconds: 30,
+});
+
+export const forgot = (id: string, routineId: string, overrides: Partial<ForgotEvent> = {}): ForgotEvent => ({
+  id,
+  routineId,
+  recordId: null,
+  label: 'Llaves',
+  date: '2026-10-14T10:05:00.000Z',
+  ...overrides,
 });

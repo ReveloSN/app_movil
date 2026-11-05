@@ -11,6 +11,7 @@ const routine = (id: string, overrides: Partial<Routine> = {}): Routine => ({
   id,
   userId: 'user-1',
   name: `Rutina ${id}`,
+  kind: 'departure',
   icon: null,
   color: null,
   active: true,
@@ -62,6 +63,17 @@ describe('mergePulled', () => {
     });
   });
 
+  it('el tipo de rutina lo escribe el cliente: con un cambio pendiente se queda el local; sin él, el del servidor', () => {
+    const pending = mergePulled(
+      doc({ routines: [routine('r1', { kind: 'arrival' })] }, [op({ kind: 'update', table: 'routines', id: 'r1', changes: { kind: 'arrival' } })]),
+      tables({ routines: [routine('r1', { kind: 'departure' })] }),
+    );
+    expect(pending.routines[0].kind).toBe('arrival');
+
+    const settled = mergePulled(doc({ routines: [routine('r1', { kind: 'departure' })] }), tables({ routines: [routine('r1', { kind: 'arrival' })] }));
+    expect(settled.routines[0].kind).toBe('arrival');
+  });
+
   it('una fila creada sin red que aún no se subió se conserva', () => {
     const merged = mergePulled(
       doc({ routines: [routine('local-1')] }, [op({ kind: 'insert', table: 'routines', id: 'local-1', values: {} })]),
@@ -102,5 +114,35 @@ describe('mergePulled', () => {
     const before = doc({ homeNetworks: [network] });
 
     expect(mergePulled(before, tables({ homeNetworks: [{ ...network }] }))).toBe(before.tables);
+  });
+
+  describe('servidor sin la columna kind', () => {
+    const withoutKind = ({ kind: _kind, ...rest }: Routine) => rest;
+
+    it('una rutina sin cambios pendientes conserva su tipo local (no vuelve a ser de salida)', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      const merged = mergePulled(local, { ...tables({}), routines: [withoutKind(routine('r1', { name: 'Otro nombre' }))] });
+
+      expect(merged.routines).toEqual([expect.objectContaining({ id: 'r1', name: 'Otro nombre', kind: 'arrival' })]);
+    });
+
+    it('sin cambios devuelve el mismo objeto', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      expect(mergePulled(local, { ...tables({}), routines: [withoutKind(routine('r1'))] })).toBe(local.tables);
+    });
+
+    it('una rutina que no está aquí llega como de salida (el default de la base)', () => {
+      const merged = mergePulled(doc({}), { ...tables({}), routines: [withoutKind(routine('r2'))] });
+
+      expect(merged.routines).toEqual([expect.objectContaining({ id: 'r2', kind: 'departure' })]);
+    });
+
+    it('si el servidor trae el tipo, manda el del servidor', () => {
+      const local = doc({ routines: [routine('r1', { kind: 'arrival' })] });
+
+      expect(mergePulled(local, tables({ routines: [routine('r1')] })).routines[0].kind).toBe('departure');
+    });
   });
 });

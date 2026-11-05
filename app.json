@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -48,12 +48,19 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Para detectar tu Wi-Fi, el teléfono pide acceso a la ubicación. No la guardamos.",
-          "locationAlwaysAndWhenInUsePermission": "Para notar que saliste de tu Wi-Fi aunque la app esté cerrada. No guardamos tu ubicación.",
+          "locationWhenInUsePermission": "Para detectar tu Wi-Fi y, si quieres, definir tu casa con tu ubicación actual. La ubicación de tu casa se guarda solo en tu teléfono y no se envía a ningún lado.",
+          "locationAlwaysAndWhenInUsePermission": "Para notar que saliste o llegaste a casa aunque la app esté cerrada. La ubicación de tu casa se guarda solo en tu teléfono y no se envía a ningún lado.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
       "expo-notifications",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Para dictar por voz la rutina que necesitas. El audio no se guarda.",
+          "speechRecognitionPermission": "Para convertir tu voz en texto al dictar una rutina."
+        }
+      ],
       "./plugins/with-release-signing",
       [
         "react-native-android-widget",

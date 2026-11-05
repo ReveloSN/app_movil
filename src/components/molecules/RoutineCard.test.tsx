@@ -55,4 +55,28 @@ describe('RoutineCard', () => {
     );
     expect(screen.getByText('Pausada')).toBeTruthy();
   });
+
+  it('marca "Verificada hoy" con texto y muestra solo la hora cuando ya se verificó hoy', async () => {
+    const done = new Date(2026, 10, 4, 8, 15).toISOString();
+    await render(
+      <TestProviders>
+        <RoutineCard name="Salir de casa" icon={null} active lastCompletedAt={done} completedToday onPress={jest.fn()} />
+      </TestProviders>,
+    );
+    expect(screen.getByText('Verificada hoy')).toBeTruthy();
+    expect(screen.getByText(/^Hoy, /)).toBeTruthy();
+    expect(screen.queryByText(/Última vez/)).toBeNull();
+    expect(screen.getByRole('button', { name: /^Salir de casa\. Verificada hoy\. Hoy, / })).toBeTruthy();
+  });
+
+  it('sin verificar hoy no muestra la marca y conserva "Última vez"', async () => {
+    const before = new Date(2026, 10, 3, 8, 15).toISOString();
+    await render(
+      <TestProviders>
+        <RoutineCard name="Salir de casa" icon={null} active lastCompletedAt={before} />
+      </TestProviders>,
+    );
+    expect(screen.queryByText('Verificada hoy')).toBeNull();
+    expect(screen.getByText(/^Última vez: /)).toBeTruthy();
+  });
 });

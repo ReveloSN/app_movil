@@ -22,3 +22,15 @@ export const hapticConfirm = () =>
 
 /** Al cambiar de pestaña (tocando o deslizando). */
 export const hapticTick = () => perform(Haptics.AndroidHaptics.Segment_Tick, Haptics.selectionAsync);
+
+/** Al cruzar el umbral de un deslizamiento: avisa que, si suelta ahora, se confirma. Sutil. */
+export const hapticSwipeArm = () => perform(Haptics.AndroidHaptics.Segment_Tick, Haptics.selectionAsync);
+
+/** Al levantar una fila para reordenarla. */
+export const hapticReorderPick = () => perform(Haptics.AndroidHaptics.Gesture_Start, Haptics.selectionAsync);
+
+/** Cada vez que la fila arrastrada pasa a otra posición. */
+export const hapticReorderStep = () => perform(Haptics.AndroidHaptics.Segment_Tick, Haptics.selectionAsync);
+
+/** Al soltar la fila en su nueva posición. */
+export const hapticReorderDrop = () => perform(Haptics.AndroidHaptics.Gesture_End, Haptics.selectionAsync);

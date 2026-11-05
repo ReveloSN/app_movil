@@ -1,7 +1,7 @@
 import { memoryStorage } from '@/db/local/testing/memoryStorage';
 
 import { patternMessage } from './insights.copy';
-import { createForgotStore, createSnoozeStore } from './insights.stores';
+import { createSnoozeStore } from './insights.stores';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -22,18 +22,15 @@ describe('"Ahora no"', () => {
   });
 });
 
-describe('olvidos anotados', () => {
-  it('guarda y devuelve los eventos', async () => {
-    const store = createForgotStore('u1', memoryStorage());
-    await store.add({ id: 'e1', routineId: 'r1', recordId: 'rec1', label: 'Paraguas', date: '2026-10-17T07:00:00.000Z' });
-    expect(await store.getAll()).toEqual([{ id: 'e1', routineId: 'r1', recordId: 'rec1', label: 'Paraguas', date: '2026-10-17T07:00:00.000Z' }]);
-  });
-});
-
 describe('mensaje determinista (sin IA)', () => {
   it('sin culpa, con el ítem entre comillas y el día si aplica', () => {
     const base = { routineId: 'r1', label: 'Cargador', misses: 3, observations: 4, critical: false };
     expect(patternMessage({ kind: 'item', recentMisses: 3, ...base })).toBe('Sueles omitir «Cargador». ¿Lo marcamos como crítico?');
     expect(patternMessage({ kind: 'weekday', weekday: 2, ...base })).toBe('Los martes sueles omitir «Cargador». ¿Lo marcamos como crítico?');
+    const forgot = { kind: 'forgot_weekday' as const, routineId: 'r1', label: 'Llaves', weekday: 1, misses: 3, observations: 4 };
+    expect(patternMessage(forgot, 'add_item')).toBe('Los lunes sueles olvidar «Llaves». ¿Lo agregamos a tu rutina?');
+    expect(patternMessage(forgot, 'mark_critical')).toBe('Los lunes sueles olvidar «Llaves». ¿Lo marcamos como crítico?');
+    // Corto y sin emojis: cabe en el mismo límite que el texto de la IA.
+    expect(patternMessage({ ...forgot, label: 'x'.repeat(60), weekday: 3 }, 'add_item').length).toBeLessThanOrEqual(140);
   });
 });

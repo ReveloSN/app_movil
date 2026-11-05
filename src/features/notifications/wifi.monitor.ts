@@ -6,7 +6,8 @@ import { loadLastSsid, saveLastSsid } from '@/features/triggers/wifi/wifiSnapsho
 import { createSerialQueue } from '@/shared/lib/serialQueue';
 
 import { loadNotificationPrefs } from './notification.prefs';
-import { fireTriggerNow } from './occurrence.lifecycle';
+import { fireArrival, fireTriggerNow } from './occurrence.lifecycle';
+import { toArrivalTarget } from './arrival.service';
 
 const serial = createSerialQueue();
 
@@ -34,7 +35,12 @@ export function checkWifiTriggers(now: number = Date.now()): Promise<number> {
     let fired = 0;
     for (const armed of snapshot.triggers) {
       if (!strategyFor(armed).firesOnNetworkChange(armed, previous, current, new Date(now))) continue;
-      if (await fireTriggerNow(armed, snapshot.ownerId, now, prefs)) fired += 1;
+      // Llegar al Wi-Fi de casa en una rutina de llegada es una llegada: comparte el cooldown con la geocerca.
+      const sounded =
+        armed.type === 'wifi_enter' && armed.routineKind === 'arrival'
+          ? await fireArrival(toArrivalTarget(armed), snapshot.ownerId, now, prefs)
+          : await fireTriggerNow(armed, snapshot.ownerId, now, prefs);
+      if (sounded) fired += 1;
     }
     return fired;
   });

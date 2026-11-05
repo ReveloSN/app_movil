@@ -1,39 +1,55 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
-import { SkeletonList } from '@/components/molecules/SkeletonList';
+import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
+import { DepartureStatsView } from '@/features/history/DepartureStatsView';
 import * as copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
 import { groupRecordsByDay } from '@/features/history/history.grouping';
+import { HistorySkeleton } from '@/features/history/HistorySkeleton';
 import { describeResult, RESULT_FILTERS } from '@/features/history/history.result';
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
+import * as statsCopy from '@/features/history/stats.copy';
 import { useHistory } from '@/features/history/useHistory';
 import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
 import { routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
+import { useMinuteClock } from '@/shared/hooks/useMinuteClock';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 const ALL = '';
 
+// EV-02 → Inicio: desde el vacío se vuelve a la pestaña para registrar una verificación.
+const goHome = () => router.navigate('/(tabs)');
+
+type HistoryView = 'history' | 'stats';
+const VIEW_OPTIONS: readonly SegmentOption<HistoryView>[] = [
+  { value: 'history', label: statsCopy.VIEW_HISTORY_LABEL },
+  { value: 'stats', label: statsCopy.VIEW_STATS_LABEL },
+];
+
 export default function HistoryScreen() {
-  const { records, loading, error, refresh } = useHistory();
+  const history = useHistory();
+  const { records, loading, error, refresh } = history;
+  // Historial | Estadísticas: no se guarda; al volver a la pestaña se ve el listado.
+  const [view, setView] = useState<HistoryView>('history');
   const { routines } = useRoutines();
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const swipeLock = useTabSwipeLockHandlers();
-  // Fecha de "Tu semana" en cada render (las estadísticas son baratas; la clave de la semana cambia el lunes).
-  const weekNow = new Date();
+  // Fecha de "Tu semana": cambia por minuto, no por render (la clave de la semana cambia el lunes).
+  const weekNow = useMinuteClock();
   // 09-3: vive en la pestaña; no se guarda.
   const [filter, setFilter] = useState<HistoryFilter>(NO_FILTER);
   const [detail, setDetail] = useState<HistoryEntry | null>(null);
@@ -67,9 +83,38 @@ export default function HistoryScreen() {
   const resultOptions = useMemo(() => [{ value: ALL, label: copy.ALL_RESULTS_LABEL }, ...RESULT_FILTERS], []);
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && records.length === 0) return <SkeletonList rows={5} accessibilityLabel="Cargando historial" />;
+  if (loading && records.length === 0) return <HistorySkeleton loading={loading} />;
   if (error && records.length === 0) return <ErrorState message={error} onRetry={refresh} />;
-  if (records.length === 0) return <EmptyState icon="time-outline" message={copy.EMPTY_MESSAGE} />;
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        illustration="noResults"
+        title={copy.EMPTY_TITLE}
+        message={copy.EMPTY_MESSAGE}
+        action={{ label: copy.EMPTY_ACTION, onPress: goHome, accessibilityHint: copy.EMPTY_ACTION_HINT }}
+      />
+    );
+  }
+
+  const viewSwitch = (
+    <SegmentedControl<HistoryView> accessibilityLabel={statsCopy.VIEW_GROUP_LABEL} options={VIEW_OPTIONS} value={view} onChange={setView} />
+  );
+
+  if (view === 'stats') {
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={[styles.list, styles.statsContent]}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} colors={[colors.primary]} />
+          }
+        >
+          {viewSwitch}
+          <DepartureStatsView history={history} />
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -80,6 +125,7 @@ export default function HistoryScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.filters}>
+            {viewSwitch}
             {/* "Tu semana": resumen guardado por semana (se genera a pedido). */}
             <WeekSummarySection records={records} now={weekNow} />
             {error ? <StatusMessage tone="error" message={error} /> : null}
@@ -114,6 +160,7 @@ export default function HistoryScreen() {
             accentTint={routineAccent(colors, item.routineColor).tint}
             date={item.date}
             result={describeResult(item.result)}
+            kindLabel={item.routineKind === 'arrival' ? copy.ARRIVAL_ROW_LABEL : undefined}
             pendingLabel={item.pending ? PENDING_SYNC_LABEL : undefined}
             onPress={() => setDetail(item)}
             pressHint={copy.openDetailHint}
@@ -159,6 +206,10 @@ const createStyles = ({ colors, radii, spacing, typography }: AppTheme) =>
     list: {
       padding: spacing.xl,
       paddingTop: spacing.sm,
+    },
+    statsContent: {
+      gap: spacing.md,
+      paddingTop: spacing.md,
     },
     filters: {
       gap: spacing.md,

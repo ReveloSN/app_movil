@@ -3,6 +3,8 @@
 
 import type { WeeklyStatsInput } from '@/features/ai/ai.stats';
 import { mostSkippedItems } from '@/features/history/history.filter';
+import { deviceUtcOffset, type UtcOffsetMinutes } from '@/features/history/history.streak';
+import { departureRecords, globalStreak } from '@/features/history/stats';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -21,33 +23,23 @@ export function mondayOf(date: Date): Date {
 /** Clave de la semana: el lunes en "AAAA-MM-DD" (hora local). */
 export const weekKey = (date: Date) => isoDay(mondayOf(date));
 
-const localDay = (epochMs: number) => {
-  const date = new Date(epochMs);
-  return Math.round(new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / DAY_MS);
-};
-
-/** Días seguidos (hasta hoy o ayer) con al menos una verificación completa, de cualquier rutina. */
-function overallStreak(records: readonly VerificationRecord[], now: Date): number {
-  const days = new Set(
-    records.filter((record) => record.result === 'completed').map((record) => Date.parse(record.date)).filter(Number.isFinite).map(localDay),
-  );
-  const today = localDay(now.getTime());
-  let day = days.has(today) ? today : today - 1;
-  let streak = 0;
-  while (days.has(day)) {
-    streak += 1;
-    day -= 1;
-  }
-  return streak;
-}
-
 const inRange = (record: VerificationRecord, from: number, to: number) => {
   const at = Date.parse(record.date);
   return Number.isFinite(at) && at >= from && at < to;
 };
 
-/** Estadísticas de la semana de `now` (de lunes a domingo) comparadas con la anterior. */
-export function buildWeeklyStats(records: readonly VerificationRecord[], now: Date): WeeklyStatsInput {
+/**
+ * Estadísticas de la semana de `now` (de lunes a domingo) comparadas con la anterior. Solo cuentan las
+ * rutinas de salida (`departureRoutineIds`): las de llegada quedan fuera de las cifras, la racha y la IA.
+ * La racha es `globalStreak` (con `offsetOf` inyectable en los tests).
+ */
+export function buildWeeklyStats(
+  allRecords: readonly VerificationRecord[],
+  departureRoutineIds: ReadonlySet<string>,
+  now: Date,
+  offsetOf: UtcOffsetMinutes = deviceUtcOffset,
+): WeeklyStatsInput {
+  const records = departureRecords(allRecords, departureRoutineIds);
   const start = mondayOf(now).getTime();
   const end = start + 7 * DAY_MS;
   const week = records.filter((record) => inRange(record, start, end));
@@ -73,7 +65,8 @@ export function buildWeeklyStats(records: readonly VerificationRecord[], now: Da
     partial: week.filter((record) => record.result === 'partial').length,
     // "Hoy no salgo": la verificación omitida a propósito (Omitir por hoy).
     skipped: week.filter((record) => record.result === 'skipped').length,
-    streak: overallStreak(records, now),
+    // La misma racha global de Estadísticas: una sola definición para toda la app.
+    streak: globalStreak(records, now, offsetOf),
     previousCompleted: previous.filter((record) => record.result === 'completed').length,
     topSkipped: mostSkippedItems(week, 3),
     bestDay: pick((day) => day.good),

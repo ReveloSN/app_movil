@@ -15,6 +15,8 @@ const mockAccess = { visible: true, online: true, whenConsented: (action: () => 
 jest.mock('@/features/auth/AuthProvider', () => ({ useAuth: () => ({ user: { id: 'user-1' } }) }));
 jest.mock('@/features/ai/useAiAccess', () => ({ useAiAccess: () => mockAccess }));
 jest.mock('@/features/ai/ai.service', () => ({ requestWeekSummary: jest.fn() }));
+const mockRoutines: { list: { id: string; kind: string }[] } = { list: [{ id: 'r1', kind: 'departure' }] };
+jest.mock('@/features/routines/useRoutines', () => ({ useRoutines: () => ({ routines: mockRoutines.list, loading: false }) }));
 
 jest.setTimeout(20000);
 
@@ -37,6 +39,7 @@ beforeEach(async () => {
   mockedRequest.mockReset();
   mockAccess.visible = true;
   mockAccess.online = true;
+  mockRoutines.list = [{ id: 'r1', kind: 'departure' }];
 });
 
 describe('useWeeklySummary', () => {
@@ -87,6 +90,14 @@ describe('useWeeklySummary', () => {
 
     await waitFor(() => expect(result.current.summary?.source).toBe('local'));
     expect(mockedRequest).not.toHaveBeenCalled();
+  });
+
+  it('una rutina de llegada no cuenta en la semana ni viaja a la IA', async () => {
+    mockRoutines.list = [{ id: 'r1', kind: 'arrival' }];
+    const { result } = await renderHook(() => useWeeklySummary(RECORDS, NOW));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.empty).toBe(true);
+    expect(result.current.stats).toMatchObject({ completed: 0, partial: 0, streak: 0 });
   });
 
   it('semana sin verificaciones: vacía', async () => {

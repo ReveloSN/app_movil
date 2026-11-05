@@ -2,9 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { KeyValueStorage } from '@/shared/types/key-value-storage.types';
 
-// Datos de "aprender de tus olvidos" que viven solo en este teléfono, por usuario: los registros de
-// verificación no se editan (no tienen updated_at), así que un olvido anotado DESPUÉS de verificar no
-// puede ir dentro del registro. Se guarda aparte, enlazado por su id.
+// Preferencias de "aprender de tus olvidos" que viven solo en este teléfono, por usuario. Los olvidos en sí
+// ya no están aquí: van en la copia local y se sincronizan (local.forgotEvents; la clave vieja
+// `forgot-events:<userId>` la pasa a su sitio db/local/forgot.migration.ts).
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -30,30 +30,6 @@ export function createSnoozeStore(userId: string, storage: KeyValueStorage = Asy
       // Se limpian los vencidos para que la lista no crezca sin límite.
       const alive = Object.fromEntries(Object.entries(all).filter(([, until]) => until > now));
       await storage.setItem(key, JSON.stringify({ ...alive, [patternKey]: now + WEEK_MS }));
-    },
-  };
-}
-
-export interface ForgotEvent {
-  id: string;
-  routineId: string;
-  /** Verificación en la que se notó (si se anotó desde su resumen). */
-  recordId: string | null;
-  label: string;
-  /** ISO 8601. */
-  date: string;
-}
-
-const FORGOT_LIMIT = 200;
-
-/** Eventos "olvido" (Olvidé algo), para el historial de este teléfono. */
-export function createForgotStore(userId: string, storage: KeyValueStorage = AsyncStorage) {
-  const key = `forgot-events:${userId}`;
-  return {
-    getAll: () => read<ForgotEvent[]>(storage, key, []),
-    async add(event: ForgotEvent): Promise<void> {
-      const events = await read<ForgotEvent[]>(storage, key, []);
-      await storage.setItem(key, JSON.stringify([...events, event].slice(-FORGOT_LIMIT)));
     },
   };
 }

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { KeyValueStorage } from '@/shared/types/key-value-storage.types';
 
-import type { ArmedTrigger } from './trigger.types';
+import type { ArmedTrigger, ArrivalRoutine } from './trigger.types';
 
 const STORAGE_KEY = 'armed-triggers';
 
@@ -10,6 +10,8 @@ export interface ArmedTriggersSnapshot {
   /** Cuenta dueña de los avisos: los registros que generen (Omitir, sin respuesta) van a su nombre. */
   ownerId: string;
   triggers: ArmedTrigger[];
+  /** Rutinas de llegada activas. Las copias anteriores no lo traen. */
+  arrivals?: ArrivalRoutine[];
 }
 
 /** Copia local de los avisos activos. La lee la tarea en segundo plano, que no puede depender de la red. */
@@ -19,7 +21,7 @@ export async function loadArmedTriggers(storage: KeyValueStorage = AsyncStorage)
   try {
     const parsed = JSON.parse(raw) as Partial<ArmedTriggersSnapshot> | null;
     return typeof parsed?.ownerId === 'string' && Array.isArray(parsed.triggers)
-      ? { ownerId: parsed.ownerId, triggers: parsed.triggers }
+      ? { ownerId: parsed.ownerId, triggers: parsed.triggers, arrivals: Array.isArray(parsed.arrivals) ? parsed.arrivals : [] }
       : null;
   } catch {
     return null;

@@ -1,5 +1,5 @@
 import { classifyOutbox, discardOp, retryOp } from './outbox.dependencies';
-import { failure, op, record } from './testing/outbox.fixtures';
+import { failure, forgot, op, record } from './testing/outbox.fixtures';
 
 const statuses = (outbox: Parameters<typeof classifyOutbox>[0]) =>
   classifyOutbox(outbox).map(({ op: item, status }) => [item.opId, status]);
@@ -28,6 +28,30 @@ describe('classifyOutbox', () => {
       [trigger.opId, 'blocked'],
       [verification.opId, 'blocked'],
       [otherRoutine.opId, 'ready'],
+    ]);
+  });
+
+  it('si falla el insert de una rutina, sus olvidos quedan bloqueados; los de otra rutina siguen listos', () => {
+    const routine = op({ kind: 'insert', table: 'routines', id: 'r1', values: { id: 'r1' } }, { failed: failure });
+    const blocked = op({ kind: 'insertForgot', event: forgot('f1', 'r1') });
+    const other = op({ kind: 'insertForgot', event: forgot('f2', 'r2') });
+
+    expect(statuses([routine, blocked, other])).toEqual([
+      [routine.opId, 'failed'],
+      [blocked.opId, 'blocked'],
+      [other.opId, 'ready'],
+    ]);
+  });
+
+  it('un olvido fallido no bloquea a nadie (nada depende de él)', () => {
+    const failed = op({ kind: 'insertForgot', event: forgot('f1', 'r1') }, { failed: failure });
+    const next = op({ kind: 'insertForgot', event: forgot('f2', 'r1') });
+    const item = op({ kind: 'insert', table: 'items', id: 'i1', values: { id: 'i1', routineId: 'r1' } });
+
+    expect(statuses([failed, next, item])).toEqual([
+      [failed.opId, 'failed'],
+      [next.opId, 'ready'],
+      [item.opId, 'ready'],
     ]);
   });
 

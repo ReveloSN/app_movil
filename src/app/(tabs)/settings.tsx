@@ -2,8 +2,10 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
+import { HomeLocationSection } from '@/features/geofence/HomeLocationSection';
 import { AccountSection } from '@/features/settings/AccountSection';
 import { AiSettingsSection } from '@/features/settings/AiSettingsSection';
+import { AppearanceSection } from '@/features/settings/AppearanceSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { VerificationPrefsSection } from '@/features/settings/VerificationPrefsSection';
@@ -16,7 +18,7 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 /**
- * P11 en el orden del documento de jerarquía: redes (11-1) → permisos (11-2) → no molestar, posponer y
+ * P11 en el orden del documento de jerarquía: redes (11-1) → casa (geocerca) → permisos (11-2) → no molestar, posponer y
  * sonido (11-3/4/5) → IA → nombre → cambios sin sincronizar → ayuda (11-6) → cuenta.
  */
 export default function SettingsScreen() {
@@ -25,11 +27,13 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <HomeNetworksSection />
+      <HomeLocationSection />
       <PermissionsSection />
       <NotificationPrefsSection />
       <VerificationPrefsSection />
       <AiSettingsSection />
       <WeatherSettingsSection />
+      <AppearanceSection />
       <ProfileSection />
       <SyncStatusSection />
 

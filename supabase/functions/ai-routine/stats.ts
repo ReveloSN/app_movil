@@ -3,7 +3,7 @@
 // etiquetas de ítems, que son datos de la persona (se delimitan y se limitan como cualquier texto).
 // Sin APIs de Deno.
 
-import { AiError } from './contract.ts';
+import { AiError, INPUT_LIMITS, INSIGHT_SOURCES, type InsightSource } from './contract.ts';
 import { cleanText, clip } from './text.ts';
 
 export const STATS_LIMITS = {
@@ -12,25 +12,52 @@ export const STATS_LIMITS = {
   count: 500,
   streak: 366,
   topSkipped: 3,
-  insightMessage: 160,
+  /** "Olvidé algo": la persona escribe la etiqueta (igual que el check de forgot_events.label). */
+  forgotLabel: INPUT_LIMITS.forgotLabel,
+  insightMessage: 140,
   summary: 280,
   recommendation: 140,
 } as const;
 
-export const INSIGHT_ACTIONS = ['mark_critical', 'none'] as const;
+export const INSIGHT_ACTIONS = ['mark_critical', 'add_item', 'none'] as const;
 export type InsightAction = (typeof INSIGHT_ACTIONS)[number];
+
+/** Ítem de la rutina que se omite al verificar (el cliente de siempre: sin `source`). */
+export interface OmissionInsightPattern {
+  source: 'omission';
+  item: string;
+  routine: string;
+  /** 0 = domingo … 6 = sábado, o null si no es un patrón de día. */
+  weekday: number | null;
+  misses: number;
+  observations: number;
+  critical: boolean;
+}
+
+/** Ítem anotado con "Olvidé algo" que se repite el mismo día de la semana. */
+export interface ForgotInsightPattern {
+  source: 'forgot';
+  label: string;
+  routine: string;
+  /** 0 = domingo … 6 = sábado. */
+  weekday: number;
+  /** Días con el olvido anotado y salidas ese día de la semana (lo calcula el teléfono). */
+  misses: number;
+  observations: number;
+  /** Si el ítem ya está en la rutina (entonces se puede marcar como crítico; si no, agregar). */
+  inRoutine: boolean;
+  critical: boolean;
+}
 
 export interface InsightsRequest {
   mode: 'insights';
-  pattern: {
-    item: string;
-    routine: string;
-    /** 0 = domingo … 6 = sábado, o null si no es un patrón de día. */
-    weekday: number | null;
-    misses: number;
-    observations: number;
-    critical: boolean;
-  };
+  pattern: OmissionInsightPattern | ForgotInsightPattern;
+}
+
+/** La acción la decide el dato, no el modelo: el modelo solo redacta el mensaje para esa acción. */
+export function expectedInsightAction(pattern: InsightsRequest['pattern']): InsightAction {
+  if (pattern.source === 'forgot' && !pattern.inRoutine) return 'add_item';
+  return pattern.critical ? 'none' : 'mark_critical';
 }
 
 export interface WeeklyRequest {
@@ -86,15 +113,42 @@ function label(value: unknown, field: string, max: number): string {
   return text;
 }
 
+function source(value: unknown): InsightSource {
+  if (value === undefined || value === null) return 'omission'; // Compatible con la app que no lo envía.
+  const known = INSIGHT_SOURCES.find((option) => option === value);
+  return known ?? fail(`"pattern.source" debe ser ${INSIGHT_SOURCES.map((option) => `"${option}"`).join(' o ')}.`);
+}
+
 export function parseInsightsRequest(body: Record<string, unknown>): InsightsRequest {
   const pattern = body.pattern;
   if (!isRecord(pattern)) return fail('"pattern" debe ser un objeto.');
+  const kind = source(pattern.source);
   const misses = count(pattern.misses, 'pattern.misses');
   const observations = count(pattern.observations, 'pattern.observations');
   if (misses < 1 || observations < misses) fail('"pattern" debe tener al menos una omisión y no más omisiones que verificaciones.');
+  if (kind === 'forgot') {
+    const day = weekday(pattern.weekday, 'pattern.weekday');
+    if (day === null) return fail('Para un olvido, "pattern.weekday" es obligatorio (0 a 6).');
+    const inRoutine = pattern.inRoutine === true;
+    return {
+      mode: 'insights',
+      pattern: {
+        source: 'forgot',
+        label: label(pattern.label, 'pattern.label', STATS_LIMITS.forgotLabel),
+        routine: label(pattern.routine, 'pattern.routine', STATS_LIMITS.routineName),
+        weekday: day,
+        misses,
+        observations,
+        inRoutine,
+        // Lo que no está en la rutina no puede ser crítico.
+        critical: inRoutine && pattern.critical === true,
+      },
+    };
+  }
   return {
     mode: 'insights',
     pattern: {
+      source: 'omission',
       item: label(pattern.item, 'pattern.item', STATS_LIMITS.itemLabel),
       routine: label(pattern.routine, 'pattern.routine', STATS_LIMITS.routineName),
       weekday: weekday(pattern.weekday, 'pattern.weekday'),
@@ -141,11 +195,12 @@ const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'vierne
 const neutral = (text: string) => text.replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim();
 const data = (text: string) => `<datos_usuario>${neutral(text)}</datos_usuario>`;
 
-export const INSIGHTS_RULES = `Tarea: redacta UNA sugerencia breve para alguien que suele olvidar un ítem de su rutina.
-- Sin culpa ni regaños, en tuteo, sin emojis y sin signos de exclamación. Ejemplo: "Sueles omitir «Cargador». ¿Lo marcamos como crítico?".
-- "message": máximo ${STATS_LIMITS.insightMessage} caracteres, que mencione el ítem entre comillas angulares « ».
-- "action": "mark_critical" si conviene marcarlo como crítico (y aún no lo es); si no, "none".
-- No inventes datos: usa solo los conteos dados. No incluyas enlaces ni direcciones web.`;
+export const INSIGHTS_RULES = `Tarea: SOLO redactas UNA sugerencia breve para alguien que suele olvidar un ítem. El patrón, los conteos y la acción ya están calculados: no calcules, no deduzcas ni inventes datos; usa solo los dados.
+- En español, con tuteo, sin culpa ni regaños, sin emojis y sin signos de exclamación.
+- "message": máximo ${STATS_LIMITS.insightMessage} caracteres, que mencione el ítem entre comillas angulares « » (y el día, si lo hay) y termine proponiendo la acción indicada.
+  Ejemplos: "Sueles omitir «Cargador». ¿Lo marcamos como crítico?", "Olvidas las «Llaves» los lunes. ¿Las agregamos a tu rutina?".
+- "action": exactamente la de "Acción indicada" ("mark_critical" = marcarlo como crítico, "add_item" = agregarlo a la rutina, "none" = ninguna).
+- No incluyas enlaces ni direcciones web.`;
 
 export const WEEKLY_RULES = `Tarea: resume la semana de verificaciones de la persona.
 - "resumen": máximo ${STATS_LIMITS.summary} caracteres; qué tal fue la semana comparada con la anterior, sin culpa.
@@ -154,12 +209,25 @@ export const WEEKLY_RULES = `Tarea: resume la semana de verificaciones de la per
 
 export function insightsUserMessage({ pattern }: InsightsRequest): string {
   const when = pattern.weekday === null ? 'en general' : `los ${DAY_NAMES[pattern.weekday]}`;
+  const action = `Acción indicada: ${expectedInsightAction(pattern)}.`;
+  if (pattern.source === 'forgot') {
+    return [
+      'Origen: ítems que la persona anotó con "Olvidé algo" después de salir.',
+      `Ítem olvidado: ${data(pattern.label)}`,
+      `Rutina: ${data(pattern.routine)}`,
+      `Cuándo: ${when}`,
+      `Olvidado ${pattern.misses} de sus ${pattern.observations} salidas de ese día en las últimas 8 semanas.`,
+      `Está en la rutina: ${pattern.inRoutine ? 'sí' : 'no'}. Ya es crítico: ${pattern.critical ? 'sí' : 'no'}.`,
+      action,
+    ].join('\n');
+  }
   return [
     `Ítem: ${data(pattern.item)}`,
     `Rutina: ${data(pattern.routine)}`,
     `Cuándo: ${when}`,
     `Omitido ${pattern.misses} de ${pattern.observations} verificaciones.`,
     `Ya es crítico: ${pattern.critical ? 'sí' : 'no'}.`,
+    action,
   ].join('\n');
 }
 
@@ -200,8 +268,10 @@ function outputText(value: unknown, max: number, field: string): string {
   return text;
 }
 
+/** Mensaje limpio; la acción solo pasa si es la que corresponde al patrón (si el modelo se desvía, "none"). */
 export function sanitizeInsight(raw: Record<string, unknown>, request: InsightsRequest): Insight {
-  const action = raw.action === 'mark_critical' && !request.pattern.critical ? 'mark_critical' : 'none';
+  const expected = expectedInsightAction(request.pattern);
+  const action: InsightAction = raw.action === expected ? expected : 'none';
   return { message: outputText(raw.message, STATS_LIMITS.insightMessage, 'message'), action };
 }
 

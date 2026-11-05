@@ -9,7 +9,13 @@ export const INPUT_LIMITS = {
   name: 24,
   items: 12,
   itemLabel: 32,
+  /** Etiqueta de un olvido ("Olvidé algo"), como el check de forgot_events.label. */
+  forgotLabel: 60,
 } as const;
+
+/** De dónde sale un patrón del modo insights: ítems omitidos al verificar u olvidos anotados. */
+export const INSIGHT_SOURCES = ['omission', 'forgot'] as const;
+export type InsightSource = (typeof INSIGHT_SOURCES)[number];
 
 /** Límites de salida. Un borrador trae menos ítems que el máximo de una rutina (lista corta). */
 export const OUTPUT_LIMITS = {

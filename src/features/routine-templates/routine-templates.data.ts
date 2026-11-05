@@ -8,6 +8,7 @@ import type { PresetTemplate } from './routine-templates.types';
 const item = (label: string, kind: ItemKind, critical = false): ItemDraft => ({ label, kind, critical, icon: iconForItemLabel(label) });
 
 const leaveWifi = (networkName: string): TriggerDraft => ({ type: 'wifi_exit', ssid: '', networkName, window: null });
+const arriveWifi = (networkName: string): TriggerDraft => ({ type: 'wifi_enter', ssid: '', networkName, window: null });
 const WEEKDAYS: readonly Weekday[] = [1, 2, 3, 4, 5];
 const EVERY_DAY: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
@@ -141,6 +142,24 @@ export const PRESET_TEMPLATES: readonly PresetTemplate[] = [
     ],
     suggestedTrigger: 'Manual',
     suggestedTriggerDraft: null,
+  },
+  {
+    id: 'arriving-home',
+    name: 'Llegar a casa',
+    // Rutina de llegada: aparece en «Al llegar», no cuenta como salida.
+    kind: 'arrival',
+    description: 'Recordatorios al volver, sin tener que acordarte.',
+    icon: 'home-outline',
+    color: 'amber',
+    items: [
+      item('Poner a cargar el celular', 'do'),
+      item('Guardar las llaves', 'do'),
+      item('Dejar la billetera en su lugar', 'do'),
+      item('Sacar el almuerzo de la mochila', 'do'),
+      item('Lavarme las manos', 'do'),
+    ],
+    suggestedTrigger: 'Llegar al Wi-Fi de Casa',
+    suggestedTriggerDraft: arriveWifi('Casa'),
   },
 ];
 

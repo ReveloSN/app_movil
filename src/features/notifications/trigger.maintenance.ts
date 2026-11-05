@@ -2,6 +2,7 @@ import { remoteRepositories } from '@/db/app.repositories';
 import { getLocalStore } from '@/db/local/local.store';
 import { migratePendingRecords } from '@/db/local/pendingSync.migration';
 import { pushOutbox } from '@/db/sync/sync.push';
+import { ensureHomeGeofence } from '@/features/geofence/geofence.service';
 import { loadArmedTriggers } from '@/features/triggers/armedTriggers.store';
 
 import { loadNotificationPrefs } from './notification.prefs';
@@ -18,7 +19,7 @@ const warn = (scope: string) => (cause: unknown) => {
  * Solo usa datos locales:
  * 1. pasa la cola vieja de verificaciones a la outbox (una sola vez, tras actualizar la app),
  * 2. rellena las próximas veces de los avisos por horario,
- * 3. revisa si cambió la red Wi-Fi,
+ * 3. revisa si cambió la red Wi-Fi y vuelve a registrar la geocerca de casa si el sistema la perdió,
  * 4. registra como "sin respuesta" lo que venció sin respuesta (va a la outbox),
  * 5. solo desde la tarea en segundo plano (`push`): sube la outbox. Con la app abierta lo hace SyncProvider.
  */
@@ -31,8 +32,14 @@ export async function runTriggerMaintenance(now: number = Date.now(), options: {
 
   await checkWifiTriggers(now).catch(warn('wifi'));
 
+  // La geocerca de casa se vuelve a registrar si el sistema la perdió (reinicio, actualización de Google Play),
+  // y solo existe mientras haya una rutina de llegada activa: sin ella se quita.
+  if (snapshot) await ensureHomeGeofence(snapshot.ownerId, (snapshot.arrivals?.length ?? 0) > 0).catch(warn('geofence'));
+
   const unanswered = await takeUnanswered(now);
   for (const occurrence of unanswered) {
+    // Una llegada sin atender no es un olvido: se descarta sin dejar registro.
+    if (occurrence.kind === 'arrival') continue;
     await writeNotificationRecord(occurrence.routineId, occurrence.ownerId, 'no_response', occurrence.deadline).catch(
       warn('noResponse'),
     );

@@ -51,6 +51,16 @@ const warn = (scope: string) => (cause: unknown) => {
   if (__DEV__) console.warn(`[sync.${scope}]`, cause);
 };
 
+const sameStatus = (a: SyncStatus, b: SyncStatus) =>
+  a.pendingCount === b.pendingCount &&
+  a.blockedCount === b.blockedCount &&
+  a.lastSyncedAt === b.lastSyncedAt &&
+  a.failedChanges.length === b.failedChanges.length &&
+  a.failedChanges.every((change, index) => {
+    const other = b.failedChanges[index];
+    return change.opId === other.opId && change.title === other.title && change.reason === other.reason;
+  });
+
 /**
  * Cuándo sincronizar (§2.3): al abrir con sesión, al volver la conexión, al volver a primer plano y
  * tras cada cambio local (agrupado). Tras bajar algo nuevo, rearma los avisos. Con la app cerrada,
@@ -88,7 +98,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           title: describeChange(op, doc.tables),
           reason: failureReason(op.failed),
         }));
-        setStatus({ pendingCount, blockedCount, failedChanges, lastSyncedAt: doc.lastPulledAt });
+        const next = { pendingCount, blockedCount, failedChanges, lastSyncedAt: doc.lastPulledAt };
+        // Mismo estado: se conserva el objeto y quienes leen la sincronización no se redibujan.
+        setStatus((previous) => (sameStatus(previous, next) ? previous : next));
       })
       .catch(warn('status'));
   }, [store, userId]);

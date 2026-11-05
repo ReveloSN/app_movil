@@ -20,7 +20,8 @@ export const PERMISSION_COPY: Record<PermissionKind, PermissionCopy> = {
   location: {
     title: 'Ubicación',
     icon: 'location-outline',
-    reason: 'Para detectar tu Wi-Fi, el teléfono pide acceso a la ubicación. No la guardamos.',
+    reason:
+      'Para detectar tu Wi-Fi y, si quieres, tu casa, el teléfono pide acceso a la ubicación. La ubicación de tu casa se guarda solo en este teléfono y no se envía a ningún lado.',
   },
 };
 
@@ -38,7 +39,7 @@ export const PERMISSIONS_TITLE = 'Permisos';
 
 export const BACKGROUND_LOCATION_TITLE = 'Avisos con la app cerrada';
 export const BACKGROUND_LOCATION_REASON =
-  'Para notar que saliste aunque la app esté cerrada, elige «Permitir todo el tiempo». Es opcional.';
+  'Para notar que saliste o llegaste a casa aunque la app esté cerrada, elige «Permitir todo el tiempo». Es opcional: sin él, solo avisamos por Wi-Fi. No enviamos tu ubicación a ningún lado.';
 export const BACKGROUND_LOCATION_ALLOW = 'Permitir todo el tiempo';
 
 export const LOCATION_SERVICES_OFF = 'La ubicación del teléfono está apagada: actívala para detectar tu Wi-Fi.';

@@ -1,7 +1,7 @@
 import type { ItemRepository } from '@/db/repositories/item.repository';
 import type { RoutineRepository } from '@/db/repositories/routine.repository';
 import { createTriggersForRoutine, type TriggerServiceDeps } from '@/features/triggers/trigger.service';
-import type { Routine } from '@/shared/types/routine.types';
+import { DEFAULT_ROUTINE_KIND, type Routine } from '@/shared/types/routine.types';
 
 import { DEFAULT_ROUTINE_COLOR, DEFAULT_ROUTINE_ICON } from './routine-appearance';
 import type { RoutineDraft } from './routines.types';
@@ -19,6 +19,7 @@ export interface RoutineServiceDeps extends TriggerServiceDeps {
 export async function createRoutineWithItems(deps: RoutineServiceDeps, draft: RoutineDraft): Promise<Routine> {
   const routine = await deps.routines.create({
     name: draft.name.trim(),
+    kind: draft.kind ?? DEFAULT_ROUTINE_KIND,
     icon: draft.icon ?? DEFAULT_ROUTINE_ICON,
     color: draft.color ?? DEFAULT_ROUTINE_COLOR,
   });

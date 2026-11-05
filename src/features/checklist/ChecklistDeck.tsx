@@ -3,7 +3,7 @@ import Animated from 'react-native-reanimated';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { TextButton } from '@/components/atoms/TextButton';
-import { SwipeCard } from '@/components/molecules/SwipeCard';
+import { SwipeCard } from './SwipeCard';
 import { displayIconForItem } from '@/features/routines/item-icon-guess';
 import { hapticToggleOff, hapticToggleOn } from '@/shared/haptics/haptics';
 import { fadeIn } from '@/shared/theme/motion';

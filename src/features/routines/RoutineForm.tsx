@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
+import { SegmentedControl } from '@/components/molecules/SegmentedControl';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { AiDraftNotice } from '@/features/ai/AiDraftNotice';
@@ -18,7 +19,7 @@ import { UNDO_LABEL } from '@/features/feedback/feedback.copy';
 import { useToast } from '@/features/feedback/toast.context';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
-import type { Routine } from '@/shared/types/routine.types';
+import type { Routine, RoutineKind } from '@/shared/types/routine.types';
 
 import { ItemSuggestions } from './ItemSuggestions';
 import { RoutineAppearanceFields } from './RoutineAppearanceFields';
@@ -48,6 +49,11 @@ interface RoutineFormProps {
    */
   aiAssisted?: { suggestsWifiExit: boolean };
 }
+
+const KIND_OPTIONS = [
+  { value: 'departure', label: copy.DEPARTURE_KIND_LABEL },
+  { value: 'arrival', label: copy.ARRIVAL_KIND_LABEL },
+] as const;
 
 /** P04: el mismo formulario crea o edita según reciba `editing`. */
 export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: RoutineFormProps) {
@@ -111,11 +117,23 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {aiAssisted ? <AiDraftNotice suggestsWifiExit={aiAssisted.suggestsWifiExit} /> : null}
+        {/* Salida o llegada: solo al crear (cambiarlo después dejaría avisos que ya no tienen sentido). */}
+        {editing ? null : (
+          <View style={styles.kindGroup}>
+            <SegmentedControl<RoutineKind>
+              accessibilityLabel={copy.ROUTINE_KIND_LABEL}
+              options={KIND_OPTIONS}
+              value={form.kind}
+              onChange={form.setKind}
+            />
+            <Text style={styles.kindHint}>{copy.ROUTINE_KIND_HINT[form.kind]}</Text>
+          </View>
+        )}
         <TextField
           ref={nameRef}
           returnKeyType="done"
           label="Nombre de la rutina"
-          placeholder="Ej. Salir al trabajo"
+          placeholder={copy.NAME_PLACEHOLDER[form.kind]}
           value={form.name}
           onChangeText={form.setName}
           maxLength={ROUTINE_NAME_MAX_LENGTH}
@@ -134,6 +152,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           onEdit={(entry) => setEditingItem({ entry, isNew: false })}
           onAdd={() => setEditingItem({ entry: form.blankItem(), isNew: true })}
           onRemove={removeItem}
+          onMove={form.moveItemTo}
         />
 
         {/* 04-4 */}
@@ -146,7 +165,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
 
         {/* 04-5 */}
         <View onLayout={onTriggersLayout}>
-          <RoutineTriggersSection formId={formId} error={form.errors.triggers} />
+          <RoutineTriggersSection formId={formId} routineKind={form.kind} error={form.errors.triggers} />
         </View>
 
         {/* Compartir como copia (solo al editar): lo que se ve en el formulario, sin avisos. */}
@@ -220,8 +239,15 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
   );
 }
 
-const createStyles = ({ spacing }: AppTheme) =>
+const createStyles = ({ colors, spacing, typography }: AppTheme) =>
   StyleSheet.create({
+    kindGroup: {
+      gap: spacing.sm,
+    },
+    kindHint: {
+      ...typography.label,
+      color: colors.textSecondary,
+    },
     flex: {
       flex: 1,
     },

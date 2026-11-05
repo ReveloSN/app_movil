@@ -1,7 +1,14 @@
+/** Para qué momento es la rutina: salir de un lugar o llegar a uno. */
+export type RoutineKind = 'departure' | 'arrival';
+
+export const DEFAULT_ROUTINE_KIND: RoutineKind = 'departure';
+
 export interface Routine {
   id: string;
   userId: string;
   name: string;
+  /** Las rutinas anteriores a este campo son todas de salida ('departure'). */
+  kind: RoutineKind;
   icon: string | null;
   color: string | null;
   active: boolean;
@@ -17,6 +24,8 @@ export interface CreateRoutineInput {
   /** Generado por el cliente para crear sin conexión; si falta, lo pone la base de datos. */
   id?: string;
   name: string;
+  /** Por defecto, 'departure' (como en la base de datos). */
+  kind?: RoutineKind;
   icon?: string | null;
   color?: string | null;
   active?: boolean;
