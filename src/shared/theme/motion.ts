@@ -41,11 +41,11 @@ export const stagger = { step: 40, maxItems: 8 } as const;
 /** Desplazamiento de las entradas (en dp): lo justo para notar de dónde viene. */
 export const offsets = { enter: 12, toast: 24 } as const;
 
-export const timing = (duration: number, easing: WithTimingConfig['easing'] = easings.standard): WithTimingConfig => ({
-  duration,
-  easing,
-  reduceMotion: ReduceMotion.System,
-});
+// Worklet: se llama dentro de `useAnimatedStyle`, que corre en el hilo de UI.
+export const timing = (duration: number, easing?: WithTimingConfig['easing']): WithTimingConfig => {
+  'worklet';
+  return { duration, easing: easing ?? easings.standard, reduceMotion: ReduceMotion.System };
+};
 
 /** Retraso escalonado del elemento `index` (con tope). */
 export const staggerDelay = (index: number) => Math.min(index, stagger.maxItems) * stagger.step;
