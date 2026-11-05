@@ -4,8 +4,7 @@ import type { GeofenceStatus } from './geofence.types';
 
 export const HOME_SECTION_TITLE = 'Casa';
 
-export const HOME_INTRO =
-  'Define dónde vives para que te avisemos al llegar, aunque la app esté cerrada. Las coordenadas de tu casa se guardan solo en este teléfono: no se envían a ningún lado.';
+export const HOME_INTRO = 'Te avisamos al llegar a casa. Tu ubicación no sale de este teléfono.';
 
 export const STATUS_TITLE: Record<GeofenceStatus, string> = {
   'no-home': 'Sin casa definida',
@@ -16,18 +15,18 @@ export const STATUS_TITLE: Record<GeofenceStatus, string> = {
 };
 
 export const STATUS_DETAIL: Record<GeofenceStatus, string> = {
-  'no-home': 'Mientras tanto, los avisos al llegar solo usan tu Wi-Fi.',
-  'no-arrival': 'Crea o activa una rutina de llegada para que te avisemos al llegar. Mientras tanto, no usamos tu ubicación.',
-  active: 'Te avisamos al llegar a casa, incluso con la app cerrada.',
-  'no-permission': 'Permite la ubicación «todo el tiempo» para detectar tu llegada. Mientras tanto, solo avisamos por Wi-Fi.',
-  inactive: 'El teléfono no tiene la zona registrada. Revisa que la ubicación esté encendida y vuelve a abrir la app.',
+  'no-home': 'Defínela para que te avisemos al llegar.',
+  'no-arrival': 'Crea una rutina de llegada para activarla.',
+  active: 'Lista para avisarte, incluso con la app cerrada.',
+  'no-permission': 'Permite la ubicación «todo el tiempo».',
+  inactive: 'Enciende la ubicación y abre la app de nuevo.',
 };
 
 export const USE_LOCATION_LABEL = 'Usar mi ubicación actual';
 export const LOCATING_LABEL = 'Buscando tu ubicación…';
 export const RADIUS_LABEL = 'Radio de tu casa';
 export const radiusOptionLabel = (meters: number) => `${meters} m`;
-export const RADIUS_HINT = 'Elige un radio mayor si vives en un edificio grande o la señal es floja.';
+export const RADIUS_HINT = 'Más radio si vives en un edificio grande.';
 export const REMOVE_HOME_LABEL = 'Quitar casa';
 export const ALLOW_BACKGROUND_LABEL = 'Permitir ubicación todo el tiempo';
 export const ALLOW_LOCATION_LABEL = 'Permitir ubicación';
@@ -40,5 +39,4 @@ export const LOCATION_PERMISSION_NEEDED = 'Para usar tu ubicación actual, permi
 export const SAVE_FAILED = 'No pudimos guardar tu casa. Inténtalo de nuevo.';
 
 /** Sobre la demora en Android: la detección no es instantánea. */
-export const DETECTION_DELAY_NOTE =
-  'Android puede tardar unos minutos en notar que llegaste. Si el Wi-Fi de casa también está configurado, lo que ocurra primero te avisa, una sola vez.';
+export const DETECTION_DELAY_NOTE = 'Android puede tardar unos minutos en avisarte.';

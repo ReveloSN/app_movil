@@ -170,7 +170,7 @@ export function HomeLocationSection() {
           </View>
         ) : null}
 
-        <Text style={styles.detail}>{copy.DETECTION_DELAY_NOTE}</Text>
+        {current === 'active' ? <Text style={styles.detail}>{copy.DETECTION_DELAY_NOTE}</Text> : null}
       </View>
     </View>
   );

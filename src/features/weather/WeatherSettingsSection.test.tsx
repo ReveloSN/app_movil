@@ -31,7 +31,7 @@ describe('Ajustes · Clima', () => {
   it('sin ciudad: el interruptor está desactivado y se ve la atribución', async () => {
     await renderSection();
     expect(screen.getByLabelText('Sugerencias de clima').props.accessibilityState).toMatchObject({ disabled: true });
-    expect(screen.getByText('Datos del clima: Open-Meteo.com')).toBeTruthy();
+    expect(screen.queryByText(/Open-Meteo/)).toBeNull();
     expect(screen.getByText('Elige una ciudad para activarlas.')).toBeTruthy();
   });
 
@@ -40,7 +40,7 @@ describe('Ajustes · Clima', () => {
     await fireEvent.changeText(screen.getByLabelText('Ciudad para el clima'), 'Bogotá');
     await fireEvent.press(screen.getByRole('button', { name: 'Buscar' }));
 
-    expect(screen.getByText('Se envía la ciudad elegida a Open-Meteo para consultar el clima; no se envía nada más.')).toBeTruthy();
+    expect(screen.getByText('Solo enviamos la ciudad que elegiste para consultar el clima.')).toBeTruthy();
     expect(globalThis.fetch).not.toHaveBeenCalled();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Entendido' }));

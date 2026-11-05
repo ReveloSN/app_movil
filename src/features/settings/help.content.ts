@@ -34,6 +34,10 @@ export const HELP_ENTRIES: readonly HelpEntry[] = [
       'Te lo recordamos 2 veces, separadas por los minutos que elegiste en «Posponer». Si sigues sin responder, queda en tu historial como «Sin respuesta».',
   },
   {
+    question: '¿De dónde sale el clima?',
+    answer: 'De Open-Meteo.com. Solo enviamos la ciudad que elegiste en Ajustes.',
+  },
+  {
     question: '¿Cómo cambio o elimino una rutina?',
     answer: 'Toca la rutina en Inicio. Ahí puedes editarla, y al final está «Eliminar rutina».',
   },

@@ -18,7 +18,7 @@ import type { City } from './weather.client';
 import * as copy from './weather.copy';
 import { updateWeatherPrefs, useWeatherPrefs } from './weather.prefs';
 
-/** Ajustes · Clima: ciudad (búsqueda por nombre), interruptor y atribución de Open-Meteo. */
+/** Ajustes · Clima: ciudad (búsqueda por nombre) e interruptor. */
 export function WeatherSettingsSection() {
   const styles = useThemedStyles(createStyles);
   const prefs = useWeatherPrefs();
@@ -37,7 +37,7 @@ export function WeatherSettingsSection() {
     });
   };
 
-  // La primera vez se explica qué se envía antes de consultar a Open-Meteo.
+  // La primera vez se explica qué se envía antes de consultar el clima.
   function runSearch() {
     if (!prefs.consented) setAskingConsent(true);
     else void search.search(query);
@@ -87,7 +87,6 @@ export function WeatherSettingsSection() {
           disabled={prefs.city === null}
         />
         <Text style={styles.hint}>{prefs.city === null ? copy.WEATHER_HINT_NO_CITY : copy.WEATHER_HINT}</Text>
-        <Text style={styles.hint}>{copy.WEATHER_ATTRIBUTION}</Text>
       </View>
       {askingConsent ? (
         <BottomSheet onRequestClose={() => setAskingConsent(false)}>
