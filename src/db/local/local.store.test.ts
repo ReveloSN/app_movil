@@ -145,4 +145,31 @@ describe('createLocalStore', () => {
       expect(listener).not.toHaveBeenCalled();
     });
   });
+
+  describe('caché de lectura', () => {
+    it('leer dos veces sin cambios reutiliza el mismo documento', async () => {
+      const store = createLocalStore('user-1', memoryStorage());
+      await store.update((doc) => ({ doc: { ...doc, outbox: [op({ kind: 'deleteRoutine', id: 'r1' })] }, result: null }));
+
+      expect(await store.read()).toBe(await store.read());
+    });
+
+    it('una escritura de otra instancia (la tarea en segundo plano) se ve en la siguiente lectura', async () => {
+      const storage = memoryStorage();
+      const app = createLocalStore('user-1', storage);
+      await app.read();
+      const pending = op({ kind: 'deleteRoutine', id: 'r9' });
+      await createLocalStore('user-1', storage).update((doc) => ({ doc: { ...doc, outbox: [pending] }, result: null }));
+
+      expect((await app.read()).outbox).toEqual([pending]);
+    });
+
+    it('tras borrar la copia local no queda nada en la caché', async () => {
+      const store = createLocalStore('user-1', memoryStorage());
+      await store.update((doc) => ({ doc: { ...doc, outbox: [op({ kind: 'deleteRoutine', id: 'r1' })] }, result: null }));
+      await store.clear();
+
+      expect((await store.read()).outbox).toEqual([]);
+    });
+  });
 });
