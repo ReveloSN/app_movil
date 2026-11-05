@@ -3,6 +3,7 @@ import type { WifiTriggerKind } from '@/features/triggers/trigger.types';
 import type { Routine } from '@/shared/types/routine.types';
 import type { Trigger } from '@/shared/types/trigger.types';
 import { parseSqlTime } from '@/shared/utils/formatClock';
+import { isSameLocalDay } from '@/shared/utils/isSameLocalDay';
 
 import { departureRoutines } from './routine-list';
 
@@ -16,13 +17,16 @@ export type NextRoutine = (NextRoutineBase & { kind: 'schedule'; at: Date }) | (
 
 const DAYS_AHEAD = 7;
 
-/** Próxima vez estrictamente futura de un aviso por horario (días 0 = domingo), en hora local. */
-function nextScheduleTime(trigger: Trigger, now: Date): Date | null {
+/**
+ * Próxima vez estrictamente futura de un aviso por horario (días 0 = domingo), en hora local.
+ * Con `skipToday` (ya se verificó hoy) empieza mañana.
+ */
+function nextScheduleTime(trigger: Trigger, now: Date, skipToday: boolean): Date | null {
   const time = parseSqlTime(trigger.time);
   const days = trigger.days ?? [];
   if (!time || days.length === 0) return null;
   // Hoy y los 7 días siguientes: así entra la misma hora de hoy dentro de una semana.
-  for (let offset = 0; offset <= DAYS_AHEAD; offset += 1) {
+  for (let offset = skipToday ? 1 : 0; offset <= DAYS_AHEAD; offset += 1) {
     const candidate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, time.hour, time.minute);
     if (candidate > now && days.includes(candidate.getDay())) return candidate;
   }
@@ -44,6 +48,7 @@ function wifiWindow(trigger: Trigger) {
  * 2. el aviso por horario más cercano en el futuro;
  * 3. un aviso por Wi-Fi sin franja (sin hora que comparar, solo si no hay horario).
  * Un aviso por Wi-Fi con franja que no cubre este momento no cuenta. null si no hay ninguno.
+ * Una rutina ya verificada hoy no es la próxima de hoy: sus avisos por horario cuentan desde mañana y los de Wi-Fi no cuentan.
  */
 export function findNextRoutine(routines: readonly Routine[], triggers: readonly Trigger[], now: Date): NextRoutine | null {
   // Las de llegada no son «la próxima salida»: se avisan al volver a casa, no se preparan antes de salir.
@@ -55,10 +60,11 @@ export function findNextRoutine(routines: readonly Routine[], triggers: readonly
     const routine = activeRoutines.get(trigger.routineId);
     if (!routine || !trigger.active) continue;
     const base = { routineId: routine.id, routineName: routine.name };
+    const doneToday = isSameLocalDay(routine.lastCompletedAt, now);
     if (trigger.type === 'schedule') {
-      const at = nextScheduleTime(trigger, now);
+      const at = nextScheduleTime(trigger, now, doneToday);
       if (at && (!scheduled || scheduled.kind !== 'schedule' || at < scheduled.at)) scheduled = { ...base, kind: 'schedule', at };
-    } else if (isWifiKind(trigger.type)) {
+    } else if (isWifiKind(trigger.type) && !doneToday) {
       const window = wifiWindow(trigger);
       if (!window) wifiAnytime ??= { ...base, kind: trigger.type };
       else if (isWithinWindow(window, now)) wifiInWindow ??= { ...base, kind: trigger.type };
