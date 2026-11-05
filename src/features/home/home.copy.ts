@@ -16,6 +16,8 @@ export function saluteForHour(hour: number): string {
 
 // Tarjeta de rutina (03-3): sin código en el Documento de Contenido, propuesto, pendiente de validar.
 export const VERIFY_PRESS_HINT = 'Abre la verificación';
+export const VERIFIED_TODAY_LABEL = 'Verificada hoy';
+export const VERIFY_AGAIN_LABEL = 'Verificar otra vez';
 export const editRoutineLabel = (name: string) => `Editar ${name}`;
 
 /** Lo que oye el lector de pantalla mientras cargan las rutinas. */

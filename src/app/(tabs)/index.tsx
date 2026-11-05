@@ -23,6 +23,7 @@ import {
   NEXT_ROUTINE_LABEL,
   nextRoutineDescription,
   todayLabel,
+  VERIFY_AGAIN_LABEL,
   VERIFY_PRESS_HINT,
 } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
@@ -40,6 +41,7 @@ import { staggeredEntering } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Routine } from '@/shared/types/routine.types';
+import { isSameLocalDay } from '@/shared/utils/isSameLocalDay';
 
 const openTemplates = () => router.push('/routine/templates');
 const openVerification = (routineId: string) => router.push({ pathname: '/routine/[id]/verify', params: { id: routineId } });
@@ -104,6 +106,7 @@ export default function RoutinesScreen() {
   // Las de llegada no se verifican desde aquí (ensuciaría el historial de salidas): solo se editan.
   const renderCard = (item: Routine) => {
     const verifiable = canVerifyFromHome(item);
+    const completedToday = verifiable && isSameLocalDay(item.lastCompletedAt, now);
     return (
       <RoutineCard
         name={item.name}
@@ -112,7 +115,8 @@ export default function RoutinesScreen() {
         accentTint={routineAccent(colors, item.color).tint}
         active={item.active}
         lastCompletedAt={item.lastCompletedAt}
-        actionLabel={verifiable ? VERIFY_NOW_LABEL : undefined}
+        completedToday={completedToday}
+        actionLabel={verifiable ? (completedToday ? VERIFY_AGAIN_LABEL : VERIFY_NOW_LABEL) : undefined}
         onAction={verifiable ? () => openVerification(item.id) : undefined}
         // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
         onPress={verifiable ? () => openVerification(item.id) : undefined}
