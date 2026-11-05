@@ -8,13 +8,11 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
-import { RoutineCard } from '@/components/molecules/RoutineCard';
 import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import {
   ARRIVAL_SECTION_TITLE,
-  editRoutineLabel,
   EMPTY_ROUTINES_ACTION,
   EMPTY_ROUTINES_MESSAGE,
   EMPTY_ROUTINES_TITLE,
@@ -23,10 +21,9 @@ import {
   NEXT_ROUTINE_LABEL,
   nextRoutineDescription,
   todayLabel,
-  VERIFY_AGAIN_LABEL,
-  VERIFY_PRESS_HINT,
 } from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
+import { RoutineCardItem } from '@/features/home/RoutineCardItem';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
 import { arrivalRoutines, canVerifyFromHome, departureRoutines } from '@/features/routines/routine-list';
@@ -103,29 +100,9 @@ export default function RoutinesScreen() {
     </View>
   );
 
-  // Las de llegada no se verifican desde aquí (ensuciaría el historial de salidas): solo se editan.
-  const renderCard = (item: Routine) => {
-    const verifiable = canVerifyFromHome(item);
-    const completedToday = verifiable && isSameLocalDay(item.lastCompletedAt, now);
-    return (
-      <RoutineCard
-        name={item.name}
-        icon={item.icon}
-        accentColor={routineAccent(colors, item.color).color}
-        accentTint={routineAccent(colors, item.color).tint}
-        active={item.active}
-        lastCompletedAt={item.lastCompletedAt}
-        completedToday={completedToday}
-        actionLabel={verifiable ? (completedToday ? VERIFY_AGAIN_LABEL : VERIFY_NOW_LABEL) : undefined}
-        onAction={verifiable ? () => openVerification(item.id) : undefined}
-        // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
-        onPress={verifiable ? () => openVerification(item.id) : undefined}
-        pressHint={VERIFY_PRESS_HINT}
-        onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: item.id } })}
-        editLabel={editRoutineLabel(item.name)}
-      />
-    );
-  };
+  const renderCard = (item: Routine) => (
+    <RoutineCardItem routine={item} completedToday={canVerifyFromHome(item) && isSameLocalDay(item.lastCompletedAt, now)} />
+  );
 
   return (
     <View style={styles.container}>
