@@ -42,7 +42,17 @@
       "expo-router",
       "expo-status-bar",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F5F0E8",
+          "image": "./assets/splash-blank.png",
+          "imageWidth": 1,
+          "dark": {
+            "backgroundColor": "#0E1512"
+          }
+        }
+      ],
       "expo-background-task",
       "@react-native-community/datetimepicker",
       [
@@ -62,6 +72,7 @@
         }
       ],
       "./plugins/with-release-signing",
+      "./plugins/with-window-background",
       [
         "react-native-android-widget",
         {
