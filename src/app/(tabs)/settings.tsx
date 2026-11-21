@@ -6,6 +6,7 @@ import { HomeLocationSection } from '@/features/geofence/HomeLocationSection';
 import { AccountSection } from '@/features/settings/AccountSection';
 import { AiSettingsSection } from '@/features/settings/AiSettingsSection';
 import { AppearanceSection } from '@/features/settings/AppearanceSection';
+import { LanguageSection } from '@/features/settings/LanguageSection';
 import { HomeNetworksSection } from '@/features/settings/HomeNetworksSection';
 import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsSection';
 import { VerificationPrefsSection } from '@/features/settings/VerificationPrefsSection';
@@ -34,6 +35,7 @@ export default function SettingsScreen() {
       <AiSettingsSection />
       <WeatherSettingsSection />
       <AppearanceSection />
+      <LanguageSection />
       <ProfileSection />
       <SyncStatusSection />
 

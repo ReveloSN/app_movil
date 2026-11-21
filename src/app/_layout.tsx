@@ -11,6 +11,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootStack } from '@/components/organisms/RootStack';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { ToastProvider } from '@/features/feedback/ToastProvider';
+import { LanguageProvider } from '@/features/language/LanguageProvider';
+import { LocalizedRoot } from '@/features/language/LocalizedRoot';
 import { LocalRepositoriesProvider } from '@/features/local-data/LocalRepositoriesProvider';
 import { NotificationResponseHandler } from '@/features/notifications/NotificationResponseHandler';
 import { TriggerRuntimeProvider } from '@/features/notifications/TriggerRuntimeProvider';
@@ -31,6 +33,8 @@ export default function RootLayout() {
   return (
     // Raíz de gestos: necesaria para deslizar filas y arrastrar para reordenar.
     <GestureHandlerRootView style={styles.root}>
+    {/* El idioma se carga primero: ninguna pantalla se pinta en un idioma y se corrige después. */}
+    <LanguageProvider>
     <ThemeModeProvider>
       {/* Avisos breves globales: sobreviven a la navegación (ej. "Rutina guardada." al volver a Inicio). */}
       <ToastProvider>
@@ -43,8 +47,10 @@ export default function RootLayout() {
               <SyncProvider>
                 {/* Avisos en edición: los comparten P04, el onboarding y P06 (pantallas distintas del stack). */}
                 <TriggerDraftsProvider>
-                  <RootStack />
-                  <NotificationResponseHandler />
+                  <LocalizedRoot>
+                    <RootStack />
+                    <NotificationResponseHandler />
+                  </LocalizedRoot>
                 </TriggerDraftsProvider>
               </SyncProvider>
             </TriggerRuntimeProvider>
@@ -53,6 +59,7 @@ export default function RootLayout() {
       </AuthProvider>
       </ToastProvider>
     </ThemeModeProvider>
+    </LanguageProvider>
     </GestureHandlerRootView>
   );
 }
