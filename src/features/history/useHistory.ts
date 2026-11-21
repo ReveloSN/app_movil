@@ -8,9 +8,8 @@ import { useLocalStore } from '@/features/local-data/LocalRepositoriesProvider';
 import { useRoutines } from '@/features/routines/useRoutines';
 import { useSync } from '@/features/sync/SyncProvider';
 
+import copy from './history.copy';
 import { withPendingRecords, type HistoryRecord } from './history.pending';
-
-const LOAD_ERROR = 'No pudimos leer tu historial en este teléfono. Inténtalo de nuevo.';
 
 export interface HistoryData {
   /** Del historial local, con `pending` si la verificación aún espera en la cola. */
@@ -60,7 +59,7 @@ export function useHistory(injectedStore?: Pick<LocalStore, 'read' | 'subscribe'
       (cause: unknown) => {
         if (request !== latestRequest.current) return;
         if (__DEV__) console.warn('[history.load]', cause);
-        setError(localLoadErrorMessage(cause, LOAD_ERROR));
+        setError(localLoadErrorMessage(cause, copy.LOAD_ERROR));
         setLoading(false);
       },
     );

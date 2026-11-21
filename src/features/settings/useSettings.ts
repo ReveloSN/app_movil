@@ -7,7 +7,7 @@ import { normalizeSnooze } from '@/features/notifications/notification.prefs';
 import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvider';
 import type { Settings, UpdateSettingsInput } from '@/shared/types/settings.types';
 
-import { SETTINGS_LOAD_ERROR, SETTINGS_SAVE_ERROR } from './settings.copy';
+import copy from './settings.copy';
 import { loadOrCreateSettings } from './settings.service';
 
 type Repository = Pick<SettingsRepository, 'getAll' | 'create' | 'update'>;
@@ -53,7 +53,7 @@ export function useSettings(injected?: Repository) {
       (cause: unknown) => {
         if (request !== latestRequest.current) return;
         if (__DEV__) console.warn('[settings.load]', cause);
-        setError(SETTINGS_LOAD_ERROR);
+        setError(copy.SETTINGS_LOAD_ERROR);
         setLoading(false);
       },
     );
@@ -89,7 +89,7 @@ export function useSettings(injected?: Repository) {
       } catch (cause) {
         if (__DEV__) console.warn('[settings.update]', cause);
         setSettings(confirmed.current);
-        setSaveError(SETTINGS_SAVE_ERROR);
+        setSaveError(copy.SETTINGS_SAVE_ERROR);
         return;
       }
       confirmed.current = saved;

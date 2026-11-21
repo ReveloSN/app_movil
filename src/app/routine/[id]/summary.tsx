@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { AnimatedCounter } from '@/components/molecules/AnimatedCounter';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
-import { COMPLETE_MESSAGE, CRITICAL_LABEL, partialMessage, STREAK_SUFFIX, streakLabel } from '@/features/checklist/checklist.copy';
+import copy from '@/features/checklist/checklist.copy';
 import { fromSummaryParams, type SummaryParams } from '@/features/checklist/summaryParams';
 import { useRoutineStreak } from '@/features/history/useRoutineStreak';
 import { SummaryInsights } from '@/features/insights/SummaryInsights';
@@ -24,9 +24,6 @@ const neutralBadge = FadeIn.duration(durations.base).reduceMotion(reduce);
 const messageEntering = FadeInDown.duration(durations.base).delay(80).reduceMotion(reduce);
 const detailsEntering = FadeIn.duration(durations.base).delay(160).reduceMotion(reduce);
 
-// Texto del botón: el brief pide "volver a /(tabs)" sin microcopy definido.
-const BACK_LABEL = 'Volver a mis rutinas';
-
 export default function SummaryScreen() {
   const params = useLocalSearchParams<Partial<SummaryParams>>();
   const { colors, iconSizes } = useAppTheme();
@@ -34,7 +31,7 @@ export default function SummaryScreen() {
   const summary = fromSummaryParams(params);
   const streak = useRoutineStreak(params.id ?? '');
   const complete = summary.outcome === 'completed';
-  const message = complete ? COMPLETE_MESSAGE : partialMessage(summary.checked, summary.total, summary.omittedLabels);
+  const message = complete ? copy.COMPLETE_MESSAGE : copy.partialMessage(summary.checked, summary.total, summary.omittedLabels);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -60,7 +57,7 @@ export default function SummaryScreen() {
           <SummaryInsights routineId={params.id ?? ''} recordId={summary.recordId ?? null} />
           {summary.omittedLabels.length > 0 ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Omitidos</Text>
+              <Text style={styles.cardTitle}>{copy.SUMMARY_OMITTED_TITLE}</Text>
               {summary.omittedLabels.map((label, index) => {
                 const critical = summary.omittedCriticalLabels.includes(label);
                 return (
@@ -68,14 +65,14 @@ export default function SummaryScreen() {
                     key={`${label}-${index}`}
                     style={styles.omittedRow}
                     accessible
-                    accessibilityLabel={critical ? `${label}, ${CRITICAL_LABEL}` : label}
+                    accessibilityLabel={critical ? `${label}, ${copy.CRITICAL_LABEL}` : label}
                   >
                     <Ionicons name="close-circle-outline" size={iconSizes.md} color={colors.textMuted} />
                     <Text style={styles.omittedLabel}>{label}</Text>
                     {critical ? (
                       <View style={styles.critical}>
                         <Ionicons name="flag" size={iconSizes.sm} color={colors.criticalText} />
-                        <Text style={styles.criticalText}>{CRITICAL_LABEL}</Text>
+                        <Text style={styles.criticalText}>{copy.CRITICAL_LABEL}</Text>
                       </View>
                     ) : null}
                   </View>
@@ -85,24 +82,24 @@ export default function SummaryScreen() {
           ) : null}
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Duración</Text>
+            <Text style={styles.cardTitle}>{copy.SUMMARY_DURATION_TITLE}</Text>
             <Text style={styles.duration}>{formatDuration(summary.durationSeconds)}</Text>
           </View>
 
           {/* 08-4: solo con 2 días o más; sin mensaje cuando se pierde. */}
           {streak ? (
-            <View style={[styles.card, styles.streak]} accessible accessibilityLabel={streakLabel(streak)}>
+            <View style={[styles.card, styles.streak]} accessible accessibilityLabel={copy.streakLabel(streak)}>
               <Ionicons name="flame-outline" size={iconSizes.md} color={colors.primary} />
               {/* El número cuenta hasta la racha; el lector oye la frase completa (etiqueta de la tarjeta). */}
               <AnimatedCounter value={streak} style={styles.duration} />
-              <Text style={styles.duration}>{STREAK_SUFFIX}</Text>
+              <Text style={styles.duration}>{copy.STREAK_SUFFIX}</Text>
             </View>
           ) : null}
         </Animated.View>
       </ScrollView>
 
       <ScreenFooter>
-        <PrimaryButton label={BACK_LABEL} onPress={() => router.dismissTo('/(tabs)')} />
+        <PrimaryButton label={copy.BACK_TO_ROUTINES_LABEL} onPress={() => router.dismissTo('/(tabs)')} />
       </ScreenFooter>
     </SafeAreaView>
   );

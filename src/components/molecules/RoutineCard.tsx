@@ -10,6 +10,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import homeCopy from '@/features/home/home.copy';
 import { formatDateTime, formatTime } from '@/shared/utils/formatDateTime';
 import { toIoniconName } from '@/shared/utils/ioniconName';
+import copy from '@/components/components.copy';
 
 interface RoutineCardProps {
   name: string;
@@ -57,10 +58,10 @@ export function RoutineCard({
   const lastCompleted = lastCompletedAt ? formatDateTime(lastCompletedAt) : null;
   const todayTime = completedToday && lastCompletedAt ? formatTime(lastCompletedAt) : null;
   const lastCompletedText = todayTime
-    ? `Hoy, ${todayTime}`
+    ? copy.todayAt(todayTime)
     : lastCompleted
-      ? `Última vez: ${lastCompleted}`
-      : 'Aún no la has completado';
+      ? copy.lastTimeAt(lastCompleted)
+      : copy.NEVER_COMPLETED;
   const statusText = completedToday ? `${homeCopy.VERIFIED_TODAY_LABEL}. ${lastCompletedText}.` : `${lastCompletedText}.`;
 
   return (
@@ -79,7 +80,7 @@ export function RoutineCard({
           accessibilityRole={onPress ? 'button' : undefined}
           accessibilityHint={onPress ? pressHint : undefined}
           // Solo se dice el estado cuando no es el de siempre: "Pausada".
-          accessibilityLabel={active ? `${name}. ${statusText}` : `${name}. Pausada. ${statusText}`}
+          accessibilityLabel={active ? `${name}. ${statusText}` : `${name}. ${copy.PAUSED_LABEL}. ${statusText}`}
         >
           <View style={[styles.iconCircle, accentTint ? { backgroundColor: accentTint } : null]}>
             <Ionicons name={toIoniconName(icon, 'checkbox-outline')} size={iconSizes.lg} color={accentColor ?? colors.primary} />
@@ -96,10 +97,10 @@ export function RoutineCard({
               </View>
             ) : null}
           </View>
-          {active ? null : <Chip tone="paused" label="Pausada" />}
+          {active ? null : <Chip tone="paused" label={copy.PAUSED_LABEL} />}
         </PressableScale>
         {/* Acción terciaria: fuera del cuerpo para que tocar la tarjeta nunca abra la edición por error. */}
-        {onEdit ? <IconButton icon="create-outline" accessibilityLabel={editLabel ?? 'Editar'} onPress={onEdit} /> : null}
+        {onEdit ? <IconButton icon="create-outline" accessibilityLabel={editLabel ?? copy.EDIT_LABEL} onPress={onEdit} /> : null}
       </View>
       {actionLabel && onAction ? (
         <SecondaryButton icon="checkmark-done" label={actionLabel} accessibilityLabel={`${actionLabel}, ${name}`} onPress={onAction} />

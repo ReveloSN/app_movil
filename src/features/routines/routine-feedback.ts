@@ -1,6 +1,6 @@
-import { routineSavedMessage } from '@/features/triggers/trigger.copy';
+import triggerCopy from '@/features/triggers/trigger.copy';
 
-import { CHANGES_SAVED } from './routine.copy';
+import copy from './routine.copy';
 import type { RoutineValidationErrors } from './routines.types';
 
 /**
@@ -8,7 +8,7 @@ import type { RoutineValidationErrors } from './routines.types';
  * ("Rutina guardada. Te avisaremos cuando salgas de Casa.") o "Rutina guardada."; al editar, "Cambios guardados.".
  */
 export function savedRoutineMessage(editing: boolean, triggerPhrases: readonly string[]): string {
-  return editing ? CHANGES_SAVED : routineSavedMessage(triggerPhrases);
+  return editing ? copy.CHANGES_SAVED : triggerCopy.routineSavedMessage(triggerPhrases);
 }
 
 /** Campo al que llevar el foco tras un intento fallido: el primero en el orden de la pantalla. */

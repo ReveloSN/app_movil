@@ -1,17 +1,7 @@
 import type { LocalTableName, LocalTables, OutboxFailure, OutboxOp } from '@/db/local/local-document.types';
 import { formatList } from '@/shared/utils/formatList';
 
-import {
-  CHANGE_TITLES,
-  DELETE_ROUTINE_TITLE,
-  DEPENDENT_LABELS,
-  DISCARD_SINGLE_MESSAGE,
-  discardWithDependentsMessage,
-  FAILURE_REASONS,
-  forgotTitle,
-  recordTitle,
-  UNKNOWN_FAILURE,
-} from './sync.copy';
+import copy from './sync.copy';
 
 const text = (value: unknown) => (typeof value === 'string' && value ? value : null);
 
@@ -36,22 +26,22 @@ function nameFor(table: LocalTableName, id: string, values: Record<string, unkno
 export function describeChange(op: OutboxOp, tables: LocalTables): string {
   switch (op.kind) {
     case 'deleteRoutine':
-      return DELETE_ROUTINE_TITLE;
+      return copy.DELETE_ROUTINE_TITLE;
     case 'insertRecord':
-      return recordTitle(tables.routines.find((routine) => routine.id === op.record.routineId)?.name ?? null);
+      return copy.recordTitle(tables.routines.find((routine) => routine.id === op.record.routineId)?.name ?? null);
     case 'insertForgot':
-      return forgotTitle(op.event.label);
+      return copy.forgotTitle(op.event.label);
     default: {
       const values = op.kind === 'insert' ? op.values : op.kind === 'update' ? op.changes : {};
-      return CHANGE_TITLES[op.table][op.kind](nameFor(op.table, op.id, values, tables));
+      return copy.CHANGE_TITLES[op.table][op.kind](nameFor(op.table, op.id, values, tables));
     }
   }
 }
 
 export const failureReason = (failure: OutboxFailure | undefined) =>
-  (failure?.code && FAILURE_REASONS[failure.code]) || UNKNOWN_FAILURE;
+  (failure?.code && copy.FAILURE_REASONS[failure.code]) || copy.UNKNOWN_FAILURE;
 
-type DependentKind = keyof typeof DEPENDENT_LABELS;
+type DependentKind = keyof typeof copy.DEPENDENT_LABELS;
 const ORDER: readonly DependentKind[] = ['items', 'triggers', 'records', 'forgotEvents', 'routines', 'homeNetworks', 'settings'];
 function kindOf(op: OutboxOp): DependentKind | null {
   switch (op.kind) {
@@ -69,14 +59,14 @@ function kindOf(op: OutboxOp): DependentKind | null {
 /** Confirmación de "Descartar": `discarded` empieza por el cambio fallido y sigue con sus dependientes. */
 export function discardMessage(discarded: readonly OutboxOp[]): string {
   const [main, ...dependents] = discarded;
-  if (dependents.length === 0) return DISCARD_SINGLE_MESSAGE;
+  if (dependents.length === 0) return copy.DISCARD_SINGLE_MESSAGE;
 
   const counts = new Map<DependentKind, number>();
   for (const op of dependents) {
     const kind = kindOf(op);
     if (kind) counts.set(kind, (counts.get(kind) ?? 0) + 1);
   }
-  const parts = ORDER.flatMap((kind) => (counts.has(kind) ? [DEPENDENT_LABELS[kind](counts.get(kind) ?? 0)] : []));
+  const parts = ORDER.flatMap((kind) => (counts.has(kind) ? [copy.DEPENDENT_LABELS[kind](counts.get(kind) ?? 0)] : []));
   const ofRoutine = main?.kind === 'insert' && main.table === 'routines';
-  return discardWithDependentsMessage(formatList(parts), ofRoutine);
+  return copy.discardWithDependentsMessage(formatList(parts), ofRoutine);
 }

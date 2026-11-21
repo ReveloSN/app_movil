@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { RadioCardGroup, type RadioCardOption } from '@/components/molecules/RadioCardGroup';
+import { changeLanguage } from '@/features/language/changeLanguage';
 import copy, { LANGUAGE_NAMES } from '@/features/language/language.copy';
-import { setLocale } from '@/shared/i18n/locale.store';
 import { LOCALES, type Locale } from '@/shared/i18n/locale.types';
 import { useLocale } from '@/shared/i18n/useLocale';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
@@ -23,7 +23,7 @@ export function LanguageSection() {
   return (
     <View style={styles.section}>
       <SectionLabel label={copy.SECTION_TITLE} />
-      <RadioCardGroup<Locale> accessibilityLabel={copy.GROUP_LABEL} options={OPTIONS} value={locale} onChange={(next) => void setLocale(next)} />
+      <RadioCardGroup<Locale> accessibilityLabel={copy.GROUP_LABEL} options={OPTIONS} value={locale} onChange={(next) => void changeLanguage(next)} />
       <Text style={styles.hint}>{copy.HINT}</Text>
     </View>
   );

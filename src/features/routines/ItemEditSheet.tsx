@@ -16,7 +16,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { ITEM_ICONS, resolveItemIcon } from './item-icons';
 import { ITEM_KIND_OPTIONS } from './item-kinds';
-import * as copy from './routine.copy';
+import copy from './routine.copy';
 import { ITEM_LABEL_MAX_LENGTH, ITEM_NOTE_MAX_LENGTH } from './routine.validation';
 import type { ItemDraft, ItemKind } from './routines.types';
 import { useItemEditor } from './useItemEditor';
@@ -69,7 +69,7 @@ export function ItemEditSheet<T extends ItemDraft>({ item, isNew, onSave, onClos
           {/* 05-1 */}
           <TextField
             label={copy.ITEM_LABEL_FIELD}
-            placeholder="Ej. Llaves"
+            placeholder={copy.ITEM_LABEL_PLACEHOLDER}
             value={editor.label}
             onChangeText={editor.setLabel}
             maxLength={ITEM_LABEL_MAX_LENGTH}

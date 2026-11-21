@@ -5,7 +5,7 @@ import { closeTo } from '@/features/forms/useCloseAfterSave';
 import { useRoutines } from '@/features/routines/useRoutines';
 
 import { decodeRoutineShare, ShareCodeError, type SharedRoutine } from './routine-share.codec';
-import * as copy from './share.copy';
+import copy from './share.copy';
 
 /**
  * "Importar rutina": pegar el código, revisar la vista previa y añadir una COPIA nueva (id nuevo, sin

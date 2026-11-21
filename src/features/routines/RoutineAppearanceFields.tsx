@@ -4,7 +4,7 @@ import { IconPicker } from '@/components/molecules/IconPicker';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
 
 import { resolveRoutineColor, resolveRoutineIcon, ROUTINE_COLORS, ROUTINE_ICONS } from './routine-appearance';
-import * as copy from './routine.copy';
+import copy from './routine.copy';
 
 interface RoutineAppearanceFieldsProps {
   icon: string;

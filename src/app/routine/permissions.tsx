@@ -6,7 +6,7 @@ import { Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
-import * as copy from '@/features/permissions/permission.copy';
+import copy, { PERMISSION_ICON } from '@/features/permissions/permission.copy';
 import {
   getBackgroundLocation,
   isLocationServiceEnabled,
@@ -41,7 +41,8 @@ export default function PermissionsScreen() {
   const { state, requesting, request } = usePermission(kind);
   const background = usePermission(kind, backgroundLocationService);
   const [servicesOff, setServicesOff] = useState(false);
-  const { title, icon, reason } = copy.PERMISSION_COPY[kind];
+  const { title, reason } = copy.PERMISSION_COPY[kind];
+  const icon = PERMISSION_ICON[kind];
 
   const granted = state?.granted ?? false;
   const blocked = state !== null && !state.granted && !state.canAskAgain;

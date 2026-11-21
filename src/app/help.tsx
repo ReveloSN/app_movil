@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { HELP_ENTRIES } from '@/features/settings/help.content';
+import helpContent from '@/features/settings/help.content';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -12,7 +12,7 @@ export default function HelpScreen() {
 
   return (
     <ScrollView contentContainerStyle={[styles.content, endPadding]}>
-      {HELP_ENTRIES.map((entry) => (
+      {helpContent.HELP_ENTRIES.map((entry) => (
         <View key={entry.question} style={styles.card}>
           <Text style={styles.question} accessibilityRole="header">
             {entry.question}

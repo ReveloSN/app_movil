@@ -1,7 +1,14 @@
+import copy from './routine.copy';
 import type { ItemDraft } from './routines.types';
 
-const suggestion = (label: string, kind: ItemDraft['kind'], icon: string, critical = false): ItemDraft => ({
-  label,
+/**
+ * Sugerencia cuya etiqueta se lee del idioma activo al pedirla (no al cargar el módulo): el catálogo se
+ * declara una vez y se ve en español o en inglés según el idioma de la app.
+ */
+const suggestion = (key: string, kind: ItemDraft['kind'], icon: string, critical = false): ItemDraft => ({
+  get label() {
+    return copy.ITEM_SUGGESTION_LABELS[key];
+  },
   kind,
   critical,
   icon,
@@ -9,18 +16,18 @@ const suggestion = (label: string, kind: ItemDraft['kind'], icon: string, critic
 
 /** 04-4: lo que más se olvida al salir (mismo vocabulario que las plantillas). Etiquetas ≤ 32. */
 export const ITEM_SUGGESTIONS: readonly ItemDraft[] = [
-  suggestion('Llaves', 'carry', 'key-outline', true),
-  suggestion('Billetera', 'carry', 'wallet-outline'),
-  suggestion('Celular cargado', 'carry', 'phone-portrait-outline'),
-  suggestion('Cargador', 'carry', 'battery-charging-outline'),
-  suggestion('Estufa apagada', 'check', 'flame-outline', true),
-  suggestion('Puerta con seguro', 'check', 'lock-closed-outline', true),
-  suggestion('Luces apagadas', 'check', 'bulb-outline'),
-  suggestion('Ventanas cerradas', 'check', 'lock-closed-outline'),
-  suggestion('Audífonos', 'carry', 'headset-outline'),
-  suggestion('Gafas', 'carry', 'glasses-outline'),
-  suggestion('Paraguas', 'carry', 'umbrella-outline'),
-  suggestion('Botella de agua', 'carry', 'water-outline'),
+  suggestion('keys', 'carry', 'key-outline', true),
+  suggestion('wallet', 'carry', 'wallet-outline'),
+  suggestion('phone', 'carry', 'phone-portrait-outline'),
+  suggestion('charger', 'carry', 'battery-charging-outline'),
+  suggestion('stove', 'check', 'flame-outline', true),
+  suggestion('door', 'check', 'lock-closed-outline', true),
+  suggestion('lights', 'check', 'bulb-outline'),
+  suggestion('windows', 'check', 'lock-closed-outline'),
+  suggestion('headphones', 'carry', 'headset-outline'),
+  suggestion('glasses', 'carry', 'glasses-outline'),
+  suggestion('umbrella', 'carry', 'umbrella-outline'),
+  suggestion('water', 'carry', 'water-outline'),
 ];
 
 const MAX_SHOWN = 4;

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { aiErrorMessage } from './ai.copy';
+import copy from './ai.copy';
 import type { AiRoutineSeed } from './ai.draft';
 import { requestRoutineDraft } from './ai.service';
 import { AiClientError } from './ai.types';
@@ -20,7 +20,7 @@ export function useAiDraft(request: Request = requestRoutineDraft) {
         return await request(prompt);
       } catch (cause) {
         if (__DEV__ && !(cause instanceof AiClientError)) console.warn('[ai.draft]', cause);
-        setError(aiErrorMessage(cause instanceof AiClientError ? cause.kind : 'server'));
+        setError(copy.aiErrorMessage(cause instanceof AiClientError ? cause.kind : 'server'));
         return null;
       } finally {
         setLoading(false);

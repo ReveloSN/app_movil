@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 
 import { handleArrivalDetected } from '@/features/notifications/arrival.service';
+import { loadLocale } from '@/shared/i18n/locale.store';
 
 import { HOME_REGION_ID } from './geofence.service';
 
@@ -20,6 +21,8 @@ export async function handleGeofenceEvent({ data, error }: GeofenceTaskBody, now
   if (data.eventType !== Location.GeofencingEventType.Enter) return 0;
   if (data.region?.identifier && data.region.identifier !== HOME_REGION_ID) return 0;
   try {
+    // Con la app cerrada nadie cargó el idioma guardado: la notificación debe salir en el idioma elegido.
+    await loadLocale();
     return await handleArrivalDetected('geofence', now);
   } catch (cause) {
     if (__DEV__) console.warn('[geofence.enter]', cause instanceof Error ? cause.name : 'error');

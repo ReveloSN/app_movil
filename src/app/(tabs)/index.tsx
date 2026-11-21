@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/molecules/ErrorState';
 import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
-import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
+import checklistCopy from '@/features/checklist/checklist.copy';
 import homeCopy from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { RoutineCardItem } from '@/features/home/RoutineCardItem';
@@ -78,9 +78,9 @@ export default function RoutinesScreen() {
           label={homeCopy.NEXT_ROUTINE_LABEL}
           name={next.routineName}
           when={homeCopy.nextRoutineDescription(next, now)}
-          actionLabel={VERIFY_NOW_LABEL}
+          actionLabel={checklistCopy.VERIFY_NOW_LABEL}
           onAction={() => openVerification(next.routineId)}
-          secondaryLabel={DEPARTURE_MODE_LABEL}
+          secondaryLabel={checklistCopy.DEPARTURE_MODE_LABEL}
           onSecondaryAction={() => openDepartureMode(next.routineId)}
           icon={resolveRoutineIcon(nextRoutine?.icon)}
           accentColor={nextAccent.color}

@@ -6,7 +6,7 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { TextLink } from '@/components/atoms/TextLink';
 import { PasswordField } from '@/components/molecules/PasswordField';
-import * as copy from '@/features/auth/auth.copy';
+import copy from '@/features/auth/auth.copy';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/auth.validation';
 import { WelcomeLayout } from '@/features/auth/components/WelcomeLayout';
@@ -31,7 +31,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <WelcomeLayout title="Crear cuenta">
+    <WelcomeLayout title={copy.REGISTER_TITLE}>
       <TextField
         ref={emailRef}
         icon="mail-outline"
@@ -53,7 +53,7 @@ export default function RegisterScreen() {
         label={copy.PASSWORD_LABEL}
         showLabel={copy.SHOW_PASSWORD}
         hideLabel={copy.HIDE_PASSWORD}
-        placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
+        placeholder={copy.passwordMinPlaceholder(MIN_PASSWORD_LENGTH)}
         value={form.password}
         onChangeText={form.setPassword}
         error={form.fieldErrors.password}
@@ -64,10 +64,10 @@ export default function RegisterScreen() {
       />
       {form.formError ? <StatusMessage tone="error" message={form.formError} /> : null}
       {confirmationSent ? (
-        <StatusMessage tone="info" message="Te enviamos un correo de confirmación. Ábrelo y luego inicia sesión." />
+        <StatusMessage tone="info" message={copy.CONFIRMATION_SENT} />
       ) : null}
-      <PrimaryButton label="Crear cuenta" onPress={() => void submit()} loading={form.submitting} />
-      <TextLink href="/(auth)/login" label="¿Ya tienes cuenta? Inicia sesión" replace />
+      <PrimaryButton label={copy.REGISTER_SUBMIT} onPress={() => void submit()} loading={form.submitting} />
+      <TextLink href="/(auth)/login" label={copy.GO_TO_LOGIN_LABEL} replace />
     </WelcomeLayout>
   );
 }

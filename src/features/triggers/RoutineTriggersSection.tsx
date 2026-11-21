@@ -7,12 +7,12 @@ import { ListActionRow } from '@/components/molecules/ListActionRow';
 import { TriggerRow } from '@/components/molecules/TriggerRow';
 import type { RoutineKind } from '@/shared/types/routine.types';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
-import { UNDO_LABEL } from '@/features/feedback/feedback.copy';
+import feedbackCopy from '@/features/feedback/feedback.copy';
 import { useToast } from '@/features/feedback/toast.context';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { strategyFor } from './strategies';
-import { ADD_TRIGGER_LABEL, MAX_TRIGGERS_REACHED, summarySentence, TRIGGER_REMOVED, TRIGGERS_SECTION_TITLE } from './trigger.copy';
+import copy from './trigger.copy';
 import type { TriggerDraftEntry } from './trigger.types';
 import { MAX_TRIGGERS } from './trigger.validation';
 import { useTriggerDrafts } from './TriggerDraftsProvider';
@@ -38,15 +38,15 @@ export function RoutineTriggersSection({ formId, routineKind = 'departure', erro
   // Quitar no pide confirmación: se hace al instante y el aviso breve permite deshacerlo.
   function removeWithUndo(draft: TriggerDraftEntry) {
     remove(draft.key);
-    toast.show({ message: TRIGGER_REMOVED, tone: 'info', action: { label: UNDO_LABEL, onPress: () => upsert(draft) } });
+    toast.show({ message: copy.TRIGGER_REMOVED, tone: 'info', action: { label: feedbackCopy.UNDO_LABEL, onPress: () => upsert(draft) } });
   }
 
   return (
     <View style={styles.section}>
       <SectionLabel
-        label={TRIGGERS_SECTION_TITLE}
+        label={copy.TRIGGERS_SECTION_TITLE}
         trailing={`${drafts.length}/${MAX_TRIGGERS}`}
-        accessibilityLabel={`${TRIGGERS_SECTION_TITLE}, ${drafts.length} de ${MAX_TRIGGERS}`}
+        accessibilityLabel={copy.triggersCountLabel(drafts.length, MAX_TRIGGERS)}
       />
       {error ? <StatusMessage tone="error" message={error} /> : null}
       <View style={styles.card}>
@@ -56,7 +56,7 @@ export function RoutineTriggersSection({ formId, routineKind = 'departure', erro
             <TriggerRow
               key={draft.key}
               icon={strategy.icon}
-              summary={summarySentence(strategy.describe(draft))}
+              summary={copy.summarySentence(strategy.describe(draft))}
               typeLabel={strategy.label}
               onEdit={() => openTrigger(formId, routineKind, draft.key)}
               onRemove={() => removeWithUndo(draft)}
@@ -64,13 +64,13 @@ export function RoutineTriggersSection({ formId, routineKind = 'departure', erro
           );
         })}
         <ListActionRow
-          label={ADD_TRIGGER_LABEL}
+          label={copy.ADD_TRIGGER_LABEL}
           onPress={() => openTrigger(formId, routineKind)}
           disabled={full}
-          disabledHint={MAX_TRIGGERS_REACHED}
+          disabledHint={copy.MAX_TRIGGERS_REACHED}
         />
       </View>
-      {full ? <Text style={styles.hint}>{MAX_TRIGGERS_REACHED}</Text> : null}
+      {full ? <Text style={styles.hint}>{copy.MAX_TRIGGERS_REACHED}</Text> : null}
     </View>
   );
 }

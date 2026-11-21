@@ -6,7 +6,7 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { AiConsentSheet } from './AiConsentSheet';
-import * as copy from './ai.copy';
+import copy from './ai.copy';
 import { useAiAccess } from './useAiAccess';
 
 /** Punto de entrada secundario a "Crear con IA" (P10 y estado vacío de Inicio). No aparece si la IA está apagada. */

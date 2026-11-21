@@ -1,13 +1,13 @@
 // Ayuda (11-6): preguntas frecuentes. Texto propio (no viene del Documento de Contenido).
 
+import { localized } from '@/shared/i18n/localized';
+
 export interface HelpEntry {
   question: string;
   answer: string;
 }
 
-export const HELP_TITLE = 'Ayuda';
-
-export const HELP_ENTRIES: readonly HelpEntry[] = [
+const entriesEs: HelpEntry[] = [
   {
     question: '¿Por qué la app pide mi ubicación?',
     answer:
@@ -42,3 +42,44 @@ export const HELP_ENTRIES: readonly HelpEntry[] = [
     answer: 'Toca la rutina en Inicio. Ahí puedes editarla, y al final está «Eliminar rutina».',
   },
 ];
+
+const entriesEn: HelpEntry[] = [
+  {
+    question: 'Why does the app ask for my location?',
+    answer:
+      "To read your Wi-Fi name, the phone requires that permission. If you set your home in Settings, we also use it to alert you when you arrive. Your home's coordinates are stored only on your phone: they aren't sent anywhere or uploaded to your account.",
+  },
+  {
+    question: 'How does “On arrival” work?',
+    answer:
+      'Create an “Arrival” routine, for example “Put the phone on charge” and “Put the keys away”. When you get home, you get a notification with those reminders. We detect your arrival through your home Wi-Fi or, if you set it up in Settings, through your location. If both detect it, we alert you only once. Arrival routines do not count toward your leaving streak.',
+  },
+  {
+    question: 'Why does the arrival alert take a few minutes?',
+    answer:
+      "Android doesn't tell the app the instant you arrive: it can take a few minutes, especially with the app closed or battery saver on. For it to work better, allow location “all the time” and don't restrict the app's battery use. Without that permission, we only alert you through Wi-Fi.",
+  },
+  {
+    question: 'Why was a Wi-Fi alert late?',
+    answer:
+      'With the app open, the alert arrives right away. With the app closed, the phone checks the network every 15 minutes or more. For it to work better, allow location “all the time”.',
+  },
+  {
+    question: "What happens if I don't respond to an alert?",
+    answer:
+      'We remind you 2 times, spaced by the minutes you chose in “Snooze”. If you still don’t respond, it shows up in your history as “No response”.',
+  },
+  {
+    question: 'Where does the weather come from?',
+    answer: 'From Open-Meteo.com. We only send the city you chose in Settings.',
+  },
+  {
+    question: 'How do I change or delete a routine?',
+    answer: 'Tap the routine on Home. You can edit it there, and at the bottom there is “Delete routine”.',
+  },
+];
+
+export default localized(
+  { HELP_TITLE: 'Ayuda', HELP_ENTRIES: entriesEs },
+  { HELP_TITLE: 'Help', HELP_ENTRIES: entriesEn },
+);

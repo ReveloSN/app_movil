@@ -1,1 +1,1 @@
-export { SCENE_ALT, SkyHouseScene } from './SkyHouseScene';
+export { SkyHouseScene } from './SkyHouseScene';

@@ -7,7 +7,7 @@ import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { itemCountLabel, suggestedTriggerLabel, USE_TEMPLATE_LABEL } from './routine-templates.copy';
+import copy from './routine-templates.copy';
 import { PRESET_TEMPLATES } from './routine-templates.data';
 import type { PresetTemplate } from './routine-templates.types';
 
@@ -39,9 +39,9 @@ export function TemplateList({ onUse, header, departuresOnly = false }: Template
           icon={item.icon}
           accentColor={routineAccent(colors, item.color).color}
           accentTint={routineAccent(colors, item.color).tint}
-          itemCountLabel={itemCountLabel(item.items.length)}
-          triggerLabel={suggestedTriggerLabel(item.suggestedTrigger)}
-          actionLabel={USE_TEMPLATE_LABEL}
+          itemCountLabel={copy.itemCountLabel(item.items.length)}
+          triggerLabel={copy.suggestedTriggerLabel(item.suggestedTrigger)}
+          actionLabel={copy.USE_TEMPLATE_LABEL}
           onAction={() => onUse(item)}
         />
       )}

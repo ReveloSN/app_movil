@@ -1,6 +1,7 @@
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
 import type { HourlyRain } from './weather.client';
+import copy from './weather.copy';
 
 /** Datos de la ventana de salida (las próximas horas) que miran las reglas. */
 export interface WeatherWindow {
@@ -25,8 +26,13 @@ export interface WeatherRule {
 export const WEATHER_RULES: readonly WeatherRule[] = [
   {
     id: 'umbrella',
-    item: { label: 'Paraguas', icon: 'umbrella-outline' },
-    message: 'Hoy puede llover. ¿Añadimos «Paraguas»?',
+    // Getters: el texto se lee al usar la regla, no al cargar el módulo, para seguir el idioma activo.
+    get item() {
+      return { label: copy.UMBRELLA_LABEL, icon: 'umbrella-outline' as const };
+    },
+    get message() {
+      return copy.UMBRELLA_MESSAGE;
+    },
     applies: ({ maxProbability, maxPrecipitation }) => maxProbability >= 50 || maxPrecipitation >= 0.5,
   },
 ];

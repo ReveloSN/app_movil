@@ -2,6 +2,8 @@ import * as BackgroundTask from 'expo-background-task';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
+import { loadLocale } from '@/shared/i18n/locale.store';
+
 // Define la tarea de la geocerca de casa: tiene que existir al cargar el bundle sin interfaz.
 import '@/features/geofence/geofence.task';
 
@@ -22,6 +24,8 @@ const MAINTENANCE_INTERVAL_MINUTES = 15;
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_RESPONSE_TASK, async ({ data, error }) => {
   if (error || !data || !('actionIdentifier' in data)) return;
   try {
+    // Sin pantalla nadie cargó el idioma guardado: lo que se reprograma (recordatorios) debe salir en ese idioma.
+    await loadLocale();
     await applyNotificationResponse(data);
   } catch (cause) {
     if (__DEV__) console.warn('[notifications.backgroundResponse]', cause);
@@ -31,6 +35,8 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_RESPO
 // Chequeo periódico: Wi-Fi, próximos horarios, "sin respuesta" y subir los cambios pendientes.
 TaskManager.defineTask(TRIGGER_MAINTENANCE_TASK, async () => {
   try {
+    // Sin pantalla nadie cargó el idioma guardado: los textos de lo que se programa dependen de él.
+    await loadLocale();
     await runTriggerMaintenance(Date.now(), { push: true });
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch (cause) {

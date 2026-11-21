@@ -2,6 +2,8 @@
 // el nombre que la persona escribe (al buscar) o las coordenadas de la ciudad elegida (al consultar).
 // Toda respuesta se valida antes de usarse: lo que llega por la red nunca se usa tal cual.
 
+import { getLocale } from '@/shared/i18n/locale.store';
+
 export interface City {
   id: number;
   name: string;
@@ -98,7 +100,7 @@ export function parseHourlyRain(data: unknown): HourlyRain {
 export async function searchCities(query: string, fetchImpl: FetchLike = fetch as unknown as FetchLike): Promise<City[]> {
   const name = query.trim().slice(0, QUERY_MAX);
   if (name.length < 2) return [];
-  const url = `${GEOCODING_URL}?name=${encodeURIComponent(name)}&count=${MAX_RESULTS}&language=es&format=json`;
+  const url = `${GEOCODING_URL}?name=${encodeURIComponent(name)}&count=${MAX_RESULTS}&language=${getLocale()}&format=json`;
   return parseCities(await getJson(url, fetchImpl, WEATHER_TIMEOUT_MS));
 }
 

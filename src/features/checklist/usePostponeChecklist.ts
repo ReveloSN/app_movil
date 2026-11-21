@@ -4,7 +4,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { DEFAULT_PREFS, loadNotificationPrefs } from '@/features/notifications/notification.prefs';
 import { postponeRoutine } from '@/features/notifications/occurrence.lifecycle';
 
-import { POSTPONE_ERROR } from './checklist.copy';
+import copy from './checklist.copy';
 
 interface PostponeInput {
   routineId: string;
@@ -44,7 +44,7 @@ export function usePostponeChecklist({ routineId, routineName, itemCount }: Post
       return true;
     } catch (cause) {
       if (__DEV__) console.warn('[checklist.postpone]', cause);
-      setError(POSTPONE_ERROR);
+      setError(copy.POSTPONE_ERROR);
       return false;
     } finally {
       setPostponing(false);

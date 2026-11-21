@@ -7,6 +7,7 @@ import { PressableScale } from '@/components/atoms/PressableScale';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { ClockTime } from '@/shared/types/clock.types';
+import copy from '@/components/components.copy';
 
 interface TimeFieldProps {
   label: string;
@@ -48,7 +49,7 @@ export function TimeField({ label, value, valueLabel, onChange }: TimeFieldProps
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${valueLabel}`}
-        accessibilityHint="Cambia la hora"
+        accessibilityHint={copy.CHANGE_TIME_HINT}
         onPress={open}
         style={styles.field}
       >

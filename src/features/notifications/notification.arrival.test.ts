@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 
 import { applyNotificationResponse, responseKind } from './notification.actions';
 import { ACTION_DONE, ARRIVAL_CATEGORY_ID } from './notification.config';
-import { ARRIVAL_MAX_LISTED, ARRIVAL_TITLE, arrivalBody } from './notification.copy';
+import notificationCopy, { ARRIVAL_MAX_LISTED } from './notification.copy';
 import { DEFAULT_PREFS } from './notification.prefs';
 import { fireArrival } from './occurrence.lifecycle';
 import { loadOccurrences } from './occurrence.store';
@@ -32,17 +32,17 @@ beforeEach(async () => {
 
 describe('contenido de la notificación de llegada', () => {
   it('con 1 recordatorio va directo', () => {
-    expect(arrivalBody(['Poner a cargar el celular'])).toBe('Poner a cargar el celular');
+    expect(notificationCopy.arrivalBody(['Poner a cargar el celular'])).toBe('Poner a cargar el celular');
   });
 
   it('con 5 los lista todos, uno por línea', () => {
-    const lines = arrivalBody(labels(5)).split('\n');
+    const lines = notificationCopy.arrivalBody(labels(5)).split('\n');
     expect(lines[0]).toBe('5 recordatorios:');
     expect(lines.slice(1)).toEqual(labels(5).map((label) => `• ${label}`));
   });
 
   it('con 12 (el máximo) lista los primeros y resume el resto con «y X más»', () => {
-    const lines = arrivalBody(labels(12)).split('\n');
+    const lines = notificationCopy.arrivalBody(labels(12)).split('\n');
     expect(lines[0]).toBe('12 recordatorios:');
     expect(lines).toHaveLength(1 + ARRIVAL_MAX_LISTED + 1);
     expect(lines[lines.length - 1]).toBe(`y ${12 - ARRIVAL_MAX_LISTED} más`);
@@ -50,7 +50,7 @@ describe('contenido de la notificación de llegada', () => {
   });
 
   it('sin recordatorios, un texto de respaldo', () => {
-    expect(arrivalBody([])).toBe('Revisa tus recordatorios de llegada.');
+    expect(notificationCopy.arrivalBody([])).toBe('Revisa tus recordatorios de llegada.');
   });
 
   it('se programa con el título, la categoría con «Hecho» y su propio canal', async () => {
@@ -58,9 +58,9 @@ describe('contenido de la notificación de llegada', () => {
     await fireArrival(target, 'u1', NOW, DEFAULT_PREFS);
     const [request] = schedule.mock.calls[0];
     expect(request.content).toMatchObject({
-      title: ARRIVAL_TITLE,
+      title: notificationCopy.ARRIVAL_TITLE,
       subtitle: 'Llegar a casa',
-      body: arrivalBody(labels(2)),
+      body: notificationCopy.arrivalBody(labels(2)),
       categoryIdentifier: ARRIVAL_CATEGORY_ID,
     });
     expect(request.trigger).toEqual({ channelId: 'arrival-reminder' });

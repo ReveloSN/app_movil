@@ -6,7 +6,10 @@ import { useHistory } from '@/features/history/useHistory';
 import { RoutinesProvider } from '@/features/routines/RoutinesProvider';
 import { useRoutines } from '@/features/routines/useRoutines';
 
-import { isNewerDataError, localLoadErrorMessage, NEWER_DATA_MESSAGE } from './localData.errors';
+import copy from './localData.copy';
+import { isNewerDataError, localLoadErrorMessage } from './localData.errors';
+
+const NEWER_DATA_MESSAGE = copy.NEWER_DATA_MESSAGE;
 
 jest.mock('@/features/auth/AuthProvider', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
 jest.mock('@/features/local-data/LocalRepositoriesProvider', () => ({

@@ -9,7 +9,7 @@ import { MAX_ITEMS, validateItemDraft } from '@/features/routines/routine.valida
 import { hapticToggleOn } from '@/shared/haptics/haptics';
 
 import { ensureForgotMigrated } from './forgot.migrate';
-import * as copy from './insights.copy';
+import copy from './insights.copy';
 import { itemKey } from './insights.detect';
 
 /**

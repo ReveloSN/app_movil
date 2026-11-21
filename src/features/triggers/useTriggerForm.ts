@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PERMISSION_COPY } from '@/features/permissions/permission.copy';
+import permissionCopy from '@/features/permissions/permission.copy';
 import { firstMissingPermission } from '@/features/permissions/permission.service';
 import type { PermissionKind } from '@/features/permissions/permission.types';
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
@@ -8,14 +8,13 @@ import type { RoutineKind } from '@/shared/types/routine.types';
 import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
-import { summarySentence } from './trigger.copy';
+import copy from './trigger.copy';
 import { allowedTriggerKindsFor, defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
 import type { TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
 import { hasTriggerErrors, normalizeTriggerDraft, validateTriggerDraft, type TriggerValidationErrors } from './trigger.validation';
 
 const DEFAULT_TIME: ClockTime = { hour: 7, minute: 0 };
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
-const DEFAULT_NETWORK_NAME = 'Casa';
 const NO_ERRORS: TriggerValidationErrors = {};
 
 interface UseTriggerFormOptions {
@@ -78,7 +77,7 @@ export function useTriggerForm({
   const [days, setDays] = useState<Weekday[]>(initialAllowed?.type === 'schedule' ? initialAllowed.days : WEEKDAYS);
   const wifi = initialAllowed?.type === 'schedule' ? undefined : initialAllowed;
   const [ssid, setSsid] = useState(wifi?.ssid ?? '');
-  const [networkName, setNetworkName] = useState(wifi?.networkName ?? DEFAULT_NETWORK_NAME);
+  const [networkName, setNetworkName] = useState(wifi?.networkName ?? copy.DEFAULT_NETWORK_NAME);
   const [windowEnabled, setWindowEnabled] = useState(Boolean(wifi?.window));
   const [timeWindow, setTimeWindow] = useState<TimeWindow>(wifi?.window ?? defaultWindowFor(routineKind));
   // Lo que había al abrir P06: base para saber si hay cambios sin guardar.
@@ -102,8 +101,8 @@ export function useTriggerForm({
 
   const summary = useMemo(() => {
     // Mientras el nombre está vacío, la frase no queda a medias.
-    const preview = draft.type === 'schedule' || draft.networkName.trim() ? draft : { ...draft, networkName: 'tu red' };
-    return summarySentence(strategyFor(preview).describe(normalizeTriggerDraft(preview)));
+    const preview = draft.type === 'schedule' || draft.networkName.trim() ? draft : { ...draft, networkName: copy.NETWORK_NAME_PLACEHOLDER };
+    return copy.summarySentence(strategyFor(preview).describe(normalizeTriggerDraft(preview)));
   }, [draft]);
 
   // Lo último de cada render, para que `save` y `resume` sean estables: la pantalla llama a
@@ -123,7 +122,7 @@ export function useTriggerForm({
         commit(normalizeTriggerDraft(current));
       } else if (missing === previouslyMissing) {
         // Volvió de P02 sin concederlo: se queda aquí con lo llenado y el motivo a la vista.
-        setPermissionError(PERMISSION_COPY[missing].reason);
+        setPermissionError(permissionCopy.PERMISSION_COPY[missing].reason);
       } else {
         pendingPermission.current = missing;
         needPermission(missing);

@@ -1,5 +1,6 @@
 import { minutesOfDay } from '@/shared/utils/formatClock';
 
+import copy from './trigger.copy';
 import { allowedTriggerKindsFor } from './trigger.defaults';
 import type { TriggerDraft } from './trigger.types';
 import type { RoutineKind } from '@/shared/types/routine.types';
@@ -22,24 +23,24 @@ export function validateTriggerDraft(draft: TriggerDraft, routineKind?: RoutineK
   const errors: TriggerValidationErrors = {};
 
   if (!allowedTriggerKindsFor(routineKind).includes(draft.type)) {
-    errors.type = 'Una rutina de llegada solo admite el aviso al conectarse al Wi-Fi de casa.';
+    errors.type = copy.ARRIVAL_ONLY_WIFI_ERROR;
   }
 
   if (draft.type === 'schedule') {
-    if (draft.days.length === 0) errors.days = 'Elige al menos un día.';
+    if (draft.days.length === 0) errors.days = copy.DAYS_REQUIRED_ERROR;
     return errors;
   }
 
   const ssid = draft.ssid.trim();
-  if (!ssid) errors.ssid = 'Escribe el nombre de la red Wi-Fi o detecta la actual.';
-  else if (ssid.length > SSID_MAX_LENGTH) errors.ssid = `Máximo ${SSID_MAX_LENGTH} caracteres.`;
+  if (!ssid) errors.ssid = copy.SSID_REQUIRED_ERROR;
+  else if (ssid.length > SSID_MAX_LENGTH) errors.ssid = copy.maxLengthError(SSID_MAX_LENGTH);
 
   const name = draft.networkName.trim();
-  if (!name) errors.networkName = 'Ponle un nombre a la red (ej. Casa).';
-  else if (name.length > NETWORK_NAME_MAX_LENGTH) errors.networkName = `Máximo ${NETWORK_NAME_MAX_LENGTH} caracteres.`;
+  if (!name) errors.networkName = copy.NETWORK_NAME_REQUIRED_ERROR;
+  else if (name.length > NETWORK_NAME_MAX_LENGTH) errors.networkName = copy.maxLengthError(NETWORK_NAME_MAX_LENGTH);
 
   if (draft.window && minutesOfDay(draft.window.start) === minutesOfDay(draft.window.end)) {
-    errors.window = 'La franja debe empezar y terminar a horas distintas.';
+    errors.window = copy.WINDOW_SAME_TIMES_ERROR;
   }
   return errors;
 }

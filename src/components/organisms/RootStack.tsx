@@ -6,7 +6,8 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineBanner } from '@/components/molecules/OfflineBanner';
-import { HELP_TITLE } from '@/features/settings/help.content';
+import copy from '@/components/components.copy';
+import help from '@/features/settings/help.content';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
@@ -49,8 +50,8 @@ export function RootStack() {
             name="help"
             options={{
               headerShown: true,
-              title: HELP_TITLE,
-              headerBackTitle: 'Volver',
+              title: help.HELP_TITLE,
+              headerBackTitle: copy.BACK_LABEL,
               headerStyle: { backgroundColor: colors.surface },
               headerTintColor: colors.textPrimary,
               headerTitleStyle: typography.h2,

@@ -11,6 +11,7 @@ import { useRoutines } from '@/features/routines/useRoutines';
 import { strategyFor } from '@/features/triggers/strategies';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
 
+import copy from './onboarding.copy';
 import { markOnboardingFinished } from './onboardingFlag.store';
 
 export type OnboardingStep = 1 | 2 | 3 | 4;
@@ -69,7 +70,7 @@ export function useOnboardingFlow() {
     });
     setCreating(false);
     if (result.status !== 'saved') {
-      setError(result.status === 'failed' ? result.error : 'Revisa la rutina elegida.');
+      setError(result.status === 'failed' ? result.error : copy.INVALID_ROUTINE_ERROR);
       return;
     }
     await finishOnboarding();

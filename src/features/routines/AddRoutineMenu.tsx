@@ -6,14 +6,14 @@ import { FloatingActionButton } from '@/components/atoms/FloatingActionButton';
 import { SheetOptionRow } from '@/components/molecules/SheetOptionRow';
 import { BottomSheet } from '@/components/organisms/BottomSheet';
 import { AiConsentSheet } from '@/features/ai/AiConsentSheet';
-import * as aiCopy from '@/features/ai/ai.copy';
+import aiCopy from '@/features/ai/ai.copy';
 import { useAiAccess } from '@/features/ai/useAiAccess';
-import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
+import templatesCopy from '@/features/routine-templates/routine-templates.copy';
 import { useBottomInset } from '@/shared/hooks/useBottomInset';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './add-routine.copy';
+import copy from './add-routine.copy';
 
 interface AddRoutineMenuProps {
   /** Posición del botón "+" (la pantalla lo ancla). */
@@ -51,7 +51,7 @@ export function AddRoutineMenu({ containerStyle }: AddRoutineMenuProps) {
               onPress={go(() => ai.whenConsented(() => router.push('/routine/ai')))}
             />
           ) : null}
-          <SheetOptionRow icon="albums-outline" label={BROWSE_TEMPLATES_LABEL} onPress={go(() => router.push('/routine/templates'))} />
+          <SheetOptionRow icon="albums-outline" label={templatesCopy.BROWSE_TEMPLATES_LABEL} onPress={go(() => router.push('/routine/templates'))} />
         </View>
       </BottomSheet>
       <AiConsentSheet {...ai.consent} />

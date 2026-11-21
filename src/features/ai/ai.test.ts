@@ -1,7 +1,7 @@
 import { memoryStorage } from '@/db/local/testing/memoryStorage';
 
 import { createAiClient, type InvokeFunction } from './ai.client';
-import { aiErrorMessage } from './ai.copy';
+import aiCopy from './ai.copy';
 import { toRoutineSeed, toSuggestions } from './ai.draft';
 import { DEFAULT_AI_PREFS, loadAiPrefs, saveAiPrefs } from './ai.prefs';
 import { AiClientError } from './ai.types';
@@ -26,7 +26,7 @@ describe('cliente de IA', () => {
     const invoke = jest.fn<ReturnType<InvokeFunction>, Parameters<InvokeFunction>>(async () => ({ data: { mode: 'suggest', suggestions: [] }, error: null }));
     const call = createAiClient(invoke);
     await expect(call({ mode: 'suggest', name: 'Gym', items: [] })).resolves.toEqual({ mode: 'suggest', suggestions: [] });
-    expect(invoke).toHaveBeenCalledWith('ai-routine', { body: { mode: 'suggest', name: 'Gym', items: [] } });
+    expect(invoke).toHaveBeenCalledWith('ai-routine', { body: { mode: 'suggest', name: 'Gym', items: [], locale: 'es' } });
   });
 
   it.each([
@@ -70,8 +70,8 @@ describe('cliente de IA', () => {
   });
 
   it('cada error tiene un mensaje que orienta', () => {
-    expect(aiErrorMessage('offline')).toMatch(/Conéctate/);
-    expect(aiErrorMessage('quota_exceeded')).toMatch(/Mañana/);
+    expect(aiCopy.aiErrorMessage('offline')).toMatch(/Conéctate/);
+    expect(aiCopy.aiErrorMessage('quota_exceeded')).toMatch(/Mañana/);
   });
 });
 

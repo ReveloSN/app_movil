@@ -3,7 +3,7 @@ import { FlexWidget, ListWidget, TextWidget } from 'react-native-android-widget'
 import { palettes } from '@/shared/theme/tokens';
 
 import { ACTION_TOGGLE_ITEM, verifyUri, type ToggleItemData } from './widget.constants';
-import * as copy from './widget.copy';
+import copy from './widget.copy';
 import type { WidgetItem, WidgetState } from './widget.state';
 
 // El widget vive en la pantalla de inicio del teléfono: usa siempre la paleta clara de la app.

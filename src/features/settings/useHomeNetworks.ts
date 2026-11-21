@@ -8,7 +8,7 @@ import { NETWORK_NAME_MAX_LENGTH } from '@/features/triggers/trigger.validation'
 import { loadNetworkLastSeen } from '@/features/triggers/wifi/networkLastSeen.store';
 import type { HomeNetwork } from '@/shared/types/home-network.types';
 
-import { NETWORK_SAVE_ERROR, NETWORKS_LOAD_ERROR } from './settings.copy';
+import copy from './settings.copy';
 
 export interface HomeNetworkView extends HomeNetwork {
   /** Avisos que apuntan a esta red: con alguno, no se puede eliminar. */
@@ -25,8 +25,8 @@ interface Deps {
 /** Valida el nombre visible de una red. null si es válido. */
 export function validateNetworkName(name: string): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return 'Ponle un nombre a la red (ej. Casa).';
-  if (trimmed.length > NETWORK_NAME_MAX_LENGTH) return `Máximo ${NETWORK_NAME_MAX_LENGTH} caracteres.`;
+  if (!trimmed) return copy.NETWORK_NAME_REQUIRED;
+  if (trimmed.length > NETWORK_NAME_MAX_LENGTH) return copy.networkNameTooLong(NETWORK_NAME_MAX_LENGTH);
   return null;
 }
 
@@ -60,7 +60,7 @@ export function useHomeNetworks(injected?: Deps) {
       (cause: unknown) => {
         if (request !== latestRequest.current) return;
         if (__DEV__) console.warn('[homeNetworks.load]', cause);
-        setError(NETWORKS_LOAD_ERROR);
+        setError(copy.NETWORKS_LOAD_ERROR);
         setLoading(false);
       },
     );
@@ -95,7 +95,7 @@ export function useHomeNetworks(injected?: Deps) {
         return true;
       } catch (cause) {
         if (__DEV__) console.warn('[homeNetworks.rename]', cause);
-        setActionError(NETWORK_SAVE_ERROR);
+        setActionError(copy.NETWORK_SAVE_ERROR);
         return false;
       }
     },
@@ -111,7 +111,7 @@ export function useHomeNetworks(injected?: Deps) {
         setNetworks((current) => current.filter((item) => item.id !== id));
       } catch (cause) {
         if (__DEV__) console.warn('[homeNetworks.delete]', cause);
-        setActionError(NETWORK_SAVE_ERROR);
+        setActionError(copy.NETWORK_SAVE_ERROR);
       }
     },
     [deps],

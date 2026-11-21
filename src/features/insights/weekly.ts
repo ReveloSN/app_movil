@@ -7,8 +7,9 @@ import { deviceUtcOffset, type UtcOffsetMinutes } from '@/features/history/histo
 import { departureRecords, globalStreak } from '@/features/history/stats';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
+import copy from './insights.copy';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const isoDay = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -82,24 +83,21 @@ export interface WeekSummaryText {
   recomendacion: string;
 }
 
-const times = (count: number) => (count === 1 ? '1 vez' : `${count} veces`);
-
 /** Resumen sin IA (sin conexión, con la IA apagada o sin cuota): breve, sin culpa y con UNA recomendación. */
 export function deterministicSummary(stats: WeeklyStatsInput): WeekSummaryText {
   const total = stats.completed + stats.partial;
-  const complete = stats.completed === 1 ? '1 completa' : `${stats.completed} completas`;
-  const parts = [`Esta semana verificaste ${times(total)}: ${complete}.`];
+  const parts = [copy.summaryLead(total, stats.completed)];
   const diff = stats.completed - stats.previousCompleted;
-  if (diff > 0) parts.push(diff === 1 ? 'Es 1 más que la semana pasada.' : `Son ${diff} más que la semana pasada.`);
-  else if (diff < 0 && stats.previousCompleted > 0) parts.push(`La semana pasada fueron ${stats.previousCompleted}.`);
-  if (stats.streak >= 2) parts.push(`Llevas ${stats.streak} días seguidos.`);
-  if (stats.bestDay !== null) parts.push(`Tu mejor día fue el ${DAY_NAMES[stats.bestDay]}.`);
+  if (diff > 0) parts.push(copy.summaryMoreThanLast(diff));
+  else if (diff < 0 && stats.previousCompleted > 0) parts.push(copy.summaryLastWeek(stats.previousCompleted));
+  if (stats.streak >= 2) parts.push(copy.summaryStreak(stats.streak));
+  if (stats.bestDay !== null) parts.push(copy.summaryBestDay(stats.bestDay));
 
   const top = stats.topSkipped[0];
   const recomendacion = top
-    ? `«${top.label}» se quedó ${times(top.count)}: déjalo junto a la puerta la noche antes.`
+    ? copy.recommendTopSkipped(top.label, top.count)
     : stats.partial > 0
-      ? 'Revisa tu rutina y deja solo lo que de verdad no puede faltar.'
-      : 'Sigue así: tu rutina ya te funciona.';
+      ? copy.RECOMMEND_PARTIAL
+      : copy.RECOMMEND_KEEP_GOING;
   return { resumen: parts.join(' ').slice(0, 280), recomendacion: recomendacion.slice(0, 140) };
 }

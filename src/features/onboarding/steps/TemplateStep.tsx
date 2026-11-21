@@ -5,7 +5,7 @@ import { TemplateList } from '@/features/routine-templates/TemplateList';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { TEMPLATES_BODY, TEMPLATES_TITLE } from '../onboarding.copy';
+import onboardingCopy from '../onboarding.copy';
 
 /** Paso 2: el selector de P10 tal cual; "Usar plantilla" elige y avanza. */
 export function TemplateStep({ onUse }: { onUse(template: PresetTemplate): void }) {
@@ -18,9 +18,9 @@ export function TemplateStep({ onUse }: { onUse(template: PresetTemplate): void 
       header={
         <View style={styles.header}>
           <Text style={styles.title} accessibilityRole="header">
-            {TEMPLATES_TITLE}
+            {onboardingCopy.TEMPLATES_TITLE}
           </Text>
-          <Text style={styles.body}>{TEMPLATES_BODY}</Text>
+          <Text style={styles.body}>{onboardingCopy.TEMPLATES_BODY}</Text>
         </View>
       }
     />

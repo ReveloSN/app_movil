@@ -6,7 +6,7 @@ import { useViewModePreference } from '@/features/checklist/useViewModePreferenc
 import { type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './settings.copy';
+import copy from './settings.copy';
 
 /** Cómo se abre la verificación en este teléfono: la lista o un ítem a la vez. */
 export function VerificationPrefsSection() {

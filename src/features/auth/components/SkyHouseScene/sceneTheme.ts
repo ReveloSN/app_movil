@@ -1,6 +1,7 @@
 // Lógica pura de la escena de Bienvenida: hora local, peso de cada imagen, textos, sol y luna.
 // Sin React: se prueba con Jest (sceneTheme.test.ts).
 
+import authCopy from '@/features/auth/auth.copy';
 import homeCopy from '@/features/home/home.copy';
 import { contrastRatio } from '@/shared/theme/contrast';
 
@@ -119,18 +120,10 @@ export interface SceneHeadline {
   subtitle: string;
 }
 
-// Voz y tono (docs/ux/01-contenido.md §02): tuteo, breve, sin culpa, sin emojis. Propuestos, pendientes de validar.
-const HEADLINES: Record<SceneStage, Omit<SceneHeadline, 'greeting'>> = {
-  morning: { title: 'Antes de cruzar la puerta', subtitle: 'Revisa en segundos lo que no puede faltar.' },
-  midday: { title: 'Lo importante, contigo', subtitle: 'Rutinas cortas que aparecen solas.' },
-  evening: { title: '¿Vas saliendo?', subtitle: 'Llaves, cargador y estufa, en una lista.' },
-  night: { title: 'Cierra el día con calma', subtitle: 'Puerta, gas y alarma, revisados.' },
-};
-
 /** Saludo (el mismo de Inicio) y titular del tramo de esta hora. */
 export function sceneHeadline(hour: number): SceneHeadline {
   const h = normalizeHour(hour);
-  return { greeting: homeCopy.saluteForHour(Math.floor(h)), ...HEADLINES[stageAt(h)] };
+  return { greeting: homeCopy.saluteForHour(Math.floor(h)), ...authCopy.sceneHeadlines[stageAt(h)] };
 }
 
 export interface CelestialPosition {

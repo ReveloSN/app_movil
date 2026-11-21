@@ -10,7 +10,7 @@ import { ITEM_LABEL_MAX_LENGTH } from '@/features/routines/routine.validation';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './insights.copy';
+import copy from './insights.copy';
 
 interface ForgotItemSheetProps {
   saving: boolean;

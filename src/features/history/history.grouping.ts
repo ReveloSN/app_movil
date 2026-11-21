@@ -1,11 +1,9 @@
 import type { Routine } from '@/shared/types/routine.types';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
+import copy from './history.copy';
 import { toLocalDayKey } from './history.dates';
 import type { HistoryEntry, HistoryGroup } from './history.types';
-
-/** Para registros cuya rutina ya no está en la lista del usuario. */
-export const UNKNOWN_ROUTINE_NAME = 'Rutina eliminada';
 
 /**
  * Agrupa los registros por día local, del más reciente al más antiguo (días y registros),
@@ -27,7 +25,7 @@ export function groupRecordsByDay(
     const routine = routinesById.get(record.routineId);
     const entry: HistoryEntry = {
       ...record,
-      routineName: routine?.name ?? UNKNOWN_ROUTINE_NAME,
+      routineName: routine?.name ?? copy.UNKNOWN_ROUTINE_NAME,
       routineIcon: routine?.icon ?? null,
       routineColor: routine?.color ?? null,
       routineKind: routine?.kind ?? null,

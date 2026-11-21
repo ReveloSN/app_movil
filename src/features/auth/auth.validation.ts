@@ -1,3 +1,4 @@
+import copy from './auth.copy';
 import type { Credentials } from './auth.types';
 
 export const MIN_PASSWORD_LENGTH = 6;
@@ -18,15 +19,15 @@ export function validateCredentials(
   const errors: CredentialErrors = {};
 
   if (!email.trim()) {
-    errors.email = 'Escribe tu correo.';
+    errors.email = copy.EMAIL_REQUIRED;
   } else if (!EMAIL_PATTERN.test(email.trim())) {
-    errors.email = 'Escribe un correo válido.';
+    errors.email = copy.EMAIL_INVALID;
   }
 
   if (!password) {
-    errors.password = 'Escribe tu contraseña.';
+    errors.password = copy.PASSWORD_REQUIRED;
   } else if (enforcePasswordLength && password.length < MIN_PASSWORD_LENGTH) {
-    errors.password = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+    errors.password = copy.passwordTooShort(MIN_PASSWORD_LENGTH);
   }
 
   return errors;

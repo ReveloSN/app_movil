@@ -1,5 +1,7 @@
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 
+import { loadLocale } from '@/shared/i18n/locale.store';
+
 import { NextRoutineWidget } from './NextRoutineWidget';
 import { ACTION_TOGGLE_ITEM, type ToggleItemData } from './widget.constants';
 import { loadWidgetState, toggleWidgetItem } from './widget.data';
@@ -22,6 +24,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
     ) {
       await toggleWidgetItem(props.clickActionData.routineId, props.clickActionData.itemId);
     }
+    // Con la app cerrada nadie cargó el idioma guardado.
+    await loadLocale();
     props.renderWidget(<NextRoutineWidget state={await loadWidgetState()} />);
   } catch (cause) {
     if (__DEV__) console.warn('[widget.task]', cause);

@@ -8,7 +8,8 @@ import { AiClientError } from '@/features/ai/ai.types';
 import { TestProviders } from '@/shared/testing/TestProviders';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
-import { useWeeklySummary, WEEKLY_FALLBACK_NOTE } from './useWeeklySummary';
+import insightsCopy from './insights.copy';
+import { useWeeklySummary } from './useWeeklySummary';
 import { createWeeklySummaryStore } from './weekly.store';
 
 const mockAccess = { visible: true, online: true, whenConsented: (action: () => void) => action(), consent: { visible: false, onAccept: jest.fn(), onDecline: jest.fn() } };
@@ -68,7 +69,7 @@ describe('useWeeklySummary', () => {
     await act(async () => result.current.generate());
 
     await waitFor(() => expect(result.current.summary?.source).toBe('local'));
-    expect(result.current.notice).toContain(WEEKLY_FALLBACK_NOTE);
+    expect(result.current.notice).toContain(insightsCopy.WEEKLY_FALLBACK_NOTE);
     expect(result.current.summary?.recomendacion).toContain('Cargador');
   });
 

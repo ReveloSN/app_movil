@@ -4,12 +4,13 @@ import Animated from 'react-native-reanimated';
 import { fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import copy from '@/components/components.copy';
 
 interface LoadingStateProps {
   accessibilityLabel?: string;
 }
 
-export function LoadingState({ accessibilityLabel = 'Cargando' }: LoadingStateProps) {
+export function LoadingState({ accessibilityLabel = copy.LOADING_LABEL }: LoadingStateProps) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 

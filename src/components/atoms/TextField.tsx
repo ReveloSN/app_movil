@@ -5,6 +5,7 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
+import copy from '@/components/components.copy';
 
 interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
@@ -31,7 +32,7 @@ export function TextField({ label, error, showCounter = false, onFocus, onBlur, 
       <View style={styles.labelRow}>
         <Text style={styles.label}>{label}</Text>
         {showCounter && max ? (
-          <Text style={styles.counter} accessibilityLabel={`${length} de ${max} caracteres`}>
+          <Text style={styles.counter} accessibilityLabel={copy.counterLabel(length, max)}>
             {length}/{max}
           </Text>
         ) : null}

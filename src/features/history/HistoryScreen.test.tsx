@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
-import * as copy from '@/features/history/history.copy';
+import copy from '@/features/history/history.copy';
 import type { HistoryRecord } from '@/features/history/history.pending';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { TestProviders } from '@/shared/testing/TestProviders';

@@ -1,6 +1,6 @@
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 
-import * as copy from './unsaved-changes.copy';
+import copy from './unsaved-changes.copy';
 
 interface UnsavedChangesDialogProps {
   visible: boolean;

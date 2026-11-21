@@ -1,23 +1,20 @@
-import { endSentence } from '@/shared/utils/endSentence';
-import { formatClock, isOneOClock } from '@/shared/utils/formatClock';
-
-import { atClock, formatDays } from '../trigger.copy';
+import copy from '../trigger.copy';
 import type { ScheduleTriggerDraft } from '../trigger.types';
 import type { TriggerStrategy } from './trigger.strategy';
-
-const ALL_DAYS = 7;
 
 /** Aviso por horario: a una hora fija los días elegidos. */
 export const scheduleStrategy: TriggerStrategy<ScheduleTriggerDraft> = {
   kind: 'schedule',
-  label: 'Horario',
+  // El texto se lee al usarlo (no al cargar el módulo): así sigue el idioma activo.
+  get label() {
+    return copy.SCHEDULE_LABEL;
+  },
   icon: 'alarm-outline',
   needsLocation: false,
 
-  describe: ({ time, days }) =>
-    days.length === ALL_DAYS ? `todos los días ${atClock(time)}` : `todos los ${formatDays(days)} ${atClock(time)}`,
+  describe: ({ time, days }) => copy.scheduleDescription(days, time),
 
-  notificationLead: ({ time }) => endSentence(`${isOneOClock(time) ? 'Es la' : 'Son las'} ${formatClock(time)}`),
+  notificationLead: ({ time }) => copy.scheduleLead(time),
 
   occurrencesBetween({ time, days }, from, until) {
     const result: Date[] = [];

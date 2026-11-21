@@ -1,12 +1,10 @@
 // Textos de «Casa» (Ajustes): la geocerca de casa para avisar al llegar.
 
+import { localized } from '@/shared/i18n/localized';
+
 import type { GeofenceStatus } from './geofence.types';
 
-export const HOME_SECTION_TITLE = 'Casa';
-
-export const HOME_INTRO = 'Te avisamos al llegar a casa. Tu ubicación no sale de este teléfono.';
-
-export const STATUS_TITLE: Record<GeofenceStatus, string> = {
+const statusTitleEs: Record<GeofenceStatus, string> = {
   'no-home': 'Sin casa definida',
   'no-arrival': 'Sin rutina de llegada',
   active: 'Activa',
@@ -14,7 +12,7 @@ export const STATUS_TITLE: Record<GeofenceStatus, string> = {
   inactive: 'Inactiva',
 };
 
-export const STATUS_DETAIL: Record<GeofenceStatus, string> = {
+const statusDetailEs: Record<GeofenceStatus, string> = {
   'no-home': 'Defínela para que te avisemos al llegar.',
   'no-arrival': 'Crea una rutina de llegada para activarla.',
   active: 'Lista para avisarte, incluso con la app cerrada.',
@@ -22,21 +20,74 @@ export const STATUS_DETAIL: Record<GeofenceStatus, string> = {
   inactive: 'Enciende la ubicación y abre la app de nuevo.',
 };
 
-export const USE_LOCATION_LABEL = 'Usar mi ubicación actual';
-export const LOCATING_LABEL = 'Buscando tu ubicación…';
-export const RADIUS_LABEL = 'Radio de tu casa';
-export const radiusOptionLabel = (meters: number) => `${meters} m`;
-export const RADIUS_HINT = 'Más radio si vives en un edificio grande.';
-export const REMOVE_HOME_LABEL = 'Quitar casa';
-export const ALLOW_BACKGROUND_LABEL = 'Permitir ubicación todo el tiempo';
-export const ALLOW_LOCATION_LABEL = 'Permitir ubicación';
+const statusTitleEn: Record<GeofenceStatus, string> = {
+  'no-home': 'No home set',
+  'no-arrival': 'No arrival routine',
+  active: 'Active',
+  'no-permission': 'A permission is missing',
+  inactive: 'Inactive',
+};
 
-export const HOME_SAVED = 'Casa guardada en este teléfono.';
-export const HOME_REMOVED = 'Quitaste tu casa. Borramos sus coordenadas del teléfono.';
-export const LOCATION_UNAVAILABLE =
-  'No pudimos obtener tu ubicación. Revisa que esté encendida y prueba de nuevo, mejor junto a una ventana o al aire libre.';
-export const LOCATION_PERMISSION_NEEDED = 'Para usar tu ubicación actual, permite el acceso a la ubicación.';
-export const SAVE_FAILED = 'No pudimos guardar tu casa. Inténtalo de nuevo.';
+const statusDetailEn: Record<GeofenceStatus, string> = {
+  'no-home': 'Set it so we can alert you when you arrive.',
+  'no-arrival': 'Create an arrival routine to turn it on.',
+  active: 'Ready to alert you, even with the app closed.',
+  'no-permission': 'Allow location “all the time”.',
+  inactive: 'Turn on location and open the app again.',
+};
 
-/** Sobre la demora en Android: la detección no es instantánea. */
-export const DETECTION_DELAY_NOTE = 'Android puede tardar unos minutos en avisarte.';
+export default localized(
+  {
+    HOME_SECTION_TITLE: 'Casa',
+
+    HOME_INTRO: 'Te avisamos al llegar a casa. Tu ubicación no sale de este teléfono.',
+
+    STATUS_TITLE: statusTitleEs,
+    STATUS_DETAIL: statusDetailEs,
+
+    USE_LOCATION_LABEL: 'Usar mi ubicación actual',
+    LOCATING_LABEL: 'Buscando tu ubicación…',
+    RADIUS_LABEL: 'Radio de tu casa',
+    radiusOptionLabel: (meters: number) => `${meters} m`,
+    RADIUS_HINT: 'Más radio si vives en un edificio grande.',
+    REMOVE_HOME_LABEL: 'Quitar casa',
+    ALLOW_BACKGROUND_LABEL: 'Permitir ubicación todo el tiempo',
+    ALLOW_LOCATION_LABEL: 'Permitir ubicación',
+
+    HOME_SAVED: 'Casa guardada en este teléfono.',
+    HOME_REMOVED: 'Quitaste tu casa. Borramos sus coordenadas del teléfono.',
+    LOCATION_UNAVAILABLE:
+      'No pudimos obtener tu ubicación. Revisa que esté encendida y prueba de nuevo, mejor junto a una ventana o al aire libre.',
+    LOCATION_PERMISSION_NEEDED: 'Para usar tu ubicación actual, permite el acceso a la ubicación.',
+    SAVE_FAILED: 'No pudimos guardar tu casa. Inténtalo de nuevo.',
+
+    /** Sobre la demora en Android: la detección no es instantánea. */
+    DETECTION_DELAY_NOTE: 'Android puede tardar unos minutos en avisarte.',
+  },
+  {
+    HOME_SECTION_TITLE: 'Your home',
+
+    HOME_INTRO: 'We alert you when you get home. Your location never leaves this phone.',
+
+    STATUS_TITLE: statusTitleEn,
+    STATUS_DETAIL: statusDetailEn,
+
+    USE_LOCATION_LABEL: 'Use my current location',
+    LOCATING_LABEL: 'Finding your location…',
+    RADIUS_LABEL: 'Your home radius',
+    radiusOptionLabel: (meters: number) => `${meters} m`,
+    RADIUS_HINT: 'Use a larger radius if you live in a big building.',
+    REMOVE_HOME_LABEL: 'Remove home',
+    ALLOW_BACKGROUND_LABEL: 'Allow location all the time',
+    ALLOW_LOCATION_LABEL: 'Allow location',
+
+    HOME_SAVED: 'Home saved on this phone.',
+    HOME_REMOVED: 'You removed your home. We deleted its coordinates from the phone.',
+    LOCATION_UNAVAILABLE:
+      "We couldn't get your location. Make sure it's on and try again, ideally near a window or outdoors.",
+    LOCATION_PERMISSION_NEEDED: 'To use your current location, allow location access.',
+    SAVE_FAILED: "We couldn't save your home. Try again.",
+
+    DETECTION_DELAY_NOTE: 'Android can take a few minutes to alert you.',
+  },
+);

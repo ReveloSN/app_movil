@@ -15,7 +15,7 @@ import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvid
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
-import { UNDO_LABEL } from '@/features/feedback/feedback.copy';
+import feedbackCopy from '@/features/feedback/feedback.copy';
 import { useToast } from '@/features/feedback/toast.context';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -27,7 +27,7 @@ import { RoutineItemsSection } from './RoutineItemsSection';
 import { ShareRoutineButton } from './share/ShareRoutineButton';
 import { routineAccent } from './routine-appearance';
 import { savedRoutineMessage } from './routine-feedback';
-import * as copy from './routine.copy';
+import copy from './routine.copy';
 import type { RoutineOriginal } from './routine-edit.service';
 import { ItemEditSheet } from './ItemEditSheet';
 import { ROUTINE_NAME_MAX_LENGTH } from './routine.validation';
@@ -50,10 +50,12 @@ interface RoutineFormProps {
   aiAssisted?: { suggestsWifiExit: boolean };
 }
 
-const KIND_OPTIONS = [
-  { value: 'departure', label: copy.DEPARTURE_KIND_LABEL },
-  { value: 'arrival', label: copy.ARRIVAL_KIND_LABEL },
-] as const;
+/** Se arma al renderizar: los textos salen del idioma activo en ese momento. */
+const kindOptions = () =>
+  [
+    { value: 'departure', label: copy.DEPARTURE_KIND_LABEL },
+    { value: 'arrival', label: copy.ARRIVAL_KIND_LABEL },
+  ] as const;
 
 /** P04: el mismo formulario crea o edita según reciba `editing`. */
 export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: RoutineFormProps) {
@@ -98,7 +100,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
     toast.show({
       message: copy.itemRemovedMessage(removed.entry.label),
       tone: 'info',
-      action: { label: UNDO_LABEL, onPress: () => form.restoreItem(removed) },
+      action: { label: feedbackCopy.UNDO_LABEL, onPress: () => form.restoreItem(removed) },
     });
   }
 
@@ -122,7 +124,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
           <View style={styles.kindGroup}>
             <SegmentedControl<RoutineKind>
               accessibilityLabel={copy.ROUTINE_KIND_LABEL}
-              options={KIND_OPTIONS}
+              options={kindOptions()}
               value={form.kind}
               onChange={form.setKind}
             />
@@ -132,7 +134,7 @@ export function RoutineForm({ formId, initialDraft, editing, aiAssisted }: Routi
         <TextField
           ref={nameRef}
           returnKeyType="done"
-          label="Nombre de la rutina"
+          label={copy.ROUTINE_NAME_LABEL}
           placeholder={copy.NAME_PLACEHOLDER[form.kind]}
           value={form.name}
           onChangeText={form.setName}

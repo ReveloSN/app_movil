@@ -8,7 +8,7 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { Skeleton } from '@/components/atoms/Skeleton';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { AiConsentSheet } from '@/features/ai/AiConsentSheet';
-import * as aiCopy from '@/features/ai/ai.copy';
+import aiCopy from '@/features/ai/ai.copy';
 import { useAiAccess } from '@/features/ai/useAiAccess';
 import { useAiSuggestions } from '@/features/ai/useAiSuggestions';
 import { hapticToggleOn } from '@/shared/haptics/haptics';
@@ -16,7 +16,7 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { pickSuggestions } from './item-suggestions';
-import * as copy from './routine.copy';
+import copy from './routine.copy';
 import type { ItemDraft } from './routines.types';
 
 interface ItemSuggestionsProps {

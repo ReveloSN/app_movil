@@ -9,7 +9,7 @@ import { fadeIn } from '@/shared/theme/motion';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './stats.copy';
+import copy, { ratePercent } from './stats.copy';
 import type { CompletionRate, DepartureSummary } from './stats';
 import type { DepartureStatsStatus } from './useDepartureStats';
 
@@ -98,7 +98,7 @@ function RateBlock({ title, rate }: { title: string; rate: CompletionRate }) {
       {rate.rate === null ? (
         <Text style={styles.noData}>{copy.NO_DEPARTURES_YET}</Text>
       ) : (
-        <AnimatedCounter value={copy.ratePercent(rate.rate)} format={percentFormat} />
+        <AnimatedCounter value={ratePercent(rate.rate)} format={percentFormat} />
       )}
       {note ? <Text style={styles.note}>{note}</Text> : null}
     </View>

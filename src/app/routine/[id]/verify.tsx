@@ -17,7 +17,7 @@ import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { VerifyHeader } from '@/components/molecules/VerifyHeader';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
-import * as copy from '@/features/checklist/checklist.copy';
+import copy from '@/features/checklist/checklist.copy';
 import { ChecklistDeck } from '@/features/checklist/ChecklistDeck';
 import type { ViewMode } from '@/features/checklist/checklist.viewmode';
 import { useViewModePreference } from '@/features/checklist/useViewModePreference';
@@ -40,7 +40,8 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 const criticalEntering = (index: number) =>
   FadeInLeft.duration(durations.base).delay(staggerDelay(index)).reduceMotion(ReduceMotion.System);
 
-const VIEW_MODES: readonly SegmentOption<ViewMode>[] = [
+/** Se arma al renderizar: los textos salen del idioma activo en ese momento. */
+const viewModes = (): readonly SegmentOption<ViewMode>[] => [
   { value: 'list', label: copy.VIEW_LIST_LABEL },
   { value: 'deck', label: copy.VIEW_DECK_LABEL },
 ];
@@ -83,17 +84,17 @@ export default function VerifyScreen() {
   const weatherHint = <WeatherHint onAdd={addTemporaryItem} />;
 
   const body = loading ? (
-    <SkeletonList variant="row" rows={4} accessibilityLabel="Cargando ítems" />
+    <SkeletonList variant="row" rows={4} accessibilityLabel={copy.LOADING_ITEMS_LABEL} />
   ) : error ? (
     <ErrorState message={error} onRetry={retry} />
   ) : items.length === 0 ? (
-    <EmptyState icon="list-outline" message="Esta rutina no tiene ítems." />
+    <EmptyState icon="list-outline" message={copy.NO_ITEMS_MESSAGE} />
   ) : (
     <>
       <View style={styles.modeToggle}>
         <SegmentedControl<ViewMode>
           accessibilityLabel={copy.VIEW_MODE_LABEL}
-          options={VIEW_MODES}
+          options={viewModes()}
           value={viewMode}
           onChange={setChosenMode}
         />

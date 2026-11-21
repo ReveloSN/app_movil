@@ -1,14 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import {
-  ACTION_LABELS,
-  ARRIVAL_CHANNEL_NAME,
-  ARRIVAL_SILENT_CHANNEL_NAME,
-  CHANNEL_NAME,
-  SILENT_CHANNEL_NAME,
-  snoozeActionLabel,
-} from './notification.copy';
+import copy from './notification.copy';
 import { loadNotificationPrefs } from './notification.prefs';
 
 const CHANNEL_ID = 'routines';
@@ -36,6 +29,34 @@ export const arrivalChannelFor = (sound: boolean) => (sound ? ARRIVAL_CHANNEL_ID
 let setup: Promise<void> | null = null;
 
 /**
+ * Crea los canales de Android con el nombre del idioma activo. Volver a llamarla con otro idioma los renombra
+ * (Android solo deja cambiar el nombre de un canal que ya existe; el sonido y la importancia no se tocan).
+ */
+export async function ensureNotificationChannels(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+    name: copy.CHANNEL_NAME,
+    importance: Notifications.AndroidImportance.HIGH,
+  });
+  await Notifications.setNotificationChannelAsync(SILENT_CHANNEL_ID, {
+    name: copy.SILENT_CHANNEL_NAME,
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: null,
+    enableVibrate: false,
+  });
+  await Notifications.setNotificationChannelAsync(ARRIVAL_CHANNEL_ID, {
+    name: copy.ARRIVAL_CHANNEL_NAME,
+    importance: Notifications.AndroidImportance.HIGH,
+  });
+  await Notifications.setNotificationChannelAsync(ARRIVAL_SILENT_CHANNEL_ID, {
+    name: copy.ARRIVAL_SILENT_CHANNEL_NAME,
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: null,
+    enableVibrate: false,
+  });
+}
+
+/**
  * Presentación en primer plano y canales (Android). Idempotente. También lo necesita quien notifica sin
  * interfaz (geocerca o Wi-Fi con la app cerrada): el canal debe existir antes de programar.
  */
@@ -48,28 +69,7 @@ export function ensureNotificationSetup(): Promise<void> {
       },
     });
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-        name: CHANNEL_NAME,
-        importance: Notifications.AndroidImportance.HIGH,
-      });
-      await Notifications.setNotificationChannelAsync(SILENT_CHANNEL_ID, {
-        name: SILENT_CHANNEL_NAME,
-        importance: Notifications.AndroidImportance.HIGH,
-        sound: null,
-        enableVibrate: false,
-      });
-      await Notifications.setNotificationChannelAsync(ARRIVAL_CHANNEL_ID, {
-        name: ARRIVAL_CHANNEL_NAME,
-        importance: Notifications.AndroidImportance.HIGH,
-      });
-      await Notifications.setNotificationChannelAsync(ARRIVAL_SILENT_CHANNEL_ID, {
-        name: ARRIVAL_SILENT_CHANNEL_NAME,
-        importance: Notifications.AndroidImportance.HIGH,
-        sound: null,
-        enableVibrate: false,
-      });
-    }
+    await ensureNotificationChannels();
   })().catch((cause: unknown) => {
     setup = null; // Se reintenta en la próxima llamada.
     throw cause;
@@ -84,16 +84,16 @@ export function ensureNotificationSetup(): Promise<void> {
 export async function registerNotificationActions(snoozeMinutes: number) {
   // Llegada a casa: solo «Hecho», que no abre la app. Tocar el cuerpo solo la descarta (no es una salida).
   await Notifications.setNotificationCategoryAsync(ARRIVAL_CATEGORY_ID, [
-    { identifier: ACTION_DONE, buttonTitle: ACTION_LABELS.done, options: { opensAppToForeground: false } },
+    { identifier: ACTION_DONE, buttonTitle: copy.ACTION_LABELS.done, options: { opensAppToForeground: false } },
   ]);
   return Notifications.setNotificationCategoryAsync(CATEGORY_ID, [
-    { identifier: ACTION_VERIFY, buttonTitle: ACTION_LABELS.verify, options: { opensAppToForeground: true } },
+    { identifier: ACTION_VERIFY, buttonTitle: copy.ACTION_LABELS.verify, options: { opensAppToForeground: true } },
     {
       identifier: ACTION_SNOOZE,
-      buttonTitle: snoozeActionLabel(snoozeMinutes),
+      buttonTitle: copy.snoozeActionLabel(snoozeMinutes),
       options: { opensAppToForeground: false },
     },
-    { identifier: ACTION_SKIP, buttonTitle: ACTION_LABELS.skip, options: { opensAppToForeground: false } },
+    { identifier: ACTION_SKIP, buttonTitle: copy.ACTION_LABELS.skip, options: { opensAppToForeground: false } },
   ]);
 }
 

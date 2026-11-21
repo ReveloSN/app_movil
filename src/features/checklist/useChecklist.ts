@@ -4,10 +4,9 @@ import type { ItemRepository } from '@/db/repositories/item.repository';
 import { localLoadErrorMessage } from '@/features/local-data/localData.errors';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
 
+import copy from './checklist.copy';
 import { toChecklistItems } from './checklist.items';
 import type { ChecklistItemState, ChecklistProgress } from './checklist.types';
-
-const LOAD_ERROR = 'No pudimos cargar los ítems de esta rutina.';
 
 /**
  * Ítems de una rutina para verificar, desde la copia local: abre igual sin conexión. Marcar/desmarcar es
@@ -43,7 +42,7 @@ export function useChecklist(
       (cause: unknown) => {
         if (!isLatest()) return;
         if (__DEV__) console.warn('[checklist.load]', cause);
-        setError(localLoadErrorMessage(cause, LOAD_ERROR));
+        setError(localLoadErrorMessage(cause, copy.LOAD_ITEMS_ERROR));
         setLoading(false);
       },
     );

@@ -7,7 +7,7 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { ForgotItemSheet } from './ForgotItemSheet';
-import * as copy from './insights.copy';
+import copy from './insights.copy';
 import { useForgotItem } from './useForgotItem';
 import { useRoutineInsight } from './useRoutineInsight';
 

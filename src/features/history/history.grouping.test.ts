@@ -1,7 +1,8 @@
 import type { Routine } from '@/shared/types/routine.types';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
-import { groupRecordsByDay, UNKNOWN_ROUTINE_NAME } from './history.grouping';
+import copy from './history.copy';
+import { groupRecordsByDay } from './history.grouping';
 
 const routine = (overrides: Partial<Routine>): Routine => ({
   id: 'r1',
@@ -44,6 +45,6 @@ describe('groupRecordsByDay', () => {
   it('si la rutina ya no existe, usa el nombre de rutina eliminada y no inventa color', () => {
     const [group] = groupRecordsByDay([record('a', 'gone', '2026-10-13T15:00:00.000Z')], []);
 
-    expect(group.records[0]).toMatchObject({ routineName: UNKNOWN_ROUTINE_NAME, routineIcon: null, routineColor: null });
+    expect(group.records[0]).toMatchObject({ routineName: copy.UNKNOWN_ROUTINE_NAME, routineIcon: null, routineColor: null });
   });
 });

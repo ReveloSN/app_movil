@@ -7,7 +7,7 @@ import { fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './history.copy';
+import copy from './history.copy';
 
 interface HistorySkeletonProps {
   /** true mientras carga el primer listado. El esqueleto aparece tras ~150 ms; antes, solo el fondo (sin parpadeo). */

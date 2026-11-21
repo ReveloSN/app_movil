@@ -5,7 +5,7 @@ import { PermissionRow } from '@/features/permissions/PermissionRow';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { PERMISSIONS_SECTION_TITLE } from './settings.copy';
+import settingsCopy from './settings.copy';
 
 /** Permisos (11-2): mismos estados y acciones que P02. */
 export function PermissionsSection() {
@@ -13,7 +13,7 @@ export function PermissionsSection() {
 
   return (
     <View style={styles.section}>
-      <SectionLabel label={PERMISSIONS_SECTION_TITLE} />
+      <SectionLabel label={settingsCopy.PERMISSIONS_SECTION_TITLE} />
       <View style={styles.card}>
         <PermissionRow kind="notifications" />
         <View style={styles.divider} />

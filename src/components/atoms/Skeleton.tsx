@@ -6,6 +6,7 @@ import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { durations, easings, timing } from '@/shared/theme/motion';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import copy from '@/components/components.copy';
 
 export type SkeletonVariant = 'line' | 'circle' | 'card';
 
@@ -67,7 +68,7 @@ interface SkeletonGroupProps {
 }
 
 /** Contenedor de varios Skeleton: un solo elemento accesible ("Cargando"), sus bloques no se leen. */
-export function SkeletonGroup({ children, accessibilityLabel = 'Cargando', style }: SkeletonGroupProps) {
+export function SkeletonGroup({ children, accessibilityLabel = copy.LOADING_LABEL, style }: SkeletonGroupProps) {
   return (
     <View accessible accessibilityRole="progressbar" accessibilityLabel={accessibilityLabel} accessibilityState={{ busy: true }} style={style}>
       {children}

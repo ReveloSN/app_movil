@@ -9,7 +9,7 @@ import { normalizeSnooze, SNOOZE_OPTIONS } from '@/features/notifications/notifi
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './settings.copy';
+import copy from './settings.copy';
 import { useSettings } from './useSettings';
 
 // SegmentedControl trabaja con strings; el valor guardado es número de minutos.
@@ -28,11 +28,11 @@ export function NotificationPrefsSection() {
       <View style={styles.card}>
         {!settings ? (
           loading ? (
-            <ActivityIndicator color={colors.primary} accessibilityLabel="Cargando ajustes" />
+            <ActivityIndicator color={colors.primary} accessibilityLabel={copy.LOADING_SETTINGS_LABEL} />
           ) : (
             <View style={styles.group}>
               <StatusMessage tone="error" message={error ?? copy.SETTINGS_LOAD_ERROR} />
-              <SecondaryButton icon="refresh" label="Reintentar" onPress={retry} />
+              <SecondaryButton icon="refresh" label={copy.RETRY_LABEL} onPress={retry} />
             </View>
           )
         ) : (

@@ -2,11 +2,11 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
-import { LOCATION_SERVICES_OFF, PERMISSION_COPY } from '@/features/permissions/permission.copy';
+import permissionCopy from '@/features/permissions/permission.copy';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './trigger.copy';
+import copy from './trigger.copy';
 import type { WifiDetection } from './wifi/useCurrentWifi';
 
 interface NetworkDetectionProps {
@@ -27,9 +27,9 @@ export function NetworkDetection({ detection, onDetect, onRequestPermission, onU
     case 'idle':
     case 'detecting':
       return (
-        <View style={styles.row} accessible accessibilityLabel="Detectando la red" accessibilityState={{ busy: true }}>
+        <View style={styles.row} accessible accessibilityLabel={copy.DETECTING_NETWORK_LABEL} accessibilityState={{ busy: true }}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.text}>Detectando la red…</Text>
+          <Text style={styles.text}>{copy.DETECTING_NETWORK_TEXT}</Text>
         </View>
       );
     case 'detected':
@@ -42,13 +42,13 @@ export function NetworkDetection({ detection, onDetect, onRequestPermission, onU
     case 'needs-permission':
       return (
         <View style={styles.group}>
-          <StatusMessage tone="info" message={PERMISSION_COPY.location.reason} />
+          <StatusMessage tone="info" message={permissionCopy.PERMISSION_COPY.location.reason} />
           <SecondaryButton icon="location-outline" label={copy.DETECT_NETWORK_LABEL} onPress={onRequestPermission} />
         </View>
       );
     default: {
       // Sin permiso (arriba) o con la ubicación apagada se dice qué activar; si no, ER-03.
-      const message = detection.status === 'services-off' ? LOCATION_SERVICES_OFF : copy.NETWORK_NOT_FOUND_MESSAGE;
+      const message = detection.status === 'services-off' ? permissionCopy.LOCATION_SERVICES_OFF : copy.NETWORK_NOT_FOUND_MESSAGE;
       return (
         <View style={styles.group}>
           <StatusMessage tone="info" message={message} />

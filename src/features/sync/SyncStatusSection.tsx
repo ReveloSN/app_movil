@@ -10,20 +10,7 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDateTime } from '@/shared/utils/formatDateTime';
 
-import {
-  ALL_SYNCED,
-  blockedHint,
-  CANCEL_LABEL,
-  DISCARD_LABEL,
-  lastSyncedLabel,
-  NEVER_SYNCED,
-  OFFLINE_HINT,
-  RETRY_LABEL,
-  SYNC_NOW_LABEL,
-  SYNC_SECTION_TITLE,
-  SYNCING_LABEL,
-  waitingLabel,
-} from './sync.copy';
+import copy from './sync.copy';
 import { discardMessage } from './sync.describe';
 import { useSync } from './SyncProvider';
 
@@ -57,12 +44,12 @@ export function SyncStatusSection() {
 
   return (
     <View style={styles.section}>
-      <SectionLabel label={SYNC_SECTION_TITLE} />
+      <SectionLabel label={copy.SYNC_SECTION_TITLE} />
       <View style={styles.card}>
-        <Text style={styles.value}>{nothingPending ? ALL_SYNCED : waitingLabel(pendingCount + failedChanges.length)}</Text>
-        {blockedCount > 0 ? <Text style={styles.hint}>{blockedHint(blockedCount)}</Text> : null}
-        {!isConnected && !nothingPending ? <Text style={styles.hint}>{OFFLINE_HINT}</Text> : null}
-        <Text style={styles.hint}>{lastSynced ? lastSyncedLabel(lastSynced) : NEVER_SYNCED}</Text>
+        <Text style={styles.value}>{nothingPending ? copy.ALL_SYNCED : copy.waitingLabel(pendingCount + failedChanges.length)}</Text>
+        {blockedCount > 0 ? <Text style={styles.hint}>{copy.blockedHint(blockedCount)}</Text> : null}
+        {!isConnected && !nothingPending ? <Text style={styles.hint}>{copy.OFFLINE_HINT}</Text> : null}
+        <Text style={styles.hint}>{lastSynced ? copy.lastSyncedLabel(lastSynced) : copy.NEVER_SYNCED}</Text>
       </View>
 
       {failedChanges.map((change) => (
@@ -70,8 +57,8 @@ export function SyncStatusSection() {
           key={change.opId}
           title={change.title}
           reason={change.reason}
-          retryLabel={RETRY_LABEL}
-          discardLabel={DISCARD_LABEL}
+          retryLabel={copy.RETRY_LABEL}
+          discardLabel={copy.DISCARD_LABEL}
           onRetry={() => retry(change.opId).catch(warn('retry'))}
           onDiscard={() => requestDiscard(change.opId)}
         />
@@ -80,7 +67,7 @@ export function SyncStatusSection() {
       {nothingPending ? null : (
         <SecondaryButton
           icon="sync-outline"
-          label={syncing ? SYNCING_LABEL : SYNC_NOW_LABEL}
+          label={syncing ? copy.SYNCING_LABEL : copy.SYNC_NOW_LABEL}
           onPress={syncNow}
           disabled={syncing || !isConnected}
         />
@@ -89,8 +76,8 @@ export function SyncStatusSection() {
       <ConfirmDialog
         visible={confirming !== null}
         message={confirming?.message ?? ''}
-        confirmLabel={DISCARD_LABEL}
-        cancelLabel={CANCEL_LABEL}
+        confirmLabel={copy.DISCARD_LABEL}
+        cancelLabel={copy.CANCEL_LABEL}
         onConfirm={confirmDiscard}
         onCancel={() => setConfirming(null)}
       />

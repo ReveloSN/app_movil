@@ -5,7 +5,7 @@ import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 
 import { encodeRoutineShare, type SharedRoutine } from './routine-share.codec';
-import * as copy from './share.copy';
+import copy from './share.copy';
 
 /** "Compartir rutina": arma el código de la copia y abre la hoja de compartir del sistema. */
 export function ShareRoutineButton({ routine }: { routine: SharedRoutine }) {

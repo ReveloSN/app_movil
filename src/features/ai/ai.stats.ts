@@ -4,6 +4,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { localDayNumber } from '@/features/history/history.streak';
+import { getLocale } from '@/shared/i18n/locale.store';
 import type { KeyValueStorage } from '@/shared/types/key-value-storage.types';
 
 import type { AiClient } from './ai.client';
@@ -155,7 +156,9 @@ function payloadOf(input: InsightPatternInput): InsightPatternInput {
 export function insightCacheKey(input: InsightPatternInput, patternId?: string): string {
   const label = input.source === 'forgot' ? input.label : input.item;
   const id = patternId ?? [input.routine, label.trim().toLocaleLowerCase('es'), input.weekday ?? ''].join('|');
-  return hashText([input.source ?? 'omission', id, missesBucket(input.misses), expectedInsightAction(input)].join('|'));
+  // Solo el inglés se distingue: así lo que ya está en caché en español sigue valiendo.
+  const language = getLocale() === 'en' ? ['en'] : [];
+  return hashText([input.source ?? 'omission', id, missesBucket(input.misses), expectedInsightAction(input), ...language].join('|'));
 }
 
 interface InsightOptions {

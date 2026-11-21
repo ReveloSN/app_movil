@@ -6,19 +6,13 @@ import { useThemeMode, type ThemePreference } from '@/shared/theme/themeMode.con
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import {
-  APPEARANCE_GROUP_LABEL,
-  APPEARANCE_SECTION_TITLE,
-  THEME_DARK_LABEL,
-  THEME_LIGHT_LABEL,
-  THEME_SYSTEM_HINT,
-  THEME_SYSTEM_LABEL,
-} from './settings.copy';
+import settingsCopy from './settings.copy';
 
-const OPTIONS: readonly RadioCardOption<ThemePreference>[] = [
-  { value: 'light', label: THEME_LIGHT_LABEL, icon: 'sunny-outline' },
-  { value: 'dark', label: THEME_DARK_LABEL, icon: 'moon-outline' },
-  { value: 'system', label: THEME_SYSTEM_LABEL, icon: 'phone-portrait-outline' },
+// Función y no constante: los textos se leen al dibujar, con el idioma activo.
+const themeOptions = (): readonly RadioCardOption<ThemePreference>[] => [
+  { value: 'light', label: settingsCopy.THEME_LIGHT_LABEL, icon: 'sunny-outline' },
+  { value: 'dark', label: settingsCopy.THEME_DARK_LABEL, icon: 'moon-outline' },
+  { value: 'system', label: settingsCopy.THEME_SYSTEM_LABEL, icon: 'phone-portrait-outline' },
 ];
 
 /** Apariencia (P11): tema claro, oscuro o el del sistema. Cada opción mide ≥ 56 dp y es un radio accesible. */
@@ -28,14 +22,14 @@ export function AppearanceSection() {
 
   return (
     <View style={styles.section}>
-      <SectionLabel label={APPEARANCE_SECTION_TITLE} />
+      <SectionLabel label={settingsCopy.APPEARANCE_SECTION_TITLE} />
       <RadioCardGroup<ThemePreference>
-        accessibilityLabel={APPEARANCE_GROUP_LABEL}
-        options={OPTIONS}
+        accessibilityLabel={settingsCopy.APPEARANCE_GROUP_LABEL}
+        options={themeOptions()}
         value={preference}
         onChange={setPreference}
       />
-      <Text style={styles.hint}>{THEME_SYSTEM_HINT}</Text>
+      <Text style={styles.hint}>{settingsCopy.THEME_SYSTEM_HINT}</Text>
     </View>
   );
 }

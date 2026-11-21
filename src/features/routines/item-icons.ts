@@ -1,29 +1,38 @@
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
 import type { IconOption } from './routine-appearance';
+import copy from './routine.copy';
+
+/** Opción de ícono cuyo texto alternativo se lee del idioma activo al pedirlo (no al cargar el módulo). */
+const itemIcon = (icon: IoniconName): IconOption => ({
+  icon,
+  get label() {
+    return copy.ITEM_ICON_LABELS[icon];
+  },
+});
 
 /** 05-2: conjunto cerrado de íconos de ítem, cada uno con su texto alternativo. */
 export const ITEM_ICONS: readonly IconOption[] = [
-  { icon: 'cube-outline', label: 'Objeto' },
-  { icon: 'key-outline', label: 'Llaves' },
-  { icon: 'wallet-outline', label: 'Billetera' },
-  { icon: 'phone-portrait-outline', label: 'Celular' },
-  { icon: 'battery-charging-outline', label: 'Cargador' },
-  { icon: 'laptop-outline', label: 'Portátil' },
-  { icon: 'card-outline', label: 'Tarjeta o carné' },
-  { icon: 'document-text-outline', label: 'Documento' },
-  { icon: 'medkit-outline', label: 'Medicamentos' },
-  { icon: 'glasses-outline', label: 'Gafas' },
-  { icon: 'headset-outline', label: 'Audífonos' },
-  { icon: 'umbrella-outline', label: 'Paraguas' },
-  { icon: 'water-outline', label: 'Agua' },
-  { icon: 'restaurant-outline', label: 'Comida' },
-  { icon: 'paw-outline', label: 'Mascota' },
-  { icon: 'flame-outline', label: 'Estufa o gas' },
-  { icon: 'bulb-outline', label: 'Luces' },
-  { icon: 'lock-closed-outline', label: 'Puerta o seguro' },
-  { icon: 'alarm-outline', label: 'Alarma' },
-  { icon: 'cloud-upload-outline', label: 'Guardar en la nube' },
+  itemIcon('cube-outline'),
+  itemIcon('key-outline'),
+  itemIcon('wallet-outline'),
+  itemIcon('phone-portrait-outline'),
+  itemIcon('battery-charging-outline'),
+  itemIcon('laptop-outline'),
+  itemIcon('card-outline'),
+  itemIcon('document-text-outline'),
+  itemIcon('medkit-outline'),
+  itemIcon('glasses-outline'),
+  itemIcon('headset-outline'),
+  itemIcon('umbrella-outline'),
+  itemIcon('water-outline'),
+  itemIcon('restaurant-outline'),
+  itemIcon('paw-outline'),
+  itemIcon('flame-outline'),
+  itemIcon('bulb-outline'),
+  itemIcon('lock-closed-outline'),
+  itemIcon('alarm-outline'),
+  itemIcon('cloud-upload-outline'),
 ];
 
 export const DEFAULT_ITEM_ICON: IoniconName = 'cube-outline';

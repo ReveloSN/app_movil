@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SectionLabel } from '@/components/atoms/SectionLabel';
 import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { SwitchRow } from '@/components/molecules/SwitchRow';
-import * as aiCopy from '@/features/ai/ai.copy';
+import aiCopy from '@/features/ai/ai.copy';
 import { updateAiPrefs, useAiPrefs } from '@/features/ai/ai.prefs';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';

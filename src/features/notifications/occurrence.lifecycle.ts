@@ -2,7 +2,9 @@ import type { ArmedTriggersSnapshot } from '@/features/triggers/armedTriggers.st
 import { strategyFor } from '@/features/triggers/strategies';
 import type { ArmedTrigger } from '@/features/triggers/trigger.types';
 
-import { triggerBody } from './notification.copy';
+import { getLocale } from '@/shared/i18n/locale.store';
+
+import copy from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import { cancelOccurrenceNotifications, scheduleArrival, scheduleOccurrence, snoozeOccurrence } from './notification.scheduler';
 import { loadLastArrivals, saveLastArrivals } from './arrival.cooldown.store';
@@ -23,10 +25,11 @@ export const WIFI_COOLDOWN_MS = 10 * 60_000;
 
 const DAY_MS = 24 * 60 * 60_000;
 
-// Incluye lo de Ajustes que cambia la notificación: cambiar "Posponer" o "Sonido" reprograma lo futuro.
+// Incluye lo de Ajustes que cambia la notificación: cambiar "Posponer", "Sonido" o el idioma reprograma lo futuro
+// (las notificaciones ya programadas llevan el texto armado en el idioma de ese momento).
 const signatureOf = (armed: ArmedTrigger, prefs: NotificationPrefs) => {
   const { triggerId: _triggerId, routineId: _routineId, ...config } = armed;
-  return JSON.stringify({ config, snoozeMinutes: prefs.snoozeMinutes, sound: prefs.sound });
+  return JSON.stringify({ config, snoozeMinutes: prefs.snoozeMinutes, sound: prefs.sound, locale: getLocale() });
 };
 
 const baseFor = (armed: ArmedTrigger, ownerId: string, firesAt: number, prefs: NotificationPrefs) => ({
@@ -40,7 +43,7 @@ const baseFor = (armed: ArmedTrigger, ownerId: string, firesAt: number, prefs: N
   signature: signatureOf(armed, prefs),
 });
 
-const bodyFor = (armed: ArmedTrigger) => triggerBody(strategyFor(armed).notificationLead(armed), armed.itemLabels);
+const bodyFor = (armed: ArmedTrigger) => copy.triggerBody(strategyFor(armed).notificationLead(armed), armed.itemLabels);
 
 /**
  * Deja programadas las próximas veces de los avisos por horario: cancela las futuras de avisos

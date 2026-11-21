@@ -6,7 +6,7 @@ import type { VerificationRecord } from '@/shared/types/verification-record.type
 
 import { DepartureStatsSection } from './DepartureStatsSection';
 import { departureSummary } from './stats';
-import * as copy from './stats.copy';
+import copy from './stats.copy';
 
 jest.mock('@/shared/hooks/useReducedMotion');
 jest.setTimeout(20000);

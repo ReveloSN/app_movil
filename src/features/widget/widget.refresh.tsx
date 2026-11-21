@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import { requestWidgetUpdate } from 'react-native-android-widget';
 
+import { loadLocale } from '@/shared/i18n/locale.store';
+
 import { NextRoutineWidget } from './NextRoutineWidget';
 import { WIDGET_NAME } from './widget.constants';
 import { loadWidgetState } from './widget.data';
@@ -13,7 +15,10 @@ export function refreshWidget(): void {
   if (Platform.OS !== 'android') return;
   requestWidgetUpdate({
     widgetName: WIDGET_NAME,
-    renderWidget: async () => <NextRoutineWidget state={await loadWidgetState()} />,
+    renderWidget: async () => {
+      await loadLocale(); // Por si el sistema lo dibuja sin que la app haya cargado el idioma.
+      return <NextRoutineWidget state={await loadWidgetState()} />;
+    },
   }).catch((cause: unknown) => {
     if (__DEV__) console.warn('[widget.refresh]', cause);
   });

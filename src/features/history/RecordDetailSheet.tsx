@@ -4,15 +4,15 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '@/components/atoms/Chip';
 import { IconButton } from '@/components/atoms/IconButton';
 import { BottomSheet } from '@/components/organisms/BottomSheet';
-import { forgotInHistory } from '@/features/insights/insights.copy';
+import insightsCopy from '@/features/insights/insights.copy';
 import { useForgotLabels } from '@/features/insights/useForgotEvents';
-import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
+import syncCopy from '@/features/sync/sync.copy';
 import { useScrollEndPadding } from '@/shared/hooks/useScrollEndPadding';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDuration } from '@/shared/utils/formatDuration';
 
-import * as copy from './history.copy';
+import copy, { recordDateTime } from './history.copy';
 import { parseCheckedItems, type CheckedItem } from './history.filter';
 import { describeResult } from './history.result';
 import type { HistoryEntry } from './history.types';
@@ -77,17 +77,17 @@ export function RecordDetailSheet({ entry, onClose }: RecordDetailSheetProps) {
         <Chip tone={result.tone} icon={result.icon} label={result.label} />
         {itemList(copy.DETAIL_CHECKED_TITLE, checked, 'checkmark-circle')}
         {itemList(copy.DETAIL_SKIPPED_TITLE, skipped, 'close-circle-outline')}
-        {forgotten.length > 0 ? <Text style={styles.secondary}>{forgotInHistory(forgotten)}</Text> : null}
+        {forgotten.length > 0 ? <Text style={styles.secondary}>{insightsCopy.forgotInHistory(forgotten)}</Text> : null}
         {items.length > 0 && checked.length === 0 ? <Text style={styles.secondary}>{copy.DETAIL_NO_ITEMS}</Text> : null}
         {/* Datos del sistema, debajo del contenido de la persona (Documento de Jerarquía). */}
         <View style={styles.block}>
-          <Text style={styles.secondary}>{copy.recordDateTime(entry.date)}</Text>
+          <Text style={styles.secondary}>{recordDateTime(entry.date)}</Text>
           {entry.durationSeconds !== null ? (
             <Text style={styles.secondary}>
               {copy.DETAIL_DURATION_TITLE}: {formatDuration(entry.durationSeconds)}
             </Text>
           ) : null}
-          {entry.pending ? <Text style={styles.secondary}>{PENDING_SYNC_LABEL}</Text> : null}
+          {entry.pending ? <Text style={styles.secondary}>{syncCopy.PENDING_SYNC_LABEL}</Text> : null}
         </View>
       </ScrollView>
     </BottomSheet>

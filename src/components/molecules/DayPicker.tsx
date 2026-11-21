@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { Weekday } from '@/shared/types/clock.types';
+import copy from '@/components/components.copy';
 
 export interface DayOption {
   value: Weekday;
@@ -28,7 +29,7 @@ export function DayPicker({ options, value, onChange }: DayPickerProps) {
   }
 
   return (
-    <View style={styles.row} accessibilityLabel="Días">
+    <View style={styles.row} accessibilityLabel={copy.DAYS_LABEL}>
       {options.map((option) => {
         const selected = value.includes(option.value);
         return (

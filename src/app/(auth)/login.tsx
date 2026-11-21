@@ -6,7 +6,7 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { TextLink } from '@/components/atoms/TextLink';
 import { PasswordField } from '@/components/molecules/PasswordField';
-import * as copy from '@/features/auth/auth.copy';
+import copy from '@/features/auth/auth.copy';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { WelcomeLayout } from '@/features/auth/components/WelcomeLayout';
 import { useCredentialsForm } from '@/features/auth/useCredentialsForm';
@@ -32,7 +32,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <WelcomeLayout title="Iniciar sesión">
+    <WelcomeLayout title={copy.LOGIN_TITLE}>
       <TextField
         ref={emailRef}
         icon="mail-outline"
@@ -63,15 +63,15 @@ export default function LoginScreen() {
         onSubmitEditing={() => void submit()}
       />
       {form.formError ? <StatusMessage tone="error" message={form.formError} /> : null}
-      <PrimaryButton label="Entrar" onPress={() => void submit()} loading={form.submitting} disabled={guest.submitting} />
+      <PrimaryButton label={copy.LOGIN_SUBMIT} onPress={() => void submit()} loading={form.submitting} disabled={guest.submitting} />
       {guest.error ? <StatusMessage tone="error" message={guest.error} /> : null}
       <SecondaryButton
         icon="person-outline"
-        label={guest.submitting ? 'Entrando…' : 'Continuar sin cuenta'}
+        label={guest.submitting ? copy.GUEST_LOADING_LABEL : copy.GUEST_LABEL}
         onPress={guest.start}
         disabled={busy}
       />
-      <TextLink href="/(auth)/register" label="¿No tienes cuenta? Regístrate" replace />
+      <TextLink href="/(auth)/register" label={copy.GO_TO_REGISTER_LABEL} replace />
     </WelcomeLayout>
   );
 }

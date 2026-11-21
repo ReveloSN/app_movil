@@ -1,6 +1,7 @@
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
 import { TAB_NAMES, type TabName } from './lastTab.store';
+import tabsCopy from './tabs.copy';
 
 export interface TabConfig {
   /** Nombre de la ruta de Expo Router dentro de (tabs). */
@@ -11,14 +12,21 @@ export interface TabConfig {
   activeIcon: IoniconName;
 }
 
-const BY_NAME: Record<TabName, Omit<TabConfig, 'name'>> = {
-  index: { title: 'Rutinas', icon: 'list-outline', activeIcon: 'list' },
-  history: { title: 'Historial', icon: 'time-outline', activeIcon: 'time' },
-  settings: { title: 'Ajustes', icon: 'settings-outline', activeIcon: 'settings' },
+const ICONS: Record<TabName, Pick<TabConfig, 'icon' | 'activeIcon'>> = {
+  index: { icon: 'list-outline', activeIcon: 'list' },
+  history: { icon: 'time-outline', activeIcon: 'time' },
+  settings: { icon: 'settings-outline', activeIcon: 'settings' },
 };
 
 /** Pestañas en el orden del Documento de Navegación: Rutinas, Historial, Ajustes. */
-export const TABS: readonly TabConfig[] = TAB_NAMES.map((name) => ({ name, ...BY_NAME[name] }));
+export const TABS: readonly TabConfig[] = TAB_NAMES.map((name) => ({
+  name,
+  // Getter: el título se lee al usarlo, con el idioma activo en ese momento.
+  get title() {
+    return tabsCopy[name];
+  },
+  ...ICONS[name],
+}));
 
 export const tabConfig = (name: string): TabConfig | undefined => TABS.find((tab) => tab.name === name);
 

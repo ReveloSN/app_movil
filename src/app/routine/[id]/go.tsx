@@ -18,7 +18,7 @@ import { ProgressRing } from '@/components/molecules/ProgressRing';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { ConfirmDialog } from '@/components/organisms/ConfirmDialog';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
-import * as copy from '@/features/checklist/checklist.copy';
+import copy from '@/features/checklist/checklist.copy';
 import { completesWithToggle } from '@/features/checklist/checklist.progress';
 import { useChecklist } from '@/features/checklist/useChecklist';
 import { useChecklistDraft } from '@/features/checklist/useChecklistDraft';
@@ -89,11 +89,11 @@ export default function DepartureModeScreen() {
   const busy = finishing || celebrating;
 
   const body = loading ? (
-    <SkeletonList variant="row" rows={4} accessibilityLabel="Cargando ítems" />
+    <SkeletonList variant="row" rows={4} accessibilityLabel={copy.LOADING_ITEMS_LABEL} />
   ) : error ? (
     <ErrorState message={error} onRetry={retry} />
   ) : items.length === 0 ? (
-    <EmptyState icon="list-outline" message="Esta rutina no tiene ítems." />
+    <EmptyState icon="list-outline" message={copy.NO_ITEMS_MESSAGE} />
   ) : (
     <FlatList
       style={styles.list}

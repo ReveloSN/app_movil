@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '@/components/atoms/ProgressBar';
 import { TextButton } from '@/components/atoms/TextButton';
 import { RequireSession } from '@/features/auth/RequireSession';
-import { BACK_LABEL, SKIP_LABEL, stepProgressLabel, TOTAL_STEPS } from '@/features/onboarding/onboarding.copy';
+import onboardingCopy, { TOTAL_STEPS } from '@/features/onboarding/onboarding.copy';
 import { DoneStep } from '@/features/onboarding/steps/DoneStep';
 import { TemplateStep } from '@/features/onboarding/steps/TemplateStep';
 import { TriggerStep } from '@/features/onboarding/steps/TriggerStep';
@@ -37,13 +37,13 @@ function OnboardingFlow() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       {/* 01-5 progreso y 01-6 saltar */}
       <View style={styles.topBar}>
-        <View style={styles.side}>{canGoBack ? <TextButton label={BACK_LABEL} onPress={back} /> : null}</View>
+        <View style={styles.side}>{canGoBack ? <TextButton label={onboardingCopy.BACK_LABEL} onPress={back} /> : null}</View>
         <View style={styles.progress}>
-          <Text style={styles.progressText}>{stepProgressLabel(step)}</Text>
-          <ProgressBar value={step} max={TOTAL_STEPS} accessibilityLabel={stepProgressLabel(step)} />
+          <Text style={styles.progressText}>{onboardingCopy.stepProgressLabel(step)}</Text>
+          <ProgressBar value={step} max={TOTAL_STEPS} accessibilityLabel={onboardingCopy.stepProgressLabel(step)} />
         </View>
         <View style={[styles.side, styles.sideEnd]}>
-          {step < 4 ? <TextButton label={SKIP_LABEL} onPress={() => void flow.skip()} /> : null}
+          {step < 4 ? <TextButton label={onboardingCopy.SKIP_LABEL} onPress={() => void flow.skip()} /> : null}
         </View>
       </View>
 

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
-import { aiErrorMessage } from './ai.copy';
+import copy from './ai.copy';
 import { requestItemSuggestions } from './ai.service';
 import { AiClientError } from './ai.types';
 import { suggestionCacheKey } from './suggestion.cache';
@@ -28,7 +28,7 @@ export function useAiSuggestions(name: string, items: readonly string[], request
     } catch (cause) {
       if (call !== latest.current) return;
       if (__DEV__ && !(cause instanceof AiClientError)) console.warn('[ai.suggest]', cause);
-      setError(aiErrorMessage(cause instanceof AiClientError ? cause.kind : 'server'));
+      setError(copy.aiErrorMessage(cause instanceof AiClientError ? cause.kind : 'server'));
     } finally {
       if (call === latest.current) setLoading(false);
     }

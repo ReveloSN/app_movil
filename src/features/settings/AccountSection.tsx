@@ -14,14 +14,7 @@ import { useSync } from '@/features/sync/SyncProvider';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import {
-  ACCOUNT_SECTION_TITLE,
-  accountLabel,
-  CANCEL_LABEL,
-  SIGN_OUT_LABEL,
-  SIGNED_IN_AS_LABEL,
-  signOutWarning,
-} from './settings.copy';
+import settingsCopy from './settings.copy';
 
 /** Cuenta (al final de P11): quién tiene la sesión y cerrar sesión. */
 export function AccountSection() {
@@ -61,26 +54,26 @@ export function AccountSection() {
 
   // Se confirma si hay algo que avisar: un invitado no puede volver a entrar, o quedan cambios sin subir.
   function requestSignOut() {
-    const message = signOutWarning(user, pendingCount + failedChanges.length);
+    const message = settingsCopy.signOutWarning(user, pendingCount + failedChanges.length);
     if (message) setWarning(message);
     else void signOutNow();
   }
 
   return (
     <View style={styles.section}>
-      <SectionLabel label={ACCOUNT_SECTION_TITLE} />
+      <SectionLabel label={settingsCopy.ACCOUNT_SECTION_TITLE} />
       <View style={styles.card}>
-        <Text style={styles.label}>{SIGNED_IN_AS_LABEL}</Text>
-        <Text style={styles.value}>{accountLabel(user)}</Text>
+        <Text style={styles.label}>{settingsCopy.SIGNED_IN_AS_LABEL}</Text>
+        <Text style={styles.value}>{settingsCopy.accountLabel(user)}</Text>
       </View>
       {error ? <StatusMessage tone="error" message={error} /> : null}
       {/* Con borde, no lleno: la primaria es para la tarea de la pantalla, y en P11 cerrar sesión es una acción de cuenta al final. */}
-      <SecondaryButton icon="log-out-outline" label={SIGN_OUT_LABEL} onPress={requestSignOut} disabled={signingOut} />
+      <SecondaryButton icon="log-out-outline" label={settingsCopy.SIGN_OUT_LABEL} onPress={requestSignOut} disabled={signingOut} />
       <ConfirmDialog
         visible={warning !== null}
         message={warning ?? ''}
-        confirmLabel={SIGN_OUT_LABEL}
-        cancelLabel={CANCEL_LABEL}
+        confirmLabel={settingsCopy.SIGN_OUT_LABEL}
+        cancelLabel={settingsCopy.CANCEL_LABEL}
         onConfirm={() => void signOutNow()}
         onCancel={() => setWarning(null)}
       />

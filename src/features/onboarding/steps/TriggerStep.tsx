@@ -6,12 +6,12 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { RoutineTriggersSection } from '@/features/triggers/RoutineTriggersSection';
 import { strategyFor } from '@/features/triggers/strategies';
-import { summarySentence } from '@/features/triggers/trigger.copy';
+import triggerCopy from '@/features/triggers/trigger.copy';
 import type { TriggerDraftEntry } from '@/features/triggers/trigger.types';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from '../onboarding.copy';
+import copy from '../onboarding.copy';
 
 interface TriggerStepProps {
   routineName: string;
@@ -48,7 +48,7 @@ export function TriggerStep({ routineName, formId, drafts, suggestion, onConfigu
         ) : suggestion ? (
           <View style={styles.suggestion}>
             <Text style={styles.suggestionText}>
-              {copy.suggestedTriggerText(summarySentence(strategyFor(suggestion).describe(suggestion)))}
+              {copy.suggestedTriggerText(triggerCopy.summarySentence(strategyFor(suggestion).describe(suggestion)))}
             </Text>
           </View>
         ) : null}

@@ -1,9 +1,12 @@
+import { getLocale } from '@/shared/i18n/locale.store';
+import type { Locale } from '@/shared/i18n/locale.types';
+
 import { AiClientError, type AiErrorKind, type AiRequest } from './ai.types';
 
 /** Lo que usa el cliente de `supabase.functions.invoke` (inyectable en tests). */
 export type InvokeFunction = (
   name: string,
-  options: { body: AiRequest },
+  options: { body: AiRequest & { locale: Locale } },
 ) => Promise<{ data: unknown; error: { name?: string; context?: unknown } | null }>;
 
 interface AiClientOptions {
@@ -69,7 +72,7 @@ export function createAiClient(invoke: InvokeFunction, { timeoutMs = DEFAULT_TIM
     for (let attempt = 0; ; attempt += 1) {
       let result: Awaited<ReturnType<InvokeFunction>>;
       try {
-        result = await withTimeout(invoke(FUNCTION_NAME, { body: request }), timeoutMs);
+        result = await withTimeout(invoke(FUNCTION_NAME, { body: { ...request, locale: getLocale() } }), timeoutMs);
       } catch (cause) {
         if (cause instanceof AiClientError) throw cause;
         if (attempt < networkRetries) continue;

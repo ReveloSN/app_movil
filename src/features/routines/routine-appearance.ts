@@ -1,24 +1,34 @@
 import type { ThemeColors } from '@/shared/theme/useAppTheme';
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
+import copy from './routine.copy';
+
 export interface IconOption {
   icon: IoniconName;
   /** Texto alternativo (lector de pantalla). */
   label: string;
 }
 
+/** Opción de ícono cuyo texto alternativo se lee del idioma activo al pedirlo (no al cargar el módulo). */
+const routineIcon = (icon: IoniconName): IconOption => ({
+  icon,
+  get label() {
+    return copy.ROUTINE_ICON_LABELS[icon];
+  },
+});
+
 /** 04-2: conjunto cerrado de íconos de rutina (incluye los de las plantillas). */
 export const ROUTINE_ICONS: readonly IconOption[] = [
-  { icon: 'checkbox-outline', label: 'Lista' },
-  { icon: 'home-outline', label: 'Casa' },
-  { icon: 'briefcase-outline', label: 'Trabajo' },
-  { icon: 'school-outline', label: 'Estudio' },
-  { icon: 'moon-outline', label: 'Noche' },
-  { icon: 'airplane-outline', label: 'Viaje' },
-  { icon: 'barbell-outline', label: 'Ejercicio' },
-  { icon: 'cart-outline', label: 'Compras' },
-  { icon: 'paw-outline', label: 'Mascota' },
-  { icon: 'car-outline', label: 'Carro' },
+  routineIcon('checkbox-outline'),
+  routineIcon('home-outline'),
+  routineIcon('briefcase-outline'),
+  routineIcon('school-outline'),
+  routineIcon('moon-outline'),
+  routineIcon('airplane-outline'),
+  routineIcon('barbell-outline'),
+  routineIcon('cart-outline'),
+  routineIcon('paw-outline'),
+  routineIcon('car-outline'),
 ];
 
 export type RoutineColorKey = 'green' | 'blue' | 'amber' | 'purple' | 'gray';
@@ -32,13 +42,23 @@ export interface ColorOption {
   tintToken: keyof ThemeColors;
 }
 
+/** Opción de color cuyo nombre se lee del idioma activo al pedirlo (no al cargar el módulo). */
+const routineColor = (key: RoutineColorKey, token: keyof ThemeColors, tintToken: keyof ThemeColors): ColorOption => ({
+  key,
+  get label() {
+    return copy.ROUTINE_COLOR_LABELS[key];
+  },
+  token,
+  tintToken,
+});
+
 /** 04-2: colores de categoría del mockup (tokens category*), con su versión para modo oscuro. */
 export const ROUTINE_COLORS: readonly ColorOption[] = [
-  { key: 'green', label: 'Verde', token: 'categoryGreen', tintToken: 'categoryGreenTint' },
-  { key: 'blue', label: 'Azul', token: 'categoryBlue', tintToken: 'categoryBlueTint' },
-  { key: 'amber', label: 'Ámbar', token: 'categoryAmber', tintToken: 'categoryAmberTint' },
-  { key: 'purple', label: 'Morado', token: 'categoryPurple', tintToken: 'categoryPurpleTint' },
-  { key: 'gray', label: 'Gris', token: 'categoryGray', tintToken: 'categoryGrayTint' },
+  routineColor('green', 'categoryGreen', 'categoryGreenTint'),
+  routineColor('blue', 'categoryBlue', 'categoryBlueTint'),
+  routineColor('amber', 'categoryAmber', 'categoryAmberTint'),
+  routineColor('purple', 'categoryPurple', 'categoryPurpleTint'),
+  routineColor('gray', 'categoryGray', 'categoryGrayTint'),
 ];
 
 /** El ícono es obligatorio (modelo de contenido): si no se elige, este. */

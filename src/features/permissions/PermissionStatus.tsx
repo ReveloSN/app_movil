@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { statusLabel } from './permission.copy';
+import copy from './permission.copy';
 import type { PermissionState } from './permission.types';
 
 /** Estado de un permiso: ícono + texto (nunca solo color). Lo usan P02 y Ajustes (11-2). */
@@ -14,13 +14,13 @@ export function PermissionStatus({ state }: { state: PermissionState | null }) {
   const granted = state?.granted ?? false;
 
   return (
-    <View style={styles.status} accessible accessibilityLabel={`Estado: ${statusLabel(state)}`}>
+    <View style={styles.status} accessible accessibilityLabel={copy.statusSpoken(copy.statusLabel(state))}>
       <Ionicons
         name={granted ? 'checkmark-circle' : 'alert-circle'}
         size={iconSizes.md}
         color={granted ? colors.primary : colors.criticalText}
       />
-      <Text style={styles.text}>{statusLabel(state)}</Text>
+      <Text style={styles.text}>{copy.statusLabel(state)}</Text>
     </View>
   );
 }

@@ -4,7 +4,7 @@ import { Chip } from '@/components/atoms/Chip';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './ai.copy';
+import copy from './ai.copy';
 
 /** Indicador discreto en P04 cuando el borrador lo hizo la IA: qué revisar y que aún no está guardado. */
 export function AiDraftNotice({ suggestsWifiExit }: { suggestsWifiExit: boolean }) {

@@ -6,6 +6,7 @@ import { IconButton } from '@/components/atoms/IconButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
+import copy from '@/components/components.copy';
 
 interface TriggerRowProps {
   icon: IoniconName;
@@ -31,7 +32,7 @@ export function TriggerRow({ icon, summary, typeLabel, onEdit, onRemove }: Trigg
         containerStyle={flexOne}
         accessibilityRole="button"
         accessibilityLabel={`${summary} ${typeLabel}.`}
-        accessibilityHint="Edita el aviso"
+        accessibilityHint={copy.EDIT_TRIGGER_HINT}
         onPress={onEdit}
         style={styles.body}
       >
@@ -42,7 +43,7 @@ export function TriggerRow({ icon, summary, typeLabel, onEdit, onRemove }: Trigg
         </View>
         <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
       </PressableScale>
-      <IconButton icon="trash-outline" tone="danger" accessibilityLabel={`Quitar aviso: ${summary}`} onPress={onRemove} />
+      <IconButton icon="trash-outline" tone="danger" accessibilityLabel={copy.removeTriggerLabel(summary)} onPress={onRemove} />
     </View>
   );
 }

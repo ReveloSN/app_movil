@@ -15,7 +15,7 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { useCitySearch } from './useCitySearch';
 import type { City } from './weather.client';
-import * as copy from './weather.copy';
+import copy from './weather.copy';
 import { updateWeatherPrefs, useWeatherPrefs } from './weather.prefs';
 
 /** Ajustes · Clima: ciudad (búsqueda por nombre) e interruptor. */

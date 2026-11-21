@@ -5,7 +5,7 @@ import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { ALLOW_LABEL, OPEN_SETTINGS_LABEL, PERMISSION_COPY } from './permission.copy';
+import copy, { PERMISSION_ICON } from './permission.copy';
 import type { PermissionKind } from './permission.types';
 import { PermissionStatus } from './PermissionStatus';
 import { usePermission } from './usePermission';
@@ -18,7 +18,8 @@ export function PermissionRow({ kind }: { kind: PermissionKind }) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const { state, requesting, request } = usePermission(kind);
-  const { title, icon } = PERMISSION_COPY[kind];
+  const { title } = copy.PERMISSION_COPY[kind];
+  const icon = PERMISSION_ICON[kind];
   const blocked = state !== null && !state.granted && !state.canAskAgain;
 
   return (
@@ -32,9 +33,9 @@ export function PermissionRow({ kind }: { kind: PermissionKind }) {
       </View>
       {state && !state.granted ? (
         blocked ? (
-          <SecondaryButton icon="settings-outline" label={OPEN_SETTINGS_LABEL} onPress={() => void Linking.openSettings()} />
+          <SecondaryButton icon="settings-outline" label={copy.OPEN_SETTINGS_LABEL} onPress={() => void Linking.openSettings()} />
         ) : (
-          <SecondaryButton label={ALLOW_LABEL} onPress={request} disabled={requesting} />
+          <SecondaryButton label={copy.ALLOW_LABEL} onPress={request} disabled={requesting} />
         )
       ) : null}
     </View>

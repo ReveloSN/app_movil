@@ -9,21 +9,21 @@ import { FilterChips } from '@/components/molecules/FilterChips';
 import { HistoryRecordRow } from '@/components/molecules/HistoryRecordRow';
 import { SegmentedControl, type SegmentOption } from '@/components/molecules/SegmentedControl';
 import { DepartureStatsView } from '@/features/history/DepartureStatsView';
-import * as copy from '@/features/history/history.copy';
+import copy from '@/features/history/history.copy';
 import { formatDayHeading } from '@/features/history/history.dates';
 import { filterRecords, mostSkippedItems, NO_FILTER, type HistoryFilter } from '@/features/history/history.filter';
 import { groupRecordsByDay } from '@/features/history/history.grouping';
 import { HistorySkeleton } from '@/features/history/HistorySkeleton';
-import { describeResult, RESULT_FILTERS } from '@/features/history/history.result';
+import { describeResult, resultFilters } from '@/features/history/history.result';
 import type { HistoryEntry } from '@/features/history/history.types';
 import { RecordDetailSheet } from '@/features/history/RecordDetailSheet';
-import * as statsCopy from '@/features/history/stats.copy';
+import statsCopy from '@/features/history/stats.copy';
 import { useHistory } from '@/features/history/useHistory';
 import { WeekSummarySection } from '@/features/insights/WeekSummarySection';
 import { useTabSwipeLockHandlers } from '@/features/navigation/TabSwipeLock';
 import { routineAccent } from '@/features/routines/routine-appearance';
 import { useRoutines } from '@/features/routines/useRoutines';
-import { PENDING_SYNC_LABEL } from '@/features/sync/sync.copy';
+import syncCopy from '@/features/sync/sync.copy';
 import { useMinuteClock } from '@/shared/hooks/useMinuteClock';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -34,7 +34,8 @@ const ALL = '';
 const goHome = () => router.navigate('/(tabs)');
 
 type HistoryView = 'history' | 'stats';
-const VIEW_OPTIONS: readonly SegmentOption<HistoryView>[] = [
+// Función y no constante: los textos se leen al dibujar, con el idioma activo.
+const viewOptions = (): readonly SegmentOption<HistoryView>[] => [
   { value: 'history', label: statsCopy.VIEW_HISTORY_LABEL },
   { value: 'stats', label: statsCopy.VIEW_STATS_LABEL },
 ];
@@ -80,7 +81,7 @@ export default function HistoryScreen() {
     () => [{ value: ALL, label: copy.ALL_ROUTINES_LABEL }, ...routines.map((routine) => ({ value: routine.id, label: routine.name }))],
     [routines],
   );
-  const resultOptions = useMemo(() => [{ value: ALL, label: copy.ALL_RESULTS_LABEL }, ...RESULT_FILTERS], []);
+  const resultOptions = useMemo(() => [{ value: ALL, label: copy.ALL_RESULTS_LABEL }, ...resultFilters()], []);
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
   if (loading && records.length === 0) return <HistorySkeleton loading={loading} />;
@@ -97,7 +98,7 @@ export default function HistoryScreen() {
   }
 
   const viewSwitch = (
-    <SegmentedControl<HistoryView> accessibilityLabel={statsCopy.VIEW_GROUP_LABEL} options={VIEW_OPTIONS} value={view} onChange={setView} />
+    <SegmentedControl<HistoryView> accessibilityLabel={statsCopy.VIEW_GROUP_LABEL} options={viewOptions()} value={view} onChange={setView} />
   );
 
   if (view === 'stats') {
@@ -161,7 +162,7 @@ export default function HistoryScreen() {
             date={item.date}
             result={describeResult(item.result)}
             kindLabel={item.routineKind === 'arrival' ? copy.ARRIVAL_ROW_LABEL : undefined}
-            pendingLabel={item.pending ? PENDING_SYNC_LABEL : undefined}
+            pendingLabel={item.pending ? syncCopy.PENDING_SYNC_LABEL : undefined}
             onPress={() => setDetail(item)}
             pressHint={copy.openDetailHint}
           />

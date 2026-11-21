@@ -5,10 +5,9 @@ import type { LocalRepositories } from '@/db/local/local.repositories';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useLocalRepositories } from '@/features/local-data/LocalRepositoriesProvider';
 
+import copy from './checklist.copy';
 import { summarize, toCheckedEntries } from './checklist.outcome';
 import type { ChecklistItemState, FinishIntent, VerificationSummary } from './checklist.types';
-
-const SAVE_ERROR = 'No se pudo guardar la verificación. Inténtalo de nuevo.';
 
 /**
  * Termina la verificación y guarda el registro en la cola local (outbox): no espera a la red, el usuario
@@ -51,7 +50,7 @@ export function useFinishChecklist(
         return { ...summary, recordId };
       } catch (cause) {
         if (__DEV__) console.warn('[checklist.finish]', cause);
-        setError(SAVE_ERROR);
+        setError(copy.SAVE_VERIFICATION_ERROR);
         return null;
       } finally {
         setFinishing(false);

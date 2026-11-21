@@ -6,7 +6,7 @@ import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import { START_LABEL, WELCOME_BODY, WELCOME_TITLE } from '../onboarding.copy';
+import onboardingCopy from '../onboarding.copy';
 
 /** Paso 1: bienvenida. La "ilustración" es una puerta en un círculo (decorativa para el lector). */
 export function WelcomeStep({ onStart }: { onStart(): void }) {
@@ -21,12 +21,12 @@ export function WelcomeStep({ onStart }: { onStart(): void }) {
           <Ionicons name="key-outline" size={iconSizes.lg} color={colors.criticalText} style={styles.key} />
         </View>
         <Text style={styles.title} accessibilityRole="header">
-          {WELCOME_TITLE}
+          {onboardingCopy.WELCOME_TITLE}
         </Text>
-        <Text style={styles.body}>{WELCOME_BODY}</Text>
+        <Text style={styles.body}>{onboardingCopy.WELCOME_BODY}</Text>
       </ScrollView>
       <ScreenFooter>
-        <PrimaryButton label={START_LABEL} onPress={onStart} />
+        <PrimaryButton label={onboardingCopy.START_LABEL} onPress={onStart} />
       </ScreenFooter>
     </View>
   );

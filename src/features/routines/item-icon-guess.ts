@@ -2,29 +2,31 @@ import { DEFAULT_ITEM_ICON } from './item-icons';
 import { normalizeLabel } from './item-suggestions';
 
 /**
- * Palabras clave (sin tildes ni mayúsculas) → ícono del conjunto cerrado de ítems (`ITEM_ICONS`, 05-2).
- * La primera regla que coincide gana: las más específicas van antes ("portátil cargado" es un portátil).
+ * Palabras clave en español y en inglés (sin tildes ni mayúsculas; la persona puede escribir en cualquier
+ * idioma, sin importar el de la app) → ícono del conjunto cerrado de ítems (`ITEM_ICONS`, 05-2).
+ * La primera regla que coincide gana: las más específicas van antes ("portátil cargado" es un portátil,
+ * "charged phone" es un celular).
  */
 const RULES: readonly (readonly [RegExp, string])[] = [
-  [/llave/, 'key-outline'],
-  [/billetera|cartera/, 'wallet-outline'],
-  [/portatil|computador|escritorio|pantalla/, 'laptop-outline'],
-  [/celular|telefono/, 'phone-portrait-outline'],
-  [/cargador|cargando|cargar|cargado/, 'battery-charging-outline'],
-  [/mascota|perro|gato/, 'paw-outline'],
-  [/estufa|\bgas\b/, 'flame-outline'],
-  [/puerta|candado|seguro/, 'lock-closed-outline'],
-  [/\bluz\b|luces/, 'bulb-outline'],
-  [/audifono/, 'headset-outline'],
-  [/gafa/, 'glasses-outline'],
-  [/paraguas/, 'umbrella-outline'],
-  [/agua|botella/, 'water-outline'],
-  [/merienda|almuerzo|tarro/, 'restaurant-outline'],
-  [/carne|tiquete|boleto|pasaje/, 'card-outline'],
-  [/documento|identidad|cuaderno|anotar|pendiente/, 'document-text-outline'],
-  [/medicamento|pastilla/, 'medkit-outline'],
-  [/alarma/, 'alarm-outline'],
-  [/archivo|nube/, 'cloud-upload-outline'],
+  [/llave|\bkeys?\b/, 'key-outline'],
+  [/billetera|cartera|wallet|purse/, 'wallet-outline'],
+  [/portatil|computador|escritorio|pantalla|laptop|computer|\bdesk\b|screen/, 'laptop-outline'],
+  [/celular|telefono|phone/, 'phone-portrait-outline'],
+  [/cargador|cargando|cargar|cargado|charger|charging|charged|\bcharge\b/, 'battery-charging-outline'],
+  [/mascota|perro|gato|\bpets?\b|\bdogs?\b|\bcats?\b/, 'paw-outline'],
+  [/estufa|\bgas\b|stove|cooker/, 'flame-outline'],
+  [/puerta|candado|seguro|\bdoors?\b|padlock|\block(ed)?\b/, 'lock-closed-outline'],
+  [/\bluz\b|luces|\blights?\b/, 'bulb-outline'],
+  [/audifono|headphone|earbud|earphone/, 'headset-outline'],
+  [/gafa|glasses/, 'glasses-outline'],
+  [/paraguas|umbrella/, 'umbrella-outline'],
+  [/agua|botella|water|bottle/, 'water-outline'],
+  [/merienda|almuerzo|tarro|snack|lunch/, 'restaurant-outline'],
+  [/carne|tiquete|boleto|pasaje|badge|ticket|student id|\bpass\b/, 'card-outline'],
+  [/documento|identidad|cuaderno|anotar|pendiente|document|\bid\b|passport|notebook|write down|\bnote\b|to-do/, 'document-text-outline'],
+  [/medicamento|pastilla|medic|\bpills?\b|\bmeds\b/, 'medkit-outline'],
+  [/alarma|alarm/, 'alarm-outline'],
+  [/archivo|nube|\bfiles?\b|cloud|backup/, 'cloud-upload-outline'],
 ];
 
 /** Ícono sugerido para un ítem según su etiqueta; undefined si ninguna palabra clave coincide. */

@@ -9,7 +9,7 @@ import {
   minutesToMs,
   UNANSWERED_REMINDERS,
 } from './notification.config';
-import { ARRIVAL_TITLE, arrivalBody, notificationTitle, reminderBody } from './notification.copy';
+import copy, { notificationTitle } from './notification.copy';
 import type { NotificationPrefs } from './notification.prefs';
 import type { Occurrence, OccurrenceNotificationData } from './occurrence.types';
 
@@ -46,7 +46,7 @@ async function scheduleReminders(
     ids.push(
       await Notifications.scheduleNotificationAsync({
         identifier: `${idPrefix}${n}`,
-        content: content(occurrence, reminderBody(occurrence.itemCount, occurrence.routineName), prefs),
+        content: content(occurrence, copy.reminderBody(occurrence.itemCount, occurrence.routineName), prefs),
         trigger: atDate(base + n * minutesToMs(prefs.snoozeMinutes), prefs),
       }),
     );
@@ -116,9 +116,9 @@ export async function scheduleArrival(
   const id = await Notifications.scheduleNotificationAsync({
     identifier: `${occurrence.key}#0`,
     content: {
-      title: ARRIVAL_TITLE,
+      title: copy.ARRIVAL_TITLE,
       subtitle: occurrence.routineName,
-      body: arrivalBody(labels),
+      body: copy.arrivalBody(labels),
       data,
       categoryIdentifier: ARRIVAL_CATEGORY_ID,
       sound: prefs.sound, // iOS; en Android lo decide el canal.

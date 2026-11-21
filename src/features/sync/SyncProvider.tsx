@@ -11,7 +11,7 @@ import { useTriggerRuntime } from '@/features/notifications/TriggerRuntimeProvid
 import { showFlashMessage } from '@/shared/events/flashMessage';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 
-import { SYNC_CONFLICT_MESSAGE, syncFailedMessage } from './sync.copy';
+import copy from './sync.copy';
 import { describeChange, failureReason } from './sync.describe';
 import { summarizeOutbox } from './sync.status';
 
@@ -111,8 +111,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     engine
       .sync()
       .then((report) => {
-        if (report.push.stale.length > 0) showFlashMessage(SYNC_CONFLICT_MESSAGE);
-        else if (report.push.failed.length > 0) showFlashMessage(syncFailedMessage(report.push.failed.length));
+        if (report.push.stale.length > 0) showFlashMessage(copy.SYNC_CONFLICT_MESSAGE);
+        else if (report.push.failed.length > 0) showFlashMessage(copy.syncFailedMessage(report.push.failed.length));
         if (report.changed) rearm().catch(warn('rearm'));
       })
       .catch(warn('run'))

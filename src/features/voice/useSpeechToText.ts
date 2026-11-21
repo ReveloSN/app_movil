@@ -1,9 +1,9 @@
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { normalizeDictation } from './voice.text';
+import { speechLang } from '@/shared/i18n/intl';
 
-export const SPEECH_LANG = 'es-CO';
+import { normalizeDictation } from './voice.text';
 
 export type SpeechErrorKind = 'denied' | 'unavailable' | 'no-speech' | 'error';
 
@@ -13,7 +13,7 @@ interface Options {
 }
 
 /**
- * Dictado por voz (SpeechRecognizer de Android vía expo-speech-recognition): es-CO, resultados
+ * Dictado por voz (SpeechRecognizer de Android vía expo-speech-recognition): idioma de la app (es-CO o en-US), resultados
  * parciales en vivo, permiso denegado y servicio no disponible como errores con tipo. Al desmontar
  * cancela el reconocimiento.
  */
@@ -69,7 +69,7 @@ export function useSpeechToText({ onText }: Options) {
         setError('denied');
         return;
       }
-      ExpoSpeechRecognitionModule.start({ lang: SPEECH_LANG, interimResults: true, continuous: false });
+      ExpoSpeechRecognitionModule.start({ lang: speechLang(), interimResults: true, continuous: false });
     } catch {
       setError('error');
     }

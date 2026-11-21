@@ -1,4 +1,4 @@
-/** 42 → "42 s"; 95 → "1 min 35 s". */
+/** 42 → "42 s"; 95 → "1 min 35 s" (las abreviaturas valen igual en español e inglés). */
 export function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.round(totalSeconds));
   if (seconds < 60) return `${seconds} s`;

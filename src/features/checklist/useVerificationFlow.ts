@@ -6,7 +6,7 @@ import { closeRoutineOccurrences } from '@/features/notifications/occurrence.lif
 import { dispatchToOwner } from '@/features/forms/useUnsavedChangesGuard';
 import { hapticConfirm } from '@/shared/haptics/haptics';
 
-import * as copy from './checklist.copy';
+import copy from './checklist.copy';
 import { firstUncheckedCritical, isEmptyDone } from './checklist.outcome';
 import type { ChecklistItemState, ChecklistProgress, FinishIntent, VerificationSummary } from './checklist.types';
 import { toSummaryParams } from './summaryParams';

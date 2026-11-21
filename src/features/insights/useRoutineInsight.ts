@@ -15,7 +15,7 @@ import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import type { Item } from '@/shared/types/item.types';
 
 import { ensureForgotMigrated } from './forgot.migrate';
-import * as copy from './insights.copy';
+import copy from './insights.copy';
 import { detectForgotPatterns, detectPatterns, itemKey, patternKey, type InsightPattern } from './insights.detect';
 import { createSnoozeStore } from './insights.stores';
 

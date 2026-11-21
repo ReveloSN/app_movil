@@ -1,11 +1,13 @@
+import { getLocale } from '@/shared/i18n/locale.store';
 import type { ClockTime } from '@/shared/types/clock.types';
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
-/** "6:00 p. m.". Se arma a mano: el formato de Intl para 'es' cambia según el motor JS del teléfono. */
+/** "6:00 p. m." en español, "6:00 PM" en inglés. Se arma a mano: el formato de Intl cambia según el motor JS del teléfono. */
 export function formatClock({ hour, minute }: ClockTime): string {
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${hour12}:${pad(minute)} ${hour < 12 ? 'a. m.' : 'p. m.'}`;
+  const meridiem = getLocale() === 'en' ? (hour < 12 ? 'AM' : 'PM') : hour < 12 ? 'a. m.' : 'p. m.';
+  return `${hour12}:${pad(minute)} ${meridiem}`;
 }
 
 /** true si la hora se lee en singular ("la 1:00"). */

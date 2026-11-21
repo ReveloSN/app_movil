@@ -1,8 +1,7 @@
-import { endSentence } from '@/shared/utils/endSentence';
 import { minutesOfDay } from '@/shared/utils/formatClock';
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
-import { windowSuffix } from '../trigger.copy';
+import copy from '../trigger.copy';
 import type { TimeWindow, WifiTriggerDraft, WifiTriggerKind } from '../trigger.types';
 import type { TriggerStrategy } from './trigger.strategy';
 
@@ -17,12 +16,13 @@ export function isWithinWindow(window: TimeWindow | null, at: Date): boolean {
 
 interface WifiStrategyConfig {
   kind: WifiTriggerKind;
-  label: string;
+  /** Función, no texto: se lee al usarla para seguir el idioma activo. */
+  label(): string;
   icon: IoniconName;
-  /** "cuando salgas de" */
-  phrasePrefix: string;
-  /** "Te desconectaste del Wi-Fi de" */
-  leadPrefix: string;
+  /** "cuando salgas de Casa" */
+  phrase(networkName: string): string;
+  /** "Te desconectaste del Wi-Fi de Casa." */
+  lead(networkName: string): string;
   /** Transición que dispara, comparando con el SSID de la red del aviso. */
   isTransition(wasOnNetwork: boolean, isOnNetwork: boolean): boolean;
 }
@@ -31,11 +31,13 @@ interface WifiStrategyConfig {
 export function createWifiStrategy(config: WifiStrategyConfig): TriggerStrategy<WifiTriggerDraft> {
   return {
     kind: config.kind,
-    label: config.label,
+    get label() {
+      return config.label();
+    },
     icon: config.icon,
     needsLocation: true,
-    describe: ({ networkName, window }) => `${config.phrasePrefix} ${networkName}${windowSuffix(window)}`,
-    notificationLead: ({ networkName }) => endSentence(`${config.leadPrefix} ${networkName}`),
+    describe: ({ networkName, window }) => `${config.phrase(networkName)}${copy.windowSuffix(window)}`,
+    notificationLead: ({ networkName }) => config.lead(networkName),
     occurrencesBetween: () => [],
     firesOnNetworkChange: ({ ssid, window }, previousSsid, currentSsid, at) =>
       config.isTransition(previousSsid === ssid, currentSsid === ssid) && isWithinWindow(window, at),

@@ -5,7 +5,7 @@ import type { ChecklistItemState } from '@/features/checklist/checklist.types';
 import { hapticToggleOn } from '@/shared/haptics/haptics';
 
 import { useWeatherSuggestion } from './useWeatherSuggestion';
-import * as copy from './weather.copy';
+import copy from './weather.copy';
 import { useWeatherPrefs } from './weather.prefs';
 import { prefetchWeather } from './weather.service';
 

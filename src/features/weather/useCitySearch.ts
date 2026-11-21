@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import * as copy from './weather.copy';
+import copy from './weather.copy';
 import { searchCities, type City, type FetchLike } from './weather.client';
 
 /** Búsqueda de ciudad (Ajustes): resultados, cargando y un error que orienta (sin red, sin coincidencias). */

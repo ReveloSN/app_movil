@@ -6,9 +6,9 @@ import { StatusMessage } from '@/components/atoms/StatusMessage';
 import { TextField } from '@/components/atoms/TextField';
 import { RoutinePreview } from '@/components/molecules/RoutinePreview';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
-import { CRITICAL_LABEL } from '@/features/routines/routine.copy';
+import routineCopy from '@/features/routines/routine.copy';
 import { resolveRoutineIcon, routineAccent } from '@/features/routines/routine-appearance';
-import * as copy from '@/features/routines/share/share.copy';
+import copy from '@/features/routines/share/share.copy';
 import { useImportRoutine } from '@/features/routines/share/useImportRoutine';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -46,7 +46,7 @@ export default function ImportRoutineScreen() {
             accentTint={accent.tint}
             countLabel={copy.itemsCount(preview.items.length)}
             items={preview.items}
-            criticalLabel={CRITICAL_LABEL}
+            criticalLabel={routineCopy.CRITICAL_LABEL}
           />
         ) : null}
       </ScrollView>

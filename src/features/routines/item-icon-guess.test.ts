@@ -17,6 +17,20 @@ describe('iconForItemLabel', () => {
     expect(iconForItemLabel(label)).toBe(icon);
   });
 
+  it.each([
+    ['Keys', 'key-outline'],
+    ['Charged phone', 'phone-portrait-outline'],
+    ['Laptop and charger', 'laptop-outline'],
+    ['Pet food served', 'paw-outline'],
+    ['Stove off', 'flame-outline'],
+    ['Door locked', 'lock-closed-outline'],
+    ['Water bottle', 'water-outline'],
+    ['Student ID', 'card-outline'],
+    ['Medication', 'medkit-outline'],
+  ])('también reconoce el inglés: «%s» → %s', (label, icon) => {
+    expect(iconForItemLabel(label)).toBe(icon);
+  });
+
   it('solo usa íconos del conjunto cerrado de ítems (05-2), para que el editor los reconozca', () => {
     const allowed = new Set(ITEM_ICONS.map((option) => option.icon as string));
     const labels = PRESET_TEMPLATES.flatMap((template) => template.items.map((item) => item.label));

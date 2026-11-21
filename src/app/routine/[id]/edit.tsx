@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { LoadingState } from '@/components/molecules/LoadingState';
-import { LOAD_ROUTINE_ERROR, ROUTINE_NOT_FOUND } from '@/features/routines/routine.copy';
+import copy from '@/features/routines/routine.copy';
 import { RoutineForm } from '@/features/routines/RoutineForm';
 import { useLoadedRoutine } from '@/features/routines/useLoadedRoutine';
 import { useRoutines } from '@/features/routines/useRoutines';
@@ -22,12 +22,12 @@ export default function EditRoutineScreen() {
   const { state, retry } = useLoadedRoutine(routine, (loaded) => loaded.triggers.forEach(upsert));
 
   if (!routine) {
-    if (routinesLoading) return <LoadingState accessibilityLabel="Cargando rutina" />;
+    if (routinesLoading) return <LoadingState accessibilityLabel={copy.LOADING_ROUTINE_LABEL} />;
     if (routinesError) return <ErrorState message={routinesError} onRetry={refresh} />;
-    return <EmptyState icon="help-circle-outline" message={ROUTINE_NOT_FOUND} />;
+    return <EmptyState icon="help-circle-outline" message={copy.ROUTINE_NOT_FOUND} />;
   }
-  if (state.status === 'loading') return <LoadingState accessibilityLabel="Cargando rutina" />;
-  if (state.status === 'error') return <ErrorState message={LOAD_ROUTINE_ERROR} onRetry={retry} />;
+  if (state.status === 'loading') return <LoadingState accessibilityLabel={copy.LOADING_ROUTINE_LABEL} />;
+  if (state.status === 'error') return <ErrorState message={copy.LOAD_ROUTINE_ERROR} onRetry={retry} />;
 
   return (
     <RoutineForm

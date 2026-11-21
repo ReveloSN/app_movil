@@ -11,7 +11,7 @@ import { type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { carriedBy, type SwipeDirection } from './checklist.deck';
-import * as copy from './checklist.copy';
+import copy from './checklist.copy';
 import type { ChecklistItemState } from './checklist.types';
 import { useChecklistDeck } from './useChecklistDeck';
 

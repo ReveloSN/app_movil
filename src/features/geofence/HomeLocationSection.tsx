@@ -14,13 +14,14 @@ import { requestPermission } from '@/features/permissions/permission.service';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
-import * as copy from './geofence.copy';
+import copy from './geofence.copy';
 import { readGeofenceStatus } from './geofence.service';
 import { HOME_RADII_METERS, type GeofenceStatus } from './geofence.types';
 import { locateHome } from './homeLocation.service';
 import { useHomeGeofence } from './useHomeGeofence';
 
-const RADIUS_OPTIONS = HOME_RADII_METERS.map((meters) => ({ value: String(meters), label: copy.radiusOptionLabel(meters) }));
+/** Opciones del radio. Es función: el texto se arma al dibujar, con el idioma activo. */
+const radiusOptions = () => HOME_RADII_METERS.map((meters) => ({ value: String(meters), label: copy.radiusOptionLabel(meters) }));
 const DEFAULT_RADIUS = 250;
 
 const STATUS_ICON: Record<GeofenceStatus, 'home-outline' | 'checkmark-circle' | 'alert-circle' | 'pause-circle'> = {
@@ -148,7 +149,7 @@ export function HomeLocationSection() {
             <Text style={styles.statusTitle}>{copy.RADIUS_LABEL}</Text>
             <SegmentedControl
               accessibilityLabel={copy.RADIUS_LABEL}
-              options={RADIUS_OPTIONS}
+              options={radiusOptions()}
               value={String(home.radius)}
               onChange={(value) => void changeRadius(value)}
             />

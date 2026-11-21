@@ -9,7 +9,7 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import type { IoniconName } from '@/shared/utils/ioniconName';
 
-import * as copy from './ai.copy';
+import copy from './ai.copy';
 
 interface AiConsentSheetProps {
   visible: boolean;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { aiErrorMessage } from '@/features/ai/ai.copy';
+import aiCopy from '@/features/ai/ai.copy';
 import { requestWeekSummary } from '@/features/ai/ai.service';
 import { AiClientError, type AiErrorKind } from '@/features/ai/ai.types';
 import { useAiAccess } from '@/features/ai/useAiAccess';
@@ -9,10 +9,9 @@ import { departureRoutineIdsOf } from '@/features/history/stats';
 import { useRoutines } from '@/features/routines/useRoutines';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
+import copy from './insights.copy';
 import { buildWeeklyStats, deterministicSummary, isEmptyWeek, weekKey } from './weekly';
 import { createWeeklySummaryStore, type StoredWeekSummary } from './weekly.store';
-
-export const WEEKLY_FALLBACK_NOTE = 'Te mostramos el resumen automático.';
 
 // Los errores que tienen sentido para un resumen; el resto (ej. un servidor sin este modo aún desplegado
 // responde "entrada inválida") se cuenta como "la IA no está disponible".
@@ -81,7 +80,7 @@ export function useWeeklySummary(records: readonly VerificationRecord[], now: Da
       await save(await requestWeekSummary(stats), 'ai');
     } catch (cause) {
       // La tarjeta nunca queda vacía por la IA: se explica qué pasó y se muestra el automático.
-      setNotice(`${aiErrorMessage(noticeKind(cause))} ${WEEKLY_FALLBACK_NOTE}`);
+      setNotice(`${aiCopy.aiErrorMessage(noticeKind(cause))} ${copy.WEEKLY_FALLBACK_NOTE}`);
       await save(deterministicSummary(stats), 'local');
     } finally {
       setGenerating(false);

@@ -13,10 +13,11 @@ import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 import { formatDateTime } from '@/shared/utils/formatDateTime';
 
-import * as copy from './settings.copy';
+import copy from './settings.copy';
 import { useHomeNetworks, validateNetworkName, type HomeNetworkView } from './useHomeNetworks';
 
-const ROW_LABELS = { rename: copy.RENAME_LABEL, remove: copy.DELETE_LABEL, save: copy.SAVE_LABEL, cancel: copy.CANCEL_LABEL };
+// Función y no constante: los textos se leen al dibujar, con el idioma activo.
+const rowLabels = () => ({ rename: copy.RENAME_LABEL, remove: copy.DELETE_LABEL, save: copy.SAVE_LABEL, cancel: copy.CANCEL_LABEL });
 
 /**
  * Redes de casa (11-1). Una red que usa algún aviso no se puede eliminar: se explica por qué
@@ -92,7 +93,7 @@ export function HomeNetworksSection() {
         ) : error && networks.length === 0 ? (
           <View style={[styles.padded, styles.group]}>
             <StatusMessage tone="error" message={error} />
-            <SecondaryButton icon="refresh" label="Reintentar" onPress={() => void refresh()} />
+            <SecondaryButton icon="refresh" label={copy.RETRY_LABEL} onPress={() => void refresh()} />
           </View>
         ) : networks.length === 0 ? (
           <Text style={[styles.padded, styles.empty]}>{copy.NETWORKS_EMPTY}</Text>
@@ -104,7 +105,7 @@ export function HomeNetworksSection() {
               ssid={network.ssid}
               lastSeenText={lastSeenText(network)}
               usageText={copy.networkUsage(network.usedBy)}
-              labels={ROW_LABELS}
+              labels={rowLabels()}
               editing={editingId === network.id}
               draftName={draftName}
               nameMaxLength={NETWORK_NAME_MAX_LENGTH}

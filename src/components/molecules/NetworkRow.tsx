@@ -5,6 +5,7 @@ import { TextButton } from '@/components/atoms/TextButton';
 import { TextField } from '@/components/atoms/TextField';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import copy from '@/components/components.copy';
 
 interface NetworkRowLabels {
   rename: string;
@@ -47,7 +48,7 @@ export function NetworkRow(props: NetworkRowProps) {
         {props.editing ? (
           <View style={styles.texts}>
             <TextField
-              label={`Nombre de «${props.ssid}»`}
+              label={copy.networkNameLabel(props.ssid)}
               value={props.draftName}
               onChangeText={props.onChangeDraft}
               maxLength={props.nameMaxLength}
@@ -60,7 +61,7 @@ export function NetworkRow(props: NetworkRowProps) {
           <View
             style={styles.texts}
             accessible
-            accessibilityLabel={`${props.name}, red ${props.ssid}. ${props.lastSeenText}. ${props.usageText}.`}
+            accessibilityLabel={copy.networkRowLabel(props.name, props.ssid, props.lastSeenText, props.usageText)}
           >
             <Text style={styles.name}>{props.name}</Text>
             <Text style={styles.meta}>{props.ssid}</Text>

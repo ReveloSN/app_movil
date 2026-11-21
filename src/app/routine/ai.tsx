@@ -11,12 +11,12 @@ import { MicButton } from '@/components/molecules/MicButton';
 import { SkeletonList } from '@/components/molecules/SkeletonList';
 import { SuggestionChips } from '@/components/molecules/SuggestionChips';
 import { ScreenFooter } from '@/components/organisms/ScreenFooter';
-import * as copy from '@/features/ai/ai.copy';
+import copy from '@/features/ai/ai.copy';
 import { putAiDraft } from '@/features/ai/aiDraft.store';
-import { BROWSE_TEMPLATES_LABEL } from '@/features/routine-templates/routine-templates.copy';
+import templatesCopy from '@/features/routine-templates/routine-templates.copy';
 import { useAiDraft } from '@/features/ai/useAiDraft';
 import { useSpeechToText, type SpeechErrorKind } from '@/features/voice/useSpeechToText';
-import * as voiceCopy from '@/features/voice/voice.copy';
+import voiceCopy from '@/features/voice/voice.copy';
 import { composeDictation } from '@/features/voice/voice.text';
 import { useNetworkStatus } from '@/shared/network/useNetworkStatus';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
@@ -24,12 +24,14 @@ import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 const PROMPT_MAX_LENGTH = 200;
 
-const SPEECH_ERROR_MESSAGE: Record<SpeechErrorKind, string> = {
-  denied: voiceCopy.ERROR_DENIED,
-  unavailable: voiceCopy.ERROR_UNAVAILABLE,
-  'no-speech': voiceCopy.ERROR_NO_SPEECH,
-  error: voiceCopy.ERROR_GENERIC,
-};
+/** Se arma al usarlo: los textos salen del idioma activo en ese momento. */
+const speechErrorMessage = (kind: SpeechErrorKind): string =>
+  ({
+    denied: voiceCopy.ERROR_DENIED,
+    unavailable: voiceCopy.ERROR_UNAVAILABLE,
+    'no-speech': voiceCopy.ERROR_NO_SPEECH,
+    error: voiceCopy.ERROR_GENERIC,
+  })[kind];
 
 /** "Crear con IA": una frase → borrador que se abre en P04 como rutina nueva (sin guardar). */
 export default function CreateWithAiScreen() {
@@ -94,7 +96,7 @@ export default function CreateWithAiScreen() {
         />
         {speech.error ? (
           // Sin permiso o sin servicio: el dictado del teclado (Gboard) sigue funcionando en el mismo campo.
-          <StatusMessage tone={speech.error === 'no-speech' ? 'info' : 'error'} message={SPEECH_ERROR_MESSAGE[speech.error]} />
+          <StatusMessage tone={speech.error === 'no-speech' ? 'info' : 'error'} message={speechErrorMessage(speech.error)} />
         ) : null}
         {speech.error === 'denied' || speech.error === 'unavailable' || speech.error === 'error' ? (
           <Text style={styles.hint}>{voiceCopy.KEYBOARD_DICTATION_HELP}</Text>
@@ -122,7 +124,7 @@ export default function CreateWithAiScreen() {
           <>
             <StatusMessage tone="error" message={error} />
             {/* Siguiente paso claro si la IA no puede (sin cuota, sin servicio): una plantilla. */}
-            <SecondaryButton icon="albums-outline" label={BROWSE_TEMPLATES_LABEL} onPress={() => router.replace('/routine/templates')} />
+            <SecondaryButton icon="albums-outline" label={templatesCopy.BROWSE_TEMPLATES_LABEL} onPress={() => router.replace('/routine/templates')} />
           </>
         ) : null}
         {isConnected ? null : <StatusMessage tone="info" message={copy.OFFLINE_HINT} />}

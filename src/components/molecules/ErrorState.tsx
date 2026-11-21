@@ -6,6 +6,7 @@ import { PrimaryButton } from '@/components/atoms/PrimaryButton';
 import { fadeIn } from '@/shared/theme/motion';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
+import copy from '@/components/components.copy';
 
 interface ErrorStateProps {
   message: string;
@@ -14,7 +15,7 @@ interface ErrorStateProps {
 }
 
 /** Estado de error de pantalla completa con reintento. */
-export function ErrorState({ message, onRetry, retryLabel = 'Reintentar' }: ErrorStateProps) {
+export function ErrorState({ message, onRetry, retryLabel = copy.RETRY_LABEL }: ErrorStateProps) {
   const { colors, iconSizes } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 

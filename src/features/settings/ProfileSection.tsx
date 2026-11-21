@@ -8,7 +8,7 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { DISPLAY_NAME_MAX_LENGTH, normalizeDisplayName } from './display-name';
-import * as copy from './settings.copy';
+import copy from './settings.copy';
 import { useSettings } from './useSettings';
 
 /** "Nombre" (Ajustes, opcional): se guarda al terminar de escribir, en la copia local y luego se sincroniza. */
@@ -33,7 +33,7 @@ export function ProfileSection() {
       {saveError ? <StatusMessage tone="error" message={saveError} /> : null}
       <View style={styles.card}>
         {!settings && loading ? (
-          <ActivityIndicator color={colors.primary} accessibilityLabel="Cargando ajustes" />
+          <ActivityIndicator color={colors.primary} accessibilityLabel={copy.LOADING_SETTINGS_LABEL} />
         ) : (
           <>
             <TextField

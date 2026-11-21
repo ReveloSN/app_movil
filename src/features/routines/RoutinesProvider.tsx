@@ -8,14 +8,11 @@ import type { Routine } from '@/shared/types/routine.types';
 import { deleteRoutineCascade, type RoutineDeleteDeps } from './routine-delete.service';
 import { updateRoutineWithItems, type RoutineOriginal } from './routine-edit.service';
 import { upsertRoutine } from './routine-list';
+import copy from './routine.copy';
 import { createRoutineWithItems, type RoutineServiceDeps } from './routine.service';
 import { hasValidationErrors, validateRoutineDraft } from './routine.validation';
 import { RoutinesContext } from './routines.context';
 import type { DeleteRoutineResult, RoutineDraft, RoutinesContextValue, SaveRoutineResult } from './routines.types';
-
-const LOAD_ERROR = 'No pudimos cargar tus rutinas. Revisa tu conexión e inténtalo de nuevo.';
-const SAVE_ERROR = 'No se pudo guardar la rutina. Revisa tu conexión e inténtalo de nuevo.';
-const DELETE_ERROR = 'No se pudo eliminar la rutina. Revisa tu conexión e inténtalo de nuevo.';
 
 type RoutinesRepositories = RoutineServiceDeps & RoutineDeleteDeps;
 
@@ -63,7 +60,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
       (cause: unknown) => {
         if (!isLatest()) return;
         if (__DEV__) console.warn('[routines.getAll]', cause);
-        setError(localLoadErrorMessage(cause, LOAD_ERROR));
+        setError(localLoadErrorMessage(cause, copy.LOAD_ROUTINES_ERROR));
         setLoading(false);
       },
     );
@@ -102,7 +99,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
         return { status: 'saved', routine };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.create]', cause);
-        return { status: 'failed', error: SAVE_ERROR };
+        return { status: 'failed', error: copy.SAVE_ROUTINE_ERROR };
       }
     },
     [repositories],
@@ -119,7 +116,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
         return { status: 'saved', routine };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.update]', cause);
-        return { status: 'failed', error: SAVE_ERROR };
+        return { status: 'failed', error: copy.SAVE_ROUTINE_ERROR };
       }
     },
     [repositories],
@@ -135,7 +132,7 @@ export function RoutinesProvider({ children, repositories: injected }: RoutinesP
         return { status: 'deleted' };
       } catch (cause) {
         if (__DEV__) console.warn('[routines.delete]', cause);
-        return { status: 'failed', error: DELETE_ERROR };
+        return { status: 'failed', error: copy.DELETE_ROUTINE_ERROR };
       }
     },
     [repositories],

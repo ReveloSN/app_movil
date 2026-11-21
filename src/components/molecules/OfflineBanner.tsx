@@ -4,8 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
-
-const MESSAGE = 'Sin conexión a internet';
+import copy from '@/components/components.copy';
 
 /** Franja superior de "sin conexión". Quien la usa decide cuándo montarla. */
 export function OfflineBanner() {
@@ -13,16 +12,17 @@ export function OfflineBanner() {
   const styles = useThemedStyles(createStyles);
   // Ocupa la zona de la barra de estado: la franja queda pegada al borde superior real.
   const { top } = useSafeAreaInsets();
+  const message = copy.OFFLINE_MESSAGE;
 
   return (
     <View
       style={[styles.banner, { paddingTop: top + spacing.sm }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      accessibilityLabel={MESSAGE}
+      accessibilityLabel={message}
     >
       <Ionicons name="cloud-offline-outline" size={iconSizes.md} color={colors.criticalText} />
-      <Text style={styles.text}>{MESSAGE}</Text>
+      <Text style={styles.text}>{message}</Text>
     </View>
   );
 }

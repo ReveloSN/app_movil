@@ -8,8 +8,8 @@ import { spacing } from '@/shared/theme/tokens';
 
 import { ReorderableItemList } from './ReorderableItemList';
 import { resolveItemIcon } from './item-icons';
-import * as copy from './routine.copy';
-import { MAX_ITEMS, MAX_ITEMS_MESSAGE } from './routine.validation';
+import copy from './routine.copy';
+import { MAX_ITEMS } from './routine.validation';
 import type { RoutineValidationErrors } from './routines.types';
 import type { ItemFormEntry } from './useRoutineForm';
 
@@ -34,7 +34,7 @@ export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdi
         <SectionLabel
           label={copy.ITEMS_SECTION_TITLE}
           trailing={`${items.length}/${MAX_ITEMS}`}
-          accessibilityLabel={`${copy.ITEMS_SECTION_TITLE}, ${items.length} de ${MAX_ITEMS}`}
+          accessibilityLabel={copy.itemsSectionLabel(items.length, MAX_ITEMS)}
         />
       </View>
       {errors.items ? <StatusMessage tone="error" message={errors.items} /> : null}
@@ -63,7 +63,7 @@ export function RoutineItemsSection({ items, errors, canAddItem, onLayout, onEdi
       />
 
       {/* ER-05: al llegar al máximo, se explica por qué ya no se puede añadir. */}
-      {canAddItem ? null : <StatusMessage tone="info" message={MAX_ITEMS_MESSAGE} />}
+      {canAddItem ? null : <StatusMessage tone="info" message={copy.MAX_ITEMS_MESSAGE} />}
       <SecondaryButton icon="add" label={copy.ADD_ITEM_LABEL} onPress={onAdd} disabled={!canAddItem} />
     </>
   );

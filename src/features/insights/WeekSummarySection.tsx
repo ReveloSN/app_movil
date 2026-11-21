@@ -2,7 +2,7 @@ import { WeekSummaryCard, type WeekSummaryCardState } from '@/components/molecul
 import { AiConsentSheet } from '@/features/ai/AiConsentSheet';
 import type { VerificationRecord } from '@/shared/types/verification-record.types';
 
-import * as copy from './insights.copy';
+import copy from './insights.copy';
 import { useWeeklySummary } from './useWeeklySummary';
 
 /** "Tu semana" en el Historial: resumen guardado por semana; generarlo lo decide la persona. */

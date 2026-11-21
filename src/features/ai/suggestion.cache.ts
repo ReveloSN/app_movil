@@ -1,7 +1,11 @@
+import { getLocale } from '@/shared/i18n/locale.store';
+
 /** Clave de caché: nombre + ítems, sin importar mayúsculas, espacios ni el orden de los ítems. */
 export function suggestionCacheKey(name: string, items: readonly string[]): string {
   const norm = (value: string) => value.replace(/\s+/g, ' ').trim().toLocaleLowerCase('es');
-  return JSON.stringify([norm(name), items.map(norm).filter(Boolean).sort()]);
+  const key = [norm(name), items.map(norm).filter(Boolean).sort()];
+  // Las sugerencias dependen del idioma de la respuesta; el español conserva su clave de siempre.
+  return JSON.stringify(getLocale() === 'en' ? ['en', ...key] : key);
 }
 
 /** Caché de sugerencias durante la sesión (en memoria): la misma rutina no repite la llamada. */

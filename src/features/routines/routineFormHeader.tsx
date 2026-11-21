@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 
 import { TextButton } from '@/components/atoms/TextButton';
 
-import { CANCEL_LABEL } from './routine.copy';
+import copy from './routine.copy';
 
 function cancel() {
   if (router.canGoBack()) router.back();
@@ -15,4 +15,4 @@ function cancel() {
  * se cierra (guardar → Inicio), Android falla con "ScreenStackFragment added into a non-stack container".
  * DC-03 sigue cubriéndolo: `router.back()` pasa por la protección de cambios sin guardar.
  */
-export const renderCancelHeader = () => <TextButton label={CANCEL_LABEL} onPress={cancel} />;
+export const renderCancelHeader = () => <TextButton label={copy.CANCEL_LABEL} onPress={cancel} />;

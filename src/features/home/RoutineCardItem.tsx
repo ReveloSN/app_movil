@@ -3,7 +3,7 @@ import { memo } from 'react';
 
 import { RoutineCard } from '@/components/molecules/RoutineCard';
 import homeCopy from '@/features/home/home.copy';
-import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
+import checklistCopy from '@/features/checklist/checklist.copy';
 import { routineAccent } from '@/features/routines/routine-appearance';
 import { canVerifyFromHome } from '@/features/routines/routine-list';
 import { useAppTheme } from '@/shared/theme/useAppTheme';
@@ -33,7 +33,7 @@ function RoutineCardItemBase({ routine, completedToday }: RoutineCardItemProps) 
       active={routine.active}
       lastCompletedAt={routine.lastCompletedAt}
       completedToday={completedToday}
-      actionLabel={verifiable ? (completedToday ? homeCopy.VERIFY_AGAIN_LABEL : VERIFY_NOW_LABEL) : undefined}
+      actionLabel={verifiable ? (completedToday ? homeCopy.VERIFY_AGAIN_LABEL : checklistCopy.VERIFY_NOW_LABEL) : undefined}
       onAction={verifiable ? verify : undefined}
       // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
       onPress={verifiable ? verify : undefined}

@@ -12,7 +12,7 @@ import { NotificationPrefsSection } from '@/features/settings/NotificationPrefsS
 import { VerificationPrefsSection } from '@/features/settings/VerificationPrefsSection';
 import { PermissionsSection } from '@/features/settings/PermissionsSection';
 import { ProfileSection } from '@/features/settings/ProfileSection';
-import { HELP_LABEL } from '@/features/settings/settings.copy';
+import settingsCopy from '@/features/settings/settings.copy';
 import { SyncStatusSection } from '@/features/sync/SyncStatusSection';
 import { WeatherSettingsSection } from '@/features/weather/WeatherSettingsSection';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
       <SyncStatusSection />
 
       {/* 11-6: la ayuda va hacia el final, antes de la cuenta. */}
-      <SecondaryButton icon="help-circle-outline" label={HELP_LABEL} onPress={() => router.push('/help')} />
+      <SecondaryButton icon="help-circle-outline" label={settingsCopy.HELP_LABEL} onPress={() => router.push('/help')} />
 
       {/* "Cerrar sesión" queda al final de la pantalla. */}
       <AccountSection />

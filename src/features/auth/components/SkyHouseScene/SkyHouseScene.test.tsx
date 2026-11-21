@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
+import copy from '@/features/auth/auth.copy';
 import { TestProviders } from '@/shared/testing/TestProviders';
 
-import { SCENE_ALT, SkyHouseScene } from './SkyHouseScene';
+import { SkyHouseScene } from './SkyHouseScene';
 import { forcedHour } from './useSceneHour';
 
 jest.mock('expo-router', () => ({ useIsFocused: () => true }));
@@ -24,7 +25,7 @@ describe('SkyHouseScene', () => {
   it('en modo reducido se dibuja con su texto alternativo, el saludo y el titular de la hora', async () => {
     await renderScene(new Date(2026, 9, 17, 22, 0));
 
-    expect(screen.getByLabelText(SCENE_ALT)).toBeTruthy();
+    expect(screen.getByLabelText(copy.SCENE_ALT)).toBeTruthy();
     expect(screen.getByText('Buenas noches')).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Cierra el día con calma' })).toBeTruthy();
   });
@@ -36,7 +37,7 @@ describe('SkyHouseScene', () => {
 
   it('mantener presionado activa el recorrido de 24 h y otro mantener-presionado lo quita', async () => {
     await renderScene(new Date(2026, 9, 17, 7, 0));
-    const scene = screen.getByLabelText(SCENE_ALT).parent!;
+    const scene = screen.getByLabelText(copy.SCENE_ALT).parent!;
 
     await fireEvent(scene, 'longPress');
     expect(screen.getByText(/^Demostración · 07:00$/)).toBeTruthy();

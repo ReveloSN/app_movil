@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 
+import copy from '@/features/auth/auth.copy';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { spacing, typography } from '@/shared/theme/tokens';
 
@@ -25,8 +26,6 @@ import { Clouds, Stars } from './SkyDetails';
 import { useSceneActive } from './useSceneActive';
 import { useSceneHour } from './useSceneHour';
 
-/** Texto alternativo de la escena (la ilustración es una sola imagen para el lector de pantalla). */
-export const SCENE_ALT = 'Paisaje que cambia con la hora del día: una casa con sol o luna';
 /** Mantener presionado ~2 s activa o quita el recorrido de 24 h (para presentar la app). */
 const DEMO_LONG_PRESS_MS = 2000;
 const CROSSFADE_MS = 800;
@@ -82,7 +81,7 @@ export function SkyHouseScene({ topInset, reducedMotion: forcedReduced }: SkyHou
     >
       {/* La barra de estado se lee sobre el cielo: iconos claros de noche y oscuros de día. */}
       <StatusBar style={tone === 'light' ? 'light' : 'dark'} />
-      <View style={StyleSheet.absoluteFill} accessible accessibilityRole="image" accessibilityLabel={SCENE_ALT}>
+      <View style={StyleSheet.absoluteFill} accessible accessibilityRole="image" accessibilityLabel={copy.SCENE_ALT}>
         <SceneLayers weights={weights} size={width} top={imageTop} transitionMs={transitionMs} zoom={moving}>
           <FloatingBubbles toScene={toScene} floating={moving} night={tone === 'light'} />
         </SceneLayers>
@@ -101,7 +100,7 @@ export function SkyHouseScene({ topInset, reducedMotion: forcedReduced }: SkyHou
         <Text style={[styles.subtitle, { color: textColor }]}>{words.subtitle}</Text>
         {demo ? (
           <Text style={[styles.demo, { color: textColor }]} accessibilityLiveRegion="polite">
-            {`Demostración · ${formatSceneHour(hour)}`}
+            {copy.demoLabel(formatSceneHour(hour))}
           </Text>
         ) : null}
       </View>

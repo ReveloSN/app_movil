@@ -1,27 +1,28 @@
 import { isAuthRetryableFetchError, type AuthError } from '@supabase/supabase-js';
 
-const MESSAGES_BY_CODE: Record<string, string> = {
-  invalid_credentials: 'Correo o contraseña incorrectos.',
-  email_not_confirmed: 'Confirma tu correo antes de iniciar sesión.',
-  user_already_exists: 'Ya existe una cuenta con ese correo.',
-  email_exists: 'Ya existe una cuenta con ese correo.',
-  weak_password: 'La contraseña es demasiado débil.',
-  over_request_rate_limit: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
-  over_email_send_rate_limit: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
-  anonymous_provider_disabled: 'El acceso sin cuenta no está disponible en este momento.',
-};
+import copy from './auth.copy';
 
-const FALLBACK_MESSAGE = 'No se pudo completar la operación. Revisa tu conexión e inténtalo de nuevo.';
+/** Clave del texto (en auth.copy) que explica cada código de error de Supabase Auth. */
+const MESSAGE_KEY_BY_CODE = {
+  invalid_credentials: 'ERROR_INVALID_CREDENTIALS',
+  email_not_confirmed: 'ERROR_EMAIL_NOT_CONFIRMED',
+  user_already_exists: 'ERROR_ACCOUNT_EXISTS',
+  email_exists: 'ERROR_ACCOUNT_EXISTS',
+  weak_password: 'ERROR_WEAK_PASSWORD',
+  over_request_rate_limit: 'ERROR_RATE_LIMIT',
+  over_email_send_rate_limit: 'ERROR_RATE_LIMIT',
+  anonymous_provider_disabled: 'ERROR_ANONYMOUS_DISABLED',
+} as const;
 
-const GUEST_OFFLINE_MESSAGE =
-  'La primera vez necesitas internet para crear tu espacio. Después la app funciona sin conexión.';
+const isKnownCode = (code: string): code is keyof typeof MESSAGE_KEY_BY_CODE =>
+  Object.prototype.hasOwnProperty.call(MESSAGE_KEY_BY_CODE, code);
 
-/** Traduce un error de Supabase Auth a un mensaje para el usuario. */
+/** Traduce un error de Supabase Auth a un mensaje para el usuario (en el idioma activo). */
 export function toAuthErrorMessage(error: AuthError): string {
-  return (error.code && MESSAGES_BY_CODE[error.code]) || FALLBACK_MESSAGE;
+  return error.code && isKnownCode(error.code) ? copy[MESSAGE_KEY_BY_CODE[error.code]] : copy.ERROR_FALLBACK;
 }
 
 /** Como toAuthErrorMessage, pero sin red explica que el invitado solo necesita internet la primera vez. */
 export function toGuestErrorMessage(error: AuthError): string {
-  return isAuthRetryableFetchError(error) ? GUEST_OFFLINE_MESSAGE : toAuthErrorMessage(error);
+  return isAuthRetryableFetchError(error) ? copy.ERROR_GUEST_OFFLINE : toAuthErrorMessage(error);
 }

@@ -15,9 +15,10 @@ import { ScreenFooter } from '@/components/organisms/ScreenFooter';
 import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useCloseAfterSave } from '@/features/forms/useCloseAfterSave';
 import { useAfterAppear } from '@/features/navigation/useAfterAppear';
+import routineCopy from '@/features/routines/routine.copy';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
 import { strategyFor, strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
-import * as copy from '@/features/triggers/trigger.copy';
+import copy, { WEEK_ORDER } from '@/features/triggers/trigger.copy';
 import type { TriggerKind } from '@/features/triggers/trigger.types';
 import { NETWORK_NAME_MAX_LENGTH, SSID_MAX_LENGTH } from '@/features/triggers/trigger.validation';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
@@ -34,12 +35,14 @@ const KIND_ICONS: Record<TriggerKind, Pick<RadioCardOption<TriggerKind>, 'icon' 
   wifi_exit: { icon: 'wifi-outline', badgeIcon: 'exit-outline' },
   wifi_enter: { icon: 'wifi-outline', badgeIcon: 'enter-outline' },
 };
-const KIND_OPTIONS = TRIGGER_KINDS.map((kind) => ({ value: kind, label: strategyForKind(kind).label, ...KIND_ICONS[kind] }));
-const DAY_OPTIONS: DayOption[] = copy.WEEK_ORDER.map((day) => ({
-  value: day,
-  short: copy.DAY_LETTERS[day],
-  name: copy.DAY_NAMES[day],
-}));
+// Se arman al renderizar: los textos salen del idioma activo en ese momento.
+const kindOptions = () => TRIGGER_KINDS.map((kind) => ({ value: kind, label: strategyForKind(kind).label, ...KIND_ICONS[kind] }));
+const dayOptions = (): DayOption[] =>
+  WEEK_ORDER.map((day) => ({
+    value: day,
+    short: copy.DAY_LETTERS[day],
+    name: copy.DAY_NAMES[day],
+  }));
 
 const openLocationPermission = () => router.push({ pathname: '/routine/permissions', params: { kind: 'location' } });
 
@@ -86,12 +89,12 @@ export default function TriggerScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* 06-1 */}
         <Text style={styles.sectionTitle} accessibilityRole="header">
-          Tipo
+          {routineCopy.TRIGGER_SECTION_KIND}
         </Text>
         {form.allowedKinds.length > 1 ? (
           <RadioCardGroup<TriggerKind>
-            accessibilityLabel="Tipo de aviso"
-            options={KIND_OPTIONS.filter((option) => form.allowedKinds.includes(option.value))}
+            accessibilityLabel={routineCopy.TRIGGER_KIND_GROUP_LABEL}
+            options={kindOptions().filter((option) => form.allowedKinds.includes(option.value))}
             value={form.kind}
             onChange={form.setKind}
           />
@@ -106,7 +109,7 @@ export default function TriggerScreen() {
             <>
               {/* 06-3 + 06-4 */}
               <Text style={styles.sectionTitle} accessibilityRole="header">
-                Red
+                {routineCopy.TRIGGER_SECTION_NETWORK}
               </Text>
               <NetworkDetection
                 detection={detection}
@@ -115,8 +118,8 @@ export default function TriggerScreen() {
                 onUse={(ssid) => form.setSsid(ssid)}
               />
               <TextField
-                label="Nombre de la red Wi-Fi"
-                placeholder="Como aparece en tu teléfono"
+                label={routineCopy.SSID_LABEL}
+                placeholder={routineCopy.SSID_PLACEHOLDER}
                 value={form.ssid}
                 onChangeText={form.setSsid}
                 maxLength={SSID_MAX_LENGTH}
@@ -130,8 +133,8 @@ export default function TriggerScreen() {
               <TextField
                 ref={networkNameRef}
                 returnKeyType="done"
-                label="¿Cómo la llamas?"
-                placeholder="Ej. Casa"
+                label={routineCopy.NETWORK_NAME_LABEL}
+                placeholder={routineCopy.NETWORK_NAME_PLACEHOLDER}
                 value={form.networkName}
                 onChangeText={form.setNetworkName}
                 maxLength={NETWORK_NAME_MAX_LENGTH}
@@ -149,13 +152,13 @@ export default function TriggerScreen() {
               {form.windowEnabled ? (
                 <View style={styles.group}>
                   <TimeField
-                    label="Desde"
+                    label={routineCopy.WINDOW_FROM_LABEL}
                     value={form.timeWindow.start}
                     valueLabel={formatClock(form.timeWindow.start)}
                     onChange={(start) => form.setTimeWindow((current) => ({ ...current, start }))}
                   />
                   <TimeField
-                    label="Hasta"
+                    label={routineCopy.WINDOW_TO_LABEL}
                     value={form.timeWindow.end}
                     valueLabel={formatClock(form.timeWindow.end)}
                     onChange={(end) => form.setTimeWindow((current) => ({ ...current, end }))}
@@ -168,10 +171,10 @@ export default function TriggerScreen() {
             <>
               {/* 06-2 */}
               <Text style={styles.sectionTitle} accessibilityRole="header">
-                Hora y días
+                {routineCopy.TRIGGER_SECTION_SCHEDULE}
               </Text>
-              <TimeField label="Hora" value={form.time} valueLabel={formatClock(form.time)} onChange={form.setTime} />
-              <DayPicker options={DAY_OPTIONS} value={form.days} onChange={form.setDays} />
+              <TimeField label={routineCopy.TIME_LABEL} value={form.time} valueLabel={formatClock(form.time)} onChange={form.setTime} />
+              <DayPicker options={dayOptions()} value={form.days} onChange={form.setDays} />
               {form.errors.days ? <StatusMessage tone="error" message={form.errors.days} /> : null}
             </>
           )}

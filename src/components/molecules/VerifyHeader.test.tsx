@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { progressCount, progressSpoken } from '@/features/checklist/checklist.copy';
+import checklistCopy from '@/features/checklist/checklist.copy';
 import { TestProviders } from '@/shared/testing/TestProviders';
 
 import { VerifyHeader } from './VerifyHeader';
@@ -18,8 +18,8 @@ async function renderHeader(checked: number, total: number, onClose = jest.fn())
         checked={checked}
         total={total}
         closeLabel="Cerrar verificación"
-        countLabel={progressCount(checked, total)}
-        progressLabel={progressSpoken(checked, total)}
+        countLabel={checklistCopy.progressCount(checked, total)}
+        progressLabel={checklistCopy.progressSpoken(checked, total)}
         onClose={onClose}
       />
     </TestProviders>,

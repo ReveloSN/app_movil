@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { CreateWithAiButton } from '@/features/ai/CreateWithAiButton';
-import { HAVE_CODE_LABEL } from '@/features/routines/share/share.copy';
+import shareCopy from '@/features/routines/share/share.copy';
 import { TemplateList } from '@/features/routine-templates/TemplateList';
 import type { AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
@@ -18,7 +18,7 @@ export default function TemplatesScreen() {
         <View style={styles.header}>
           <CreateWithAiButton />
           {/* Importar una rutina que alguien compartió (se añade como copia). */}
-          <SecondaryButton icon="qr-code-outline" label={HAVE_CODE_LABEL} onPress={() => router.push('/routine/import')} />
+          <SecondaryButton icon="qr-code-outline" label={shareCopy.HAVE_CODE_LABEL} onPress={() => router.push('/routine/import')} />
         </View>
       }
       onUse={(template) => router.push({ pathname: '/routine/new', params: { templateId: template.id } })}

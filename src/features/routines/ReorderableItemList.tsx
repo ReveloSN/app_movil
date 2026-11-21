@@ -12,7 +12,7 @@ import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
 
 import { criticalGroupRange } from './item-order';
-import * as copy from './routine.copy';
+import copy from './routine.copy';
 
 /** Ms de pulsación sobre el asa antes de levantar la fila (así el scroll vertical sigue libre). */
 const LONG_PRESS_MS = 200;
@@ -276,7 +276,7 @@ function ReorderableRow({
               <SecondaryButton
                 icon="arrow-up"
                 label={copy.MOVE_UP_LABEL}
-                accessibilityLabel={`${copy.MOVE_UP_LABEL} «${item.label}»`}
+                accessibilityLabel={copy.moveUpItemLabel(item.label)}
                 disabled={!canMoveUp}
                 onPress={() => onStep(index, index - 1)}
               />
@@ -285,7 +285,7 @@ function ReorderableRow({
               <SecondaryButton
                 icon="arrow-down"
                 label={copy.MOVE_DOWN_LABEL}
-                accessibilityLabel={`${copy.MOVE_DOWN_LABEL} «${item.label}»`}
+                accessibilityLabel={copy.moveDownItemLabel(item.label)}
                 disabled={!canMoveDown}
                 onPress={() => onStep(index, index + 1)}
               />
