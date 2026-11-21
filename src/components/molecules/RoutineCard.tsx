@@ -7,7 +7,7 @@ import { PressableScale } from '@/components/atoms/PressableScale';
 import { SecondaryButton } from '@/components/atoms/SecondaryButton';
 import { useAppTheme, type AppTheme } from '@/shared/theme/useAppTheme';
 import { useThemedStyles } from '@/shared/theme/useThemedStyles';
-import { VERIFIED_TODAY_LABEL } from '@/features/home/home.copy';
+import homeCopy from '@/features/home/home.copy';
 import { formatDateTime, formatTime } from '@/shared/utils/formatDateTime';
 import { toIoniconName } from '@/shared/utils/ioniconName';
 
@@ -61,7 +61,7 @@ export function RoutineCard({
     : lastCompleted
       ? `Última vez: ${lastCompleted}`
       : 'Aún no la has completado';
-  const statusText = completedToday ? `${VERIFIED_TODAY_LABEL}. ${lastCompletedText}.` : `${lastCompletedText}.`;
+  const statusText = completedToday ? `${homeCopy.VERIFIED_TODAY_LABEL}. ${lastCompletedText}.` : `${lastCompletedText}.`;
 
   return (
     // La franja y el ícono llevan el color de la rutina; el nombre y el ícono la identifican sin él.
@@ -92,7 +92,7 @@ export function RoutineCard({
             {/* Bajo el nombre y no en la fila: junto al nombre lo cortaba y partía la hora en varias líneas. */}
             {completedToday ? (
               <View style={styles.doneChip}>
-                <Chip tone="active" icon="checkmark-circle" label={VERIFIED_TODAY_LABEL} />
+                <Chip tone="active" icon="checkmark-circle" label={homeCopy.VERIFIED_TODAY_LABEL} />
               </View>
             ) : null}
           </View>

@@ -1,7 +1,7 @@
 // Lógica pura de la escena de Bienvenida: hora local, peso de cada imagen, textos, sol y luna.
 // Sin React: se prueba con Jest (sceneTheme.test.ts).
 
-import { saluteForHour } from '@/features/home/home.copy';
+import homeCopy from '@/features/home/home.copy';
 import { contrastRatio } from '@/shared/theme/contrast';
 
 import { SCENE_IMAGES, SCENE_STAGES, type SceneStage } from './sceneImages';
@@ -130,7 +130,7 @@ const HEADLINES: Record<SceneStage, Omit<SceneHeadline, 'greeting'>> = {
 /** Saludo (el mismo de Inicio) y titular del tramo de esta hora. */
 export function sceneHeadline(hour: number): SceneHeadline {
   const h = normalizeHour(hour);
-  return { greeting: saluteForHour(Math.floor(h)), ...HEADLINES[stageAt(h)] };
+  return { greeting: homeCopy.saluteForHour(Math.floor(h)), ...HEADLINES[stageAt(h)] };
 }
 
 export interface CelestialPosition {

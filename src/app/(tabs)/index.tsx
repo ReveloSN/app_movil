@@ -11,17 +11,7 @@ import { NextRoutineCard } from '@/components/molecules/NextRoutineCard';
 import { HomeSkeleton } from '@/components/molecules/HomeSkeleton';
 import { SkyBand } from '@/components/molecules/SkyBand';
 import { DEPARTURE_MODE_LABEL, VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
-import {
-  ARRIVAL_SECTION_TITLE,
-  EMPTY_ROUTINES_ACTION,
-  EMPTY_ROUTINES_MESSAGE,
-  EMPTY_ROUTINES_TITLE,
-  greeting,
-  LOADING_ROUTINES_LABEL,
-  NEXT_ROUTINE_LABEL,
-  nextRoutineDescription,
-  todayLabel,
-} from '@/features/home/home.copy';
+import homeCopy from '@/features/home/home.copy';
 import { homeSky } from '@/features/home/homeSky';
 import { RoutineCardItem } from '@/features/home/RoutineCardItem';
 import { AddRoutineMenu } from '@/features/routines/AddRoutineMenu';
@@ -66,7 +56,7 @@ export default function RoutinesScreen() {
   useFocusEffect(useCallback(() => clearFlashMessage, []));
 
   // Primera carga y error sin datos ocupan toda la pantalla; con datos, se mantiene la lista.
-  if (loading && routines.length === 0) return <HomeSkeleton loading accessibilityLabel={LOADING_ROUTINES_LABEL} />;
+  if (loading && routines.length === 0) return <HomeSkeleton loading accessibilityLabel={homeCopy.LOADING_ROUTINES_LABEL} />;
   if (error && routines.length === 0) return <ErrorState message={error} onRetry={refresh} />;
 
   const header = (
@@ -77,17 +67,17 @@ export default function RoutinesScreen() {
         textColor={sky.text}
         scrimColor={sky.scrim}
         scrimAlpha={sky.scrimAlpha}
-        date={todayLabel(now)}
-        greeting={greeting(displayName, now)}
+        date={homeCopy.todayLabel(now)}
+        greeting={homeCopy.greeting(displayName, now)}
       />
       {flash ? <StatusMessage tone="info" message={flash} /> : null}
       {error ? <StatusMessage tone="error" message={error} /> : null}
       {/* 03-2: solo si hay alguna rutina con aviso por horario o por Wi-Fi. */}
       {next ? (
         <NextRoutineCard
-          label={NEXT_ROUTINE_LABEL}
+          label={homeCopy.NEXT_ROUTINE_LABEL}
           name={next.routineName}
-          when={nextRoutineDescription(next, now)}
+          when={homeCopy.nextRoutineDescription(next, now)}
           actionLabel={VERIFY_NOW_LABEL}
           onAction={() => openVerification(next.routineId)}
           secondaryLabel={DEPARTURE_MODE_LABEL}
@@ -119,16 +109,16 @@ export default function RoutinesScreen() {
             <EmptyState
               inline
               illustration="noRoutines"
-              title={EMPTY_ROUTINES_TITLE}
-              message={EMPTY_ROUTINES_MESSAGE}
-              action={{ label: EMPTY_ROUTINES_ACTION, onPress: openTemplates }}
+              title={homeCopy.EMPTY_ROUTINES_TITLE}
+              message={homeCopy.EMPTY_ROUTINES_MESSAGE}
+              action={{ label: homeCopy.EMPTY_ROUTINES_ACTION, onPress: openTemplates }}
             />
           )
         }
         ListFooterComponent={
           arrivals.length > 0 ? (
             <View style={styles.arrivals}>
-              <SectionLabel label={ARRIVAL_SECTION_TITLE} />
+              <SectionLabel label={homeCopy.ARRIVAL_SECTION_TITLE} />
               {arrivals.map((routine) => (
                 <View key={routine.id}>{renderCard(routine)}</View>
               ))}

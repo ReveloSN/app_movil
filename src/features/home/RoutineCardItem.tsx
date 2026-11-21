@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { memo } from 'react';
 
 import { RoutineCard } from '@/components/molecules/RoutineCard';
-import { VERIFY_AGAIN_LABEL, VERIFY_PRESS_HINT, editRoutineLabel } from '@/features/home/home.copy';
+import homeCopy from '@/features/home/home.copy';
 import { VERIFY_NOW_LABEL } from '@/features/checklist/checklist.copy';
 import { routineAccent } from '@/features/routines/routine-appearance';
 import { canVerifyFromHome } from '@/features/routines/routine-list';
@@ -33,13 +33,13 @@ function RoutineCardItemBase({ routine, completedToday }: RoutineCardItemProps) 
       active={routine.active}
       lastCompletedAt={routine.lastCompletedAt}
       completedToday={completedToday}
-      actionLabel={verifiable ? (completedToday ? VERIFY_AGAIN_LABEL : VERIFY_NOW_LABEL) : undefined}
+      actionLabel={verifiable ? (completedToday ? homeCopy.VERIFY_AGAIN_LABEL : VERIFY_NOW_LABEL) : undefined}
       onAction={verifiable ? verify : undefined}
       // Documento 3, P03: el cuerpo verifica; editar es el botón de lápiz.
       onPress={verifiable ? verify : undefined}
-      pressHint={VERIFY_PRESS_HINT}
+      pressHint={homeCopy.VERIFY_PRESS_HINT}
       onEdit={() => router.push({ pathname: '/routine/[id]/edit', params: { id: routine.id } })}
-      editLabel={editRoutineLabel(routine.name)}
+      editLabel={homeCopy.editRoutineLabel(routine.name)}
     />
   );
 }
