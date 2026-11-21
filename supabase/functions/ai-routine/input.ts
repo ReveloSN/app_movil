@@ -1,6 +1,6 @@
 // Validación de la entrada (servidor). Rechaza, no recorta: la app ya respeta los límites.
 
-import { AiError, INPUT_LIMITS, type AiRequest } from './contract.ts';
+import { AI_LOCALES, AiError, INPUT_LIMITS, type AiLocale, type AiRequest } from './contract.ts';
 import { parseInsightsRequest, parseWeeklyRequest } from './stats.ts';
 import { cleanText } from './text.ts';
 
@@ -33,12 +33,20 @@ function itemList(value: unknown): string[] {
   });
 }
 
+/** Idioma de la respuesta. Ausente (apps anteriores) = sin `locale`, y se responde en español. */
+function optionalLocale(value: unknown): { locale?: AiLocale } {
+  if (value === undefined || value === null) return {};
+  if (typeof value !== 'string' || !(AI_LOCALES as readonly string[]).includes(value)) return fail('"locale" debe ser "es" o "en".');
+  return { locale: value as AiLocale };
+}
+
 /** Entrada validada. Lanza AiError('invalid_input') con un mensaje que dice qué corregir. */
 export function parseRequest(body: unknown): AiRequest {
   if (!isRecord(body)) return fail('El cuerpo debe ser un objeto JSON.');
   const { mode } = body;
-  if (mode === 'insights') return parseInsightsRequest(body);
-  if (mode === 'weekly_summary') return parseWeeklyRequest(body);
+  const language = optionalLocale(body.locale);
+  if (mode === 'insights') return { ...parseInsightsRequest(body), ...language };
+  if (mode === 'weekly_summary') return { ...parseWeeklyRequest(body), ...language };
   if (mode !== 'draft' && mode !== 'suggest') return fail('"mode" debe ser "draft", "suggest", "insights" o "weekly_summary".');
 
   const prompt = optionalText(body.prompt, 'prompt', INPUT_LIMITS.prompt);
@@ -47,8 +55,8 @@ export function parseRequest(body: unknown): AiRequest {
 
   if (mode === 'draft') {
     if (!prompt) return fail('Para un borrador, "prompt" es obligatorio.');
-    return { mode, prompt };
+    return { mode, prompt, ...language };
   }
   if (!name && items.length === 0) return fail('Para sugerir, envía "name" o al menos un ítem en "items".');
-  return { mode, name, items };
+  return { mode, name, items, ...language };
 }

@@ -52,15 +52,22 @@ export type RoutineColor = (typeof ROUTINE_COLORS)[number];
 export type ItemType = (typeof ITEM_TYPES)[number];
 export type AiMode = 'draft' | 'suggest' | 'insights' | 'weekly_summary';
 
+/** Idiomas en los que la IA puede responder. Sin `locale` en la solicitud (apps anteriores) se responde en español. */
+export const AI_LOCALES = ['es', 'en'] as const;
+export type AiLocale = (typeof AI_LOCALES)[number];
+export const DEFAULT_AI_LOCALE: AiLocale = 'es';
+
 export interface DraftRequest {
   mode: 'draft';
   prompt: string;
+  locale?: AiLocale;
 }
 
 export interface SuggestRequest {
   mode: 'suggest';
   name: string;
   items: string[];
+  locale?: AiLocale;
 }
 
 export type AiRequest = DraftRequest | SuggestRequest | InsightsRequest | WeeklyRequest;

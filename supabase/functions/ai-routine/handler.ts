@@ -59,7 +59,7 @@ export async function handleAiRequest(body: unknown, deps: HandlerDeps): Promise
     if (!(await deps.consumeQuota())) throw new AiError('quota_exceeded', 'Se agotaron las sugerencias con IA de hoy.');
 
     const text = await deps.provider.generate({
-      system: systemPromptFor(request.mode),
+      system: systemPromptFor(request.mode, request.locale),
       user: userMessageFor(request),
       schema: responseSchemaFor(request.mode),
     });

@@ -3,7 +3,7 @@
 // etiquetas de ítems, que son datos de la persona (se delimitan y se limitan como cualquier texto).
 // Sin APIs de Deno.
 
-import { AiError, INPUT_LIMITS, INSIGHT_SOURCES, type InsightSource } from './contract.ts';
+import { AiError, INPUT_LIMITS, INSIGHT_SOURCES, type AiLocale, type InsightSource } from './contract.ts';
 import { cleanText, clip } from './text.ts';
 
 export const STATS_LIMITS = {
@@ -52,6 +52,7 @@ export interface ForgotInsightPattern {
 export interface InsightsRequest {
   mode: 'insights';
   pattern: OmissionInsightPattern | ForgotInsightPattern;
+  locale?: AiLocale;
 }
 
 /** La acción la decide el dato, no el modelo: el modelo solo redacta el mensaje para esa acción. */
@@ -62,6 +63,7 @@ export function expectedInsightAction(pattern: InsightsRequest['pattern']): Insi
 
 export interface WeeklyRequest {
   mode: 'weekly_summary';
+  locale?: AiLocale;
   stats: {
     /** Lunes de la semana, "AAAA-MM-DD". */
     weekStart: string;
