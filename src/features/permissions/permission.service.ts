@@ -36,6 +36,20 @@ export const requestBackgroundLocation = async () => toState(await Location.requ
 export const isLocationServiceEnabled = () =>
   Platform.OS === 'android' ? Location.hasServicesEnabledAsync() : Promise.resolve(true);
 
+/**
+ * Pide al sistema encender la ubicación con su propio diálogo, sin salir de la app.
+ * Devuelve true si quedó encendida; false si la persona lo rechazó o el teléfono no lo permite.
+ */
+export async function requestLocationServices(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+  try {
+    await Location.enableNetworkProviderAsync();
+  } catch {
+    // Rechazó el diálogo (o no hay proveedor): se vuelve a comprobar abajo.
+  }
+  return Location.hasServicesEnabledAsync();
+}
+
 /** Primer permiso que falta de la lista, en orden; null si están todos. */
 export async function firstMissingPermission(kinds: readonly PermissionKind[]): Promise<PermissionKind | null> {
   for (const kind of kinds) {

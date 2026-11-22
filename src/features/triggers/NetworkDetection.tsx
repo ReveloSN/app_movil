@@ -12,6 +12,8 @@ import type { WifiDetection } from './wifi/useCurrentWifi';
 interface NetworkDetectionProps {
   detection: WifiDetection;
   onDetect(): void;
+  /** Enciende la ubicación del teléfono (diálogo del sistema) y vuelve a detectar. */
+  onEnableServices(): void;
   /** Lleva a P02 (ubicación). */
   onRequestPermission(): void;
   /** Usar la red detectada como red del aviso. */
@@ -19,7 +21,7 @@ interface NetworkDetectionProps {
 }
 
 /** Red detectada (06-4): sugiere el Wi-Fi actual o explica por qué no se puede leer. */
-export function NetworkDetection({ detection, onDetect, onRequestPermission, onUse }: NetworkDetectionProps) {
+export function NetworkDetection({ detection, onDetect, onEnableServices, onRequestPermission, onUse }: NetworkDetectionProps) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -52,6 +54,9 @@ export function NetworkDetection({ detection, onDetect, onRequestPermission, onU
       return (
         <View style={styles.group}>
           <StatusMessage tone="info" message={message} />
+          {detection.status === 'services-off' ? (
+            <SecondaryButton icon="location-outline" label={copy.ENABLE_LOCATION_LABEL} onPress={onEnableServices} />
+          ) : null}
           <SecondaryButton icon="refresh" label={copy.DETECT_NETWORK_LABEL} onPress={onDetect} />
         </View>
       );

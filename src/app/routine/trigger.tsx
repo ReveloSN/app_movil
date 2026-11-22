@@ -75,7 +75,7 @@ export default function TriggerScreen() {
   });
   // DC-03 al salir de P06 con cambios sin guardar, y el cierre tras guardar.
   const guard = useCloseAfterSave(form.dirty, 'back');
-  const { detection, detect } = useCurrentWifi();
+  const { detection, detect, enableServices } = useCurrentWifi();
   const isWifi = form.kind !== 'schedule';
   const networkNameRef = useRef<TextInput>(null);
   const { resume } = form;
@@ -121,6 +121,7 @@ export default function TriggerScreen() {
               <NetworkDetection
                 detection={detection}
                 onDetect={detect}
+                onEnableServices={enableServices}
                 onRequestPermission={openLocationPermission}
                 onUse={(ssid) => form.setSsid(ssid)}
               />

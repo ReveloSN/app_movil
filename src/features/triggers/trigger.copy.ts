@@ -126,6 +126,7 @@ export default localized(
 
     // Red detectada (06-4) y franja (06-5). Sin código en el Documento de Contenido.
     DETECT_NETWORK_LABEL: 'Detectar red actual',
+    ENABLE_LOCATION_LABEL: 'Activar ubicación',
     DETECTING_NETWORK_LABEL: 'Detectando la red',
     DETECTING_NETWORK_TEXT: 'Detectando la red…',
     detectedNetworkMessage: (ssid: string) => `Estás conectado a «${ssid}».`,
@@ -196,6 +197,7 @@ export default localized(
     CONFIGURE_TRIGGER_TITLE: 'Set up alert',
 
     DETECT_NETWORK_LABEL: 'Detect current network',
+    ENABLE_LOCATION_LABEL: 'Turn on location',
     DETECTING_NETWORK_LABEL: 'Detecting the network',
     DETECTING_NETWORK_TEXT: 'Detecting the network…',
     detectedNetworkMessage: (ssid: string) => `You're connected to “${ssid}”.`,

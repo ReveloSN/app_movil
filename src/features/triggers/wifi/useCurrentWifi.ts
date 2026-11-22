@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
-import { getPermission, isLocationServiceEnabled } from '@/features/permissions/permission.service';
+import { getPermission, isLocationServiceEnabled, requestLocationServices } from '@/features/permissions/permission.service';
 
 import { readWifi } from './wifi.reader';
 
@@ -34,5 +35,21 @@ export function useCurrentWifi() {
     }
   }, []);
 
-  return { detection, detect };
+  /** Enciende la ubicación con el diálogo del sistema y vuelve a leer la red. */
+  const enableServices = useCallback(async () => {
+    await requestLocationServices();
+    await detect();
+  }, [detect]);
+
+  // Si la ubicación se enciende desde los ajustes del sistema, al volver a la app se lee de nuevo.
+  const status = detection.status;
+  useEffect(() => {
+    if (status !== 'services-off' && status !== 'hidden') return undefined;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void detect();
+    });
+    return () => subscription.remove();
+  }, [status, detect]);
+
+  return { detection, detect, enableServices };
 }
