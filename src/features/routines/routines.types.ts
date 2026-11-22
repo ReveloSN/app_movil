@@ -27,7 +27,7 @@ export interface RoutineDraft {
   /** Clave de color de 04-2 (ej. "green"). Sin ella, se guarda la de por defecto. */
   color?: string;
   items: ItemDraft[];
-  /** Avisos configurados en P06 (0–3). En edición, la clave de los ya guardados es su id. */
+  /** Avisos configurados en P06 (0–20). En edición, la clave de los ya guardados es su id. */
   triggers?: TriggerDraftEntry[];
 }
 

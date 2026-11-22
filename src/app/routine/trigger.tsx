@@ -16,11 +16,12 @@ import { UnsavedChangesDialog } from '@/features/forms/UnsavedChangesDialog';
 import { useCloseAfterSave } from '@/features/forms/useCloseAfterSave';
 import { useAfterAppear } from '@/features/navigation/useAfterAppear';
 import routineCopy from '@/features/routines/routine.copy';
+import { ExtraTimesFields } from '@/features/triggers/ExtraTimesFields';
 import { NetworkDetection } from '@/features/triggers/NetworkDetection';
 import { strategyFor, strategyForKind, TRIGGER_KINDS } from '@/features/triggers/strategies';
 import copy, { WEEK_ORDER } from '@/features/triggers/trigger.copy';
 import type { TriggerKind } from '@/features/triggers/trigger.types';
-import { NETWORK_NAME_MAX_LENGTH, SSID_MAX_LENGTH } from '@/features/triggers/trigger.validation';
+import { MAX_TRIGGERS, NETWORK_NAME_MAX_LENGTH, SSID_MAX_LENGTH } from '@/features/triggers/trigger.validation';
 import { useTriggerDrafts } from '@/features/triggers/TriggerDraftsProvider';
 import { useTriggerForm } from '@/features/triggers/useTriggerForm';
 import { useCurrentWifi } from '@/features/triggers/wifi/useCurrentWifi';
@@ -50,19 +51,25 @@ const openLocationPermission = () => router.push({ pathname: '/routine/permissio
 export default function TriggerScreen() {
   const { formId = '', key, routineKind } = useLocalSearchParams<{ formId?: string; key?: string; routineKind?: string }>();
   const styles = useThemedStyles(createStyles);
-  const { find, upsert } = useTriggerDrafts(formId);
+  const { drafts, find, upsert } = useTriggerDrafts(formId);
   // Aviso a editar, o la sugerencia (ej. de una plantilla) con la que se precarga.
   const [existing] = useState(() => find(key));
   const [entryKey] = useState(() => existing?.key ?? Crypto.randomUUID());
+  // Solo un aviso nuevo admite varias horas: cabe lo que queda de cupo (editar uno existente es una sola hora).
+  const editingSaved = drafts.some((draft) => draft.key === entryKey);
+  const maxTimes = editingSaved ? 1 : MAX_TRIGGERS - drafts.length;
 
   const form = useTriggerForm({
     initial: existing,
     routineKind: routineKind === 'arrival' ? 'arrival' : 'departure',
-    onCommit: (draft) => {
-      const entry = { ...draft, key: entryKey };
-      upsert(entry);
-      // Vuelve a P04 (o al paso del onboarding) con la frase resumen del aviso (06-6) como aviso breve.
-      guard.close(copy.summarySentence(strategyFor(entry).describe(entry)));
+    maxTimes,
+    onCommit: (created) => {
+      // El primero conserva la clave (editar o precargar); las horas extra son avisos nuevos.
+      const entries = created.map((draft, index) => ({ ...draft, key: index === 0 ? entryKey : Crypto.randomUUID() }));
+      entries.forEach(upsert);
+      // Vuelve a P04 (o al paso del onboarding) con la frase resumen (06-6) o, con varias horas, cuántos se añadieron.
+      const [first] = entries;
+      guard.close(entries.length > 1 ? copy.triggersAdded(entries.length) : copy.summarySentence(strategyFor(first).describe(first)));
     },
     onNeedPermission: (kind) => router.push({ pathname: '/routine/permissions', params: { kind } }),
   });
@@ -174,6 +181,16 @@ export default function TriggerScreen() {
                 {routineCopy.TRIGGER_SECTION_SCHEDULE}
               </Text>
               <TimeField label={routineCopy.TIME_LABEL} value={form.time} valueLabel={formatClock(form.time)} onChange={form.setTime} />
+              {!editingSaved && maxTimes > 1 ? (
+                <ExtraTimesFields
+                  times={form.extraTimes}
+                  canAdd={form.canAddTime}
+                  remaining={maxTimes - 1 - form.extraTimes.length}
+                  onAdd={form.addTime}
+                  onChange={form.setExtraTime}
+                  onRemove={form.removeExtraTime}
+                />
+              ) : null}
               <DayPicker options={dayOptions()} value={form.days} onChange={form.setDays} />
               {form.errors.days ? <StatusMessage tone="error" message={form.errors.days} /> : null}
             </>
@@ -189,7 +206,7 @@ export default function TriggerScreen() {
       {/* Primaria en la zona del pulgar, fija como en P04. */}
       <ScreenFooter bordered>
         {form.permissionError ? <StatusMessage tone="error" message={form.permissionError} /> : null}
-        <PrimaryButton label={copy.SAVE_TRIGGER_LABEL} onPress={form.save} loading={form.saving} />
+        <PrimaryButton label={form.count > 1 ? copy.saveTriggersLabel(form.count) : copy.SAVE_TRIGGER_LABEL} onPress={form.save} loading={form.saving} />
       </ScreenFooter>
       <UnsavedChangesDialog
         visible={guard.confirming}

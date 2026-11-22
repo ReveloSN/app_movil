@@ -28,7 +28,7 @@ interface RoutineTriggersSectionProps {
 const openTrigger = (formId: string, routineKind: RoutineKind, key?: string) =>
   router.push({ pathname: '/routine/trigger', params: key ? { formId, routineKind, key } : { formId, routineKind } });
 
-/** Bloque de avisos de P04 (04-5): lista agrupada (0–3), cada uno editable en P06. */
+/** Bloque de avisos de P04 (04-5): lista agrupada (0–20), cada uno editable en P06. */
 export function RoutineTriggersSection({ formId, routineKind = 'departure', error }: RoutineTriggersSectionProps) {
   const styles = useThemedStyles(createStyles);
   const { drafts, remove, upsert } = useTriggerDrafts(formId);
@@ -67,10 +67,10 @@ export function RoutineTriggersSection({ formId, routineKind = 'departure', erro
           label={copy.ADD_TRIGGER_LABEL}
           onPress={() => openTrigger(formId, routineKind)}
           disabled={full}
-          disabledHint={copy.MAX_TRIGGERS_REACHED}
+          disabledHint={copy.maxTriggersReached(MAX_TRIGGERS)}
         />
       </View>
-      {full ? <Text style={styles.hint}>{copy.MAX_TRIGGERS_REACHED}</Text> : null}
+      {full ? <Text style={styles.hint}>{copy.maxTriggersReached(MAX_TRIGGERS)}</Text> : null}
     </View>
   );
 }

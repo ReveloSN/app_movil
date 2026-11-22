@@ -94,6 +94,9 @@ export default localized(
     /** "todos los días a las 6:00 p. m." / "todos los L a V a las 6:00 p. m." */
     scheduleDescription: (days: readonly Weekday[], time: Parameters<typeof formatClock>[0]) =>
       days.length === ALL_DAYS ? `todos los días ${atClockEs(time)}` : `todos los ${formatDaysEs(days)} ${atClockEs(time)}`,
+    /** Varias horas con los mismos días: "todos los días a las 7:00 a. m. y 8:00 a. m." */
+    scheduleTimesDescription: (days: readonly Weekday[], times: readonly Parameters<typeof formatClock>[0][]) =>
+      `${days.length === ALL_DAYS ? 'todos los días' : `todos los ${formatDaysEs(days)}`} ${times.length === 1 ? atClockEs(times[0]) : `a las ${formatList(times.map(formatClock))}`}`,
     /** "Son las 6:00 p. m." */
     scheduleLead: (time: Parameters<typeof formatClock>[0]) =>
       endSentence(`${isOneOClock(time) ? 'Es la' : 'Son las'} ${formatClock(time)}`),
@@ -109,8 +112,16 @@ export default localized(
     ADD_TRIGGER_LABEL: 'Añadir aviso',
     /** Aviso breve al quitar un aviso (con "Deshacer"). */
     TRIGGER_REMOVED: 'Quitaste el aviso.',
-    MAX_TRIGGERS_REACHED: 'Una rutina admite hasta 3 avisos. Quita uno para añadir otro.',
+    maxTriggersReached: (max: number) => `Una rutina admite hasta ${max} avisos. Quita uno para añadir otro.`,
     SAVE_TRIGGER_LABEL: 'Guardar aviso',
+    saveTriggersLabel: (count: number) => `Guardar ${count} avisos`,
+    /** Aviso breve al guardar varias horas de una vez. */
+    triggersAdded: (count: number) => `Añadiste ${count} avisos.`,
+    ADD_TIME_LABEL: 'Añadir otra hora',
+    extraTimeLabel: (position: number) => `Hora ${position}`,
+    removeTimeLabel: (time: string) => `Quitar la hora ${time}`,
+    DUPLICATE_TIMES_HINT: 'Las horas repetidas se guardan una sola vez.',
+    timesLimitHint: (remaining: number) => `Puedes añadir ${remaining} horas más en esta rutina.`,
     CONFIGURE_TRIGGER_TITLE: 'Configurar aviso',
 
     // Red detectada (06-4) y franja (06-5). Sin código en el Documento de Contenido.
@@ -160,6 +171,8 @@ export default localized(
     /** "every day at 6:00 PM" / "on Monday to Friday at 6:00 PM" */
     scheduleDescription: (days: readonly Weekday[], time: Parameters<typeof formatClock>[0]) =>
       days.length === ALL_DAYS ? `every day at ${formatClock(time)}` : `on ${formatDaysEn(days)} at ${formatClock(time)}`,
+    scheduleTimesDescription: (days: readonly Weekday[], times: readonly Parameters<typeof formatClock>[0][]) =>
+      `${days.length === ALL_DAYS ? 'every day' : `on ${formatDaysEn(days)}`} at ${joinEn(times.map(formatClock))}`,
     /** "It's 6:00 PM." */
     scheduleLead: (time: Parameters<typeof formatClock>[0]) => endSentence(`It's ${formatClock(time)}`),
     wifiExitPhrase: (networkName: string) => `when you leave ${networkName}`,
@@ -171,8 +184,15 @@ export default localized(
     triggersCountLabel: (count: number, max: number) => `Alerts, ${count} of ${max}`,
     ADD_TRIGGER_LABEL: 'Add alert',
     TRIGGER_REMOVED: 'You removed the alert.',
-    MAX_TRIGGERS_REACHED: 'A routine allows up to 3 alerts. Remove one to add another.',
+    maxTriggersReached: (max: number) => `A routine allows up to ${max} alerts. Remove one to add another.`,
     SAVE_TRIGGER_LABEL: 'Save alert',
+    saveTriggersLabel: (count: number) => `Save ${count} alerts`,
+    triggersAdded: (count: number) => `You added ${count} alerts.`,
+    ADD_TIME_LABEL: 'Add another time',
+    extraTimeLabel: (position: number) => `Time ${position}`,
+    removeTimeLabel: (time: string) => `Remove the ${time} time`,
+    DUPLICATE_TIMES_HINT: 'Repeated times are saved only once.',
+    timesLimitHint: (remaining: number) => `You can add ${remaining} more times to this routine.`,
     CONFIGURE_TRIGGER_TITLE: 'Set up alert',
 
     DETECT_NETWORK_LABEL: 'Detect current network',

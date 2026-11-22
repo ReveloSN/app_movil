@@ -5,8 +5,8 @@ import { allowedTriggerKindsFor } from './trigger.defaults';
 import type { TriggerDraft } from './trigger.types';
 import type { RoutineKind } from '@/shared/types/routine.types';
 
-/** Una rutina admite de 0 a 3 avisos. */
-export const MAX_TRIGGERS = 3;
+/** Una rutina admite de 0 a 20 avisos (lo mismo que fuerza triggers_limit en la base de datos). */
+export const MAX_TRIGGERS = 20;
 export const NETWORK_NAME_MAX_LENGTH = 24;
 /** Límite del estándar 802.11 (en bytes; se aproxima con caracteres). */
 export const SSID_MAX_LENGTH = 32;

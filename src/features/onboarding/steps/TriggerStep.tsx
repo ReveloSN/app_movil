@@ -43,7 +43,7 @@ export function TriggerStep({ routineName, formId, drafts, suggestion, onConfigu
         <Text style={styles.body}>{copy.triggerBody(routineName)}</Text>
 
         {configured ? (
-          // La misma lista de P04: editar, quitar o sumar otro (hasta 3).
+          // La misma lista de P04: editar, quitar o sumar otro (hasta 20).
           <RoutineTriggersSection formId={formId} />
         ) : suggestion ? (
           <View style={styles.suggestion}>

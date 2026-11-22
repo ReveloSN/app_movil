@@ -19,7 +19,7 @@ interface TriggerRow {
 }
 
 export interface TriggerRepository extends Repository<Trigger, CreateTriggerInput, UpdateTriggerInput> {
-  /** Avisos de una rutina (0–3). */
+  /** Avisos de una rutina (0–20). */
   getByRoutine(routineId: string): Promise<Trigger[]>;
   deleteByRoutine(routineId: string): Promise<void>;
 }

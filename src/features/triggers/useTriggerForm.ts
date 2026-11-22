@@ -5,12 +5,13 @@ import { firstMissingPermission } from '@/features/permissions/permission.servic
 import type { PermissionKind } from '@/features/permissions/permission.types';
 import type { ClockTime, Weekday } from '@/shared/types/clock.types';
 import type { RoutineKind } from '@/shared/types/routine.types';
+import { minutesOfDay } from '@/shared/utils/formatClock';
 import { stableStringify } from '@/shared/utils/stableStringify';
 
 import { strategyFor } from './strategies';
 import copy from './trigger.copy';
 import { allowedTriggerKindsFor, defaultTriggerKindFor, defaultWindowFor } from './trigger.defaults';
-import type { TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
+import type { ScheduleTriggerDraft, TimeWindow, TriggerDraft, TriggerKind } from './trigger.types';
 import { hasTriggerErrors, normalizeTriggerDraft, validateTriggerDraft, type TriggerValidationErrors } from './trigger.validation';
 
 const DEFAULT_TIME: ClockTime = { hour: 7, minute: 0 };
@@ -22,8 +23,10 @@ interface UseTriggerFormOptions {
   initial?: TriggerDraft;
   /** Tipo de la rutina a la que pertenece: una de llegada propone «Llegar al Wi-Fi» y una franja de tarde. */
   routineKind?: RoutineKind;
-  /** Recibe el aviso validado y con los permisos concedidos. */
-  onCommit(draft: TriggerDraft): void;
+  /** Recibe los avisos validados y con los permisos concedidos (varios si se añadieron más horas). */
+  onCommit(drafts: TriggerDraft[]): void;
+  /** Cuántas horas puede tener esta pantalla: lo que queda de cupo en la rutina. Sin límite = 1 (editar). */
+  maxTimes?: number;
   /** Lleva a P02 por el permiso que falta. Al volver, la pantalla llama a `resume`. */
   onNeedPermission(kind: PermissionKind): void;
   /** Inyectable para tests. */
@@ -50,6 +53,20 @@ const toDraft = ({ kind, time, days, ssid, networkName, windowEnabled, timeWindo
 const fingerprint = (draft: TriggerDraft) =>
   stableStringify(draft.type === 'schedule' ? { ...draft, days: [...draft.days].sort((a, b) => a - b) } : draft);
 
+/** Un horario por hora distinta (las repetidas se guardan una sola vez), todos con los mismos días. */
+const expandTimes = (draft: TriggerDraft, extraTimes: readonly ClockTime[]): TriggerDraft[] => {
+  if (draft.type !== 'schedule') return [draft];
+  const seen = new Set<number>();
+  return [draft.time, ...extraTimes]
+    .filter((time) => {
+      const minutes = minutesOfDay(time);
+      if (seen.has(minutes)) return false;
+      seen.add(minutes);
+      return true;
+    })
+    .map((time) => ({ ...draft, time }));
+};
+
 const requiredPermissions = (draft: TriggerDraft): PermissionKind[] =>
   strategyFor(draft).needsLocation ? ['notifications', 'location'] : ['notifications'];
 
@@ -61,6 +78,7 @@ export function useTriggerForm({
   initial,
   routineKind,
   onCommit,
+  maxTimes = 1,
   onNeedPermission,
   findMissingPermission = firstMissingPermission,
 }: UseTriggerFormOptions) {
@@ -75,6 +93,8 @@ export function useTriggerForm({
   );
   const [time, setTime] = useState<ClockTime>(initialAllowed?.type === 'schedule' ? initialAllowed.time : DEFAULT_TIME);
   const [days, setDays] = useState<Weekday[]>(initialAllowed?.type === 'schedule' ? initialAllowed.days : WEEKDAYS);
+  // Horas además de la primera (solo al crear): cada una será su propio aviso con los mismos días.
+  const [extraTimes, setExtraTimes] = useState<ClockTime[]>([]);
   const wifi = initialAllowed?.type === 'schedule' ? undefined : initialAllowed;
   const [ssid, setSsid] = useState(wifi?.ssid ?? '');
   const [networkName, setNetworkName] = useState(wifi?.networkName ?? copy.DEFAULT_NETWORK_NAME);
@@ -95,31 +115,52 @@ export function useTriggerForm({
     () => toDraft({ kind, time, days, ssid, networkName, windowEnabled, timeWindow }),
     [kind, time, days, ssid, networkName, windowEnabled, timeWindow],
   );
-  const dirty = useMemo(() => fingerprint(draft) !== initialFingerprint, [draft, initialFingerprint]);
+  const dirty = useMemo(
+    () => fingerprint(draft) !== initialFingerprint || extraTimes.length > 0,
+    [draft, initialFingerprint, extraTimes],
+  );
+  const canAddTime = kind === 'schedule' && extraTimes.length + 1 < maxTimes;
+  const addTime = useCallback(() => {
+    // La nueva hora arranca una hora después de la última, para que no quede repetida.
+    setExtraTimes((current) => {
+      const last = current[current.length - 1] ?? time;
+      return [...current, { hour: (last.hour + 1) % 24, minute: last.minute }];
+    });
+  }, [time]);
+  const setExtraTime = useCallback(
+    (index: number, next: ClockTime) => setExtraTimes((current) => current.map((value, i) => (i === index ? next : value))),
+    [],
+  );
+  const removeExtraTime = useCallback((index: number) => setExtraTimes((current) => current.filter((_, i) => i !== index)), []);
+  const count = kind === 'schedule' ? expandTimes(draft, extraTimes).length : 1;
 
   const errors = useMemo(() => (attempted ? validateTriggerDraft(draft, routineKind) : NO_ERRORS), [attempted, draft, routineKind]);
 
   const summary = useMemo(() => {
     // Mientras el nombre está vacío, la frase no queda a medias.
+    if (draft.type === 'schedule' && extraTimes.length > 0) {
+      const times = expandTimes(draft, extraTimes).map((entry) => (entry as ScheduleTriggerDraft).time);
+      return copy.summarySentence(copy.scheduleTimesDescription(draft.days, times));
+    }
     const preview = draft.type === 'schedule' || draft.networkName.trim() ? draft : { ...draft, networkName: copy.NETWORK_NAME_PLACEHOLDER };
     return copy.summarySentence(strategyFor(preview).describe(normalizeTriggerDraft(preview)));
-  }, [draft]);
+  }, [draft, extraTimes]);
 
   // Lo último de cada render, para que `save` y `resume` sean estables: la pantalla llama a
   // `resume` solo al recuperar el foco, y no debe re-ejecutarse en cada cambio del formulario.
-  const latest = useRef({ draft, routineKind, onCommit, onNeedPermission, findMissingPermission });
+  const latest = useRef({ draft, extraTimes, routineKind, onCommit, onNeedPermission, findMissingPermission });
   useEffect(() => {
-    latest.current = { draft, routineKind, onCommit, onNeedPermission, findMissingPermission };
+    latest.current = { draft, extraTimes, routineKind, onCommit, onNeedPermission, findMissingPermission };
   });
 
   const continueSave = useCallback(async (previouslyMissing: PermissionKind | null) => {
-    const { draft: current, onCommit: commit, onNeedPermission: needPermission, findMissingPermission: findMissing } =
+    const { draft: current, extraTimes: extra, onCommit: commit, onNeedPermission: needPermission, findMissingPermission: findMissing } =
       latest.current;
     setSaving(true);
     try {
       const missing = await findMissing(requiredPermissions(current));
       if (!missing) {
-        commit(normalizeTriggerDraft(current));
+        commit(expandTimes(normalizeTriggerDraft(current), extra));
       } else if (missing === previouslyMissing) {
         // Volvió de P02 sin concederlo: se queda aquí con lo llenado y el motivo a la vista.
         setPermissionError(permissionCopy.PERMISSION_COPY[missing].reason);
@@ -153,6 +194,12 @@ export function useTriggerForm({
     allowedKinds,
     time,
     setTime,
+    extraTimes,
+    canAddTime,
+    addTime,
+    setExtraTime,
+    removeExtraTime,
+    count,
     days,
     setDays,
     ssid,
