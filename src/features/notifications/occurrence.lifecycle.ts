@@ -18,6 +18,11 @@ import type { Occurrence } from './occurrence.types';
  */
 const SCHEDULE_HORIZON_DAYS = 4;
 /**
+ * Android admite unas 500 alarmas por app y cada vez agenda 3 (aviso + 2 recordatorios): con muchos avisos
+ * por horario se queda en 120 veces futuras (360 alarmas) para dejar margen a los de Wi-Fi y a las pospuestas.
+ */
+export const MAX_SCHEDULED_OCCURRENCES = 120;
+/**
  * Un aviso de Wi-Fi no vuelve a sonar antes de esto (evita repetir si la señal parpadea). La llegada a casa
  * lo comparte: el Wi-Fi y la geocerca pueden detectar la misma llegada, y solo debe sonar una vez.
  */
@@ -73,12 +78,20 @@ export function syncScheduledOccurrences(
 
     const keys = new Set(kept.map((entry) => entry.key));
     const until = new Date(now + SCHEDULE_HORIZON_DAYS * DAY_MS);
-    for (const armed of snapshot.triggers) {
-      for (const date of strategyFor(armed).occurrencesBetween(armed, new Date(now), until)) {
-        const base = baseFor(armed, snapshot.ownerId, date.getTime(), prefs);
-        if (keys.has(base.key)) continue;
-        kept.push(await scheduleOccurrence(base, bodyFor(armed), now, prefs));
-      }
+    // Las que faltan, de la más próxima a la más lejana: si no caben todas, se agendan las primeras
+    // y las demás entran en la siguiente pasada (al abrir la app o con la tarea en segundo plano).
+    const missing = snapshot.triggers.flatMap((armed) =>
+      strategyFor(armed)
+        .occurrencesBetween(armed, new Date(now), until)
+        .map((date) => ({ armed, firesAt: date.getTime() }))
+        .filter(({ firesAt }) => !keys.has(`${armed.triggerId}@${firesAt}`)),
+    );
+    missing.sort((a, b) => a.firesAt - b.firesAt);
+    let room = Math.max(0, MAX_SCHEDULED_OCCURRENCES - kept.filter((entry) => entry.firesAt > now).length);
+    for (const { armed, firesAt } of missing) {
+      if (room === 0) break;
+      kept.push(await scheduleOccurrence(baseFor(armed, snapshot.ownerId, firesAt, prefs), bodyFor(armed), now, prefs));
+      room -= 1;
     }
     return { entries: kept, result: undefined };
   });
