@@ -4,7 +4,7 @@ App Android que evita olvidos al salir de casa con rutinas de verificación ráp
 
 ## Descargar
 
-[**Descargar el APK (última versión)**](https://github.com/ReveloSN/app_movil/releases/latest/download/verificador-salida-v1.0.0.apk)
+[**Descargar el APK (última versión)**](https://github.com/ReveloSN/app_movil/releases/latest/download/verificador-salida-v1.2.0.apk)
 
 Todas las versiones: [Releases](https://github.com/ReveloSN/app_movil/releases).
 
